@@ -37,13 +37,34 @@ node scripts/sync.js --check  # check for drift (used in CI)
 
 ## Distribution (git submodule)
 
-In target projects:
+### Adding to a new project
 
 ```bash
-git submodule add https://github.com/eduassistant/ai-sdd-playbooks .ai-sdd-playbooks
+# 1. Add submodule
+git submodule add https://github.com/fcdevxai/ai-sdd-playbooks.git .ai-sdd-playbooks
+
+# 2. Copy the sync script into your project (once)
+cp .ai-sdd-playbooks/scripts/sync-consumer.sh sync-playbooks.sh
+
+# 3. Run sync
 bash sync-playbooks.sh
 ```
 
-The `sync-playbooks.sh` script in each project copies from `.ai-sdd-playbooks/dist/` into `.github/skills/` and `.claude/commands/`.
+If your project uses different paths, override via env vars:
 
-CI in each project runs the sync and fails if the committed files differ (`git diff --exit-code`), preventing drift.
+```bash
+SKILLS_DEST=".github/skills" COMMANDS_DEST=".claude/commands" bash sync-playbooks.sh
+```
+
+### Updating playbooks
+
+```bash
+git submodule update --remote .ai-sdd-playbooks
+bash sync-playbooks.sh
+git add .ai-sdd-playbooks .ai/skills .claude/commands
+git commit -m "chore: update playbooks from canonical"
+```
+
+### CI anti-drift
+
+Add a workflow step that runs `bash sync-playbooks.sh --check` after checking out with `submodules: true`. It exits 1 if committed files differ from the canonical, preventing untracked manual edits.
