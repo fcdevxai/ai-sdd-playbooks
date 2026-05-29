@@ -90,43 +90,6 @@ Before opening the PR, produce the PR description following these rules:
 ```markdown
 # <Short title>
 
-## Summary
-<2–3 sentences>
-
-## What Changed
-- grouped by area: Backend, Frontend, Tests
-
-## Validation
-### Automated
-<passing tests>
-### Manual
-<steps or "None">
-
-## Reviewer Notes
-<where to focus>
-
-## Risks
-<only real risks, or omit>
-
-## Rollback
-<one sentence>
-```
-
-Run `git diff main...[branch]` to inspect changes before writing the description.
-
-### 6. Open Pull Request
-
-```bash
-gh pr create \
-  --title "[type]([module]): [subject]" \
-  --body "[PR description from step 5]" \
-  --base main
-```
-
-### 7. Confirm
-
-Report: list of committed files, commit hash, PR URL.
-
 ---
 
 ## Output
@@ -143,6 +106,8 @@ Report: list of committed files, commit hash, PR URL.
 - Always generate the PR description inline — never delegate to an external skill.
 - Commit message must be in English.
 - Do not force-push unless the user explicitly requests it.
+
+<!-- END_SKILL -->
 
 ---
 

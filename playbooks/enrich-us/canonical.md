@@ -75,45 +75,6 @@ date: [YYYY-MM-DD]
 
 # [Feature name]
 
-## Objective
-[One sentence.]
-
-## Guiding principle
-[One sentence — the architectural or product rule this feature must respect.]
-
-## Impacted modules
-- [module name] → [how it is affected]
-
-## Expected behavior
-### Happy path (Given/When/Then)
-- Given [context]
-- When [action]
-- Then [result]
-
-### Edge cases
-- [case]: [expected behavior]
-
-## Acceptance criteria
-1. [Testable, specific criterion]
-2. [...]
-
-## Error cases
-1. [Error condition]: [expected system response]
-
-## Constraints and non-goals
-- [What must NOT change]
-- [What is explicitly out of scope]
-
-## Open technical decisions
-<!-- Empty if all decisions are closed. -->
-```
-
-### 6. Ask for confirmation
-
-Present the draft and ask: "Do you approve this proposal? Reply 'yes' to proceed with `sdd-new [ticket-slug]`, or share corrections."
-
-Do not proceed to `sdd-new` without explicit user approval.
-
 ---
 
 ## Output
@@ -130,6 +91,8 @@ A complete `proposal.md` draft with `status: draft`, ready for human review and 
 - Always respond in the user's language
 - Optimize for clarity, not verbosity
 - Never skip the codebase reading step — questions must be grounded in what exists
+
+<!-- END_SKILL -->
 
 ---
 

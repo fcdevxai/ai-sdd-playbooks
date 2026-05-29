@@ -68,34 +68,6 @@ Confirm the full suite passes. Report any new failures not present before this f
 **Verification date**: [YYYY-MM-DD]
 **Merged branch**: [branch]
 
-## Acceptance criteria
-
-| # | Criterion | Test | Result |
-|---|---|---|---|
-| 1 | [criterion from proposal.md] | `tests/Feature/.../Test::method` | ✅ PASS |
-
-## Error cases verified
-
-| # | Error case | Test | Result |
-|---|---|---|---|
-| 1 | [error case from proposal.md] | `tests/Feature/.../Test::method` | ✅ PASS |
-
-## Full suite
-
-Result: [X tests, 0 failures, 0 errors]
-
-## Verdict
-
-✅ FEATURE VERIFIED — all acceptance criteria have passing tests.
-Proceed with `sdd-archive [ticket-slug]`.
-
----
-
-❌ GAPS DETECTED — the following criteria have no test coverage:
-- Criterion #N: [description]
-Resolve before proceeding with `sdd-archive`.
-```
-
 ---
 
 ## Output
@@ -109,6 +81,8 @@ Resolve before proceeding with `sdd-archive`.
 - Always run the full test suite — do not skip the regression check.
 - A criterion with a failing or missing test must produce verdict `❌ GAPS DETECTED`.
 - Do not archive without `✅ FEATURE VERIFIED`.
+
+<!-- END_SKILL -->
 
 ---
 

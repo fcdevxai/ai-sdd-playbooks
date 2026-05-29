@@ -118,6 +118,8 @@ Blocking examples:
 - Do not propose scope expansion beyond the approved feature; report only UX/UI issues for the implemented scope.
 - Keep findings concrete and reproducible.
 
+<!-- END_SKILL -->
+
 ---
 
 ## Objetivo

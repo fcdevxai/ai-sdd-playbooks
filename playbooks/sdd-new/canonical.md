@@ -66,32 +66,6 @@ date: [YYYY-MM-DD]
 
 # [Feature name]
 
-## Objective
-## Guiding principle
-## Impacted modules
-## Expected behavior
-### Happy path (Given/When/Then)
-### Edge cases
-## Acceptance criteria
-## Error cases
-## Constraints and non-goals
-## Open technical decisions
-```
-
-`status` stays `draft` until a human reviewer changes it to `status: pending`.
-
-### 5. Create tasks.md placeholder
-
-```markdown
-# Tasks — [Feature name]
-
-**Ticket**: [ticket-slug]
-**Spec**: openspec/changes/[ticket-slug]/proposal.md
-**Status**: waiting (proposal not yet approved)
-
-Run `sdd-ff [ticket-slug]` after the proposal is approved (status: pending).
-```
-
 ---
 
 ## Output
@@ -107,6 +81,8 @@ Confirm files created: `OWNER.md`, `proposal.md`, `tasks.md`.
 - Never set `status: pending` — only a human reviewer can approve the proposal.
 - Never create artifacts outside `openspec/changes/[ticket-slug]/`.
 - If the folder already exists, only create missing artifacts; do not overwrite existing content.
+
+<!-- END_SKILL -->
 
 ---
 

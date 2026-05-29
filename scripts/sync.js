@@ -55,7 +55,7 @@ function extractSections(markdown) {
 
 // ── SKILL.md renderer ───────────────────────────────────────────────────────
 
-function renderSkill(frontmatter, sections) {
+function renderSkill(frontmatter, body) {
   const templatePath = path.join(TEMPLATES_DIR, 'skill.md.hbs');
   const template = fs.readFileSync(templatePath, 'utf8');
 
@@ -63,11 +63,7 @@ function renderSkill(frontmatter, sections) {
     .replaceAll('{{NAME}}', frontmatter.slug)
     .replaceAll('{{DESCRIPTION}}', frontmatter.description)
     .replaceAll('{{TITLE}}', frontmatter.title_en || frontmatter.slug)
-    .replaceAll('{{PURPOSE}}', sections['Purpose'] || '')
-    .replaceAll('{{CONTEXT}}', sections['Context'] || '')
-    .replaceAll('{{BEHAVIOR}}', sections['Behavior'] || '')
-    .replaceAll('{{OUTPUT}}', sections['Output'] || (frontmatter.output_file ? `\`openspec/changes/[ticket-slug]/${frontmatter.output_file}\`` : ''))
-    .replaceAll('{{RULES}}', sections['Rules'] || '');
+    .replaceAll('{{BODY}}', body);
 }
 
 // ── command.md renderer ─────────────────────────────────────────────────────
@@ -152,10 +148,17 @@ for (const slug of slugs) {
 
   const raw = fs.readFileSync(canonicalPath, 'utf8');
   const { data: frontmatter, content } = matter(raw);
+
+  // Extract skill body: everything before <!-- END_SKILL -->
+  const END_SKILL = '<!-- END_SKILL -->';
+  const delimIdx = content.indexOf(END_SKILL);
+  const skillBody = (delimIdx !== -1 ? content.slice(0, delimIdx) : content).trim();
+
+  // Extract sections for command rendering (uses full content)
   const sections = extractSections(content);
 
   // Generate SKILL.md
-  const skillContent = renderSkill({ ...frontmatter, slug }, sections);
+  const skillContent = renderSkill({ ...frontmatter, slug }, skillBody);
   writeOrCheck(path.join(DIST_SKILLS, slug, 'SKILL.md'), skillContent);
 
   // Generate command.md

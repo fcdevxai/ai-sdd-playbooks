@@ -97,6 +97,8 @@ The SDD cycle for this feature is closed.
 - Always ask for explicit user confirmation before running `rm -rf` on `openspec/changes/[ticket-slug]/`.
 - If multiple domains are affected, update each domain's `spec.md` separately.
 
+<!-- END_SKILL -->
+
 ---
 
 ## Objetivo

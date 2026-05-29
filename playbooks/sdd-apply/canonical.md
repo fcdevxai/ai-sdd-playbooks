@@ -81,27 +81,6 @@ php artisan test --compact --filter=[feature]
 **Ticket**: [ticket-slug]
 **Date**: [YYYY-MM-DD]
 
-## Verified acceptance criteria
-
-| # | Criterion | Test | Status |
-|---|---|---|---|
-| 1 | [criterion from proposal.md] | `tests/Feature/.../TestName::method` | ✅ |
-
-## Completed tasks
-
-- [x] Task 1.1 — [name]
-
-## Commands run
-
-vendor/bin/pint --dirty --format agent
-php artisan test --compact --filter=[feature]
-
-## Final result
-
-✅ All acceptance criteria have passing tests.
-Ready for `sdd-code-review [ticket-slug]`.
-```
-
 ---
 
 ## Output
@@ -119,6 +98,8 @@ Ready for `sdd-code-review [ticket-slug]`.
 - Use `#[Test]` attribute on all PHPUnit test methods — never the `test_` prefix.
 - Use constructor property promotion in all new PHP classes.
 - Use explicit return types and parameter types in all new PHP methods.
+
+<!-- END_SKILL -->
 
 ---
 

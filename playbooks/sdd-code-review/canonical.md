@@ -80,38 +80,6 @@ Check every new or modified PHP file:
 **Date**: [YYYY-MM-DD]
 **Spec**: openspec/changes/[ticket-slug]/proposal.md
 
-## Spec Coverage
-
-| # | Criterion | Test | Status |
-|---|---|---|---|
-| 1 | [criterion] | `tests/Feature/.../Test::method` | ✅ |
-
-## Scope Compliance
-
-- [✅/❌] No files outside declared scope
-
-## Convention Compliance
-
-- [✅/❌] No business logic in controllers
-- [✅/❌] Form Requests used for validation
-- [✅/❌] Policies used for authorization
-- [✅/❌] Constructor property promotion
-- [✅/❌] Explicit types on all methods
-- [✅/❌] `#[Test]` attribute (not `test_` prefix)
-- [✅/❌] No hardcoded URLs (Wayfinder used)
-
-## Issues Found
-
-### Issue 1 — [Description]
-- **File**: `app/Http/Controllers/Name.php:42`
-- **Problem**: [what is wrong and why it violates the spec]
-- **Suggested fix**: [how to fix it]
-
-## Verdict
-
-**READY FOR PR** / **REQUIRES FIXES**
-```
-
 ---
 
 ## Output
@@ -126,6 +94,8 @@ Check every new or modified PHP file:
 - Never issue `READY FOR PR` if any file outside scope was modified without justification.
 - Read all implementation files completely before issuing a verdict — never review from memory.
 - Report issues with file and line number, not vague descriptions.
+
+<!-- END_SKILL -->
 
 ---
 
