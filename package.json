@@ -1,0 +1,17 @@
+{
+  "name": "ai-sdd-playbooks",
+  "version": "1.0.0",
+  "description": "Canonical source for SDD AI workflow definitions. Generates Copilot Skills and Claude Commands from a single source of truth.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync": "node scripts/sync.js",
+    "check": "node scripts/sync.js --check"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

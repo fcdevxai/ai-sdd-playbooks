@@ -1,0 +1,44 @@
+name: Generate dist
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'playbooks/**'
+      - 'templates/**'
+      - 'scripts/**'
+  pull_request:
+    paths:
+      - 'playbooks/**'
+      - 'templates/**'
+      - 'scripts/**'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Generate dist/
+        run: node scripts/sync.js
+
+      - name: Commit dist/ if changed (main only)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add dist/
+          git diff --cached --quiet || git commit -m "chore: regenerate dist from canonical [skip ci]"
+          git push
+
+      - name: Check no drift on PRs
+        if: github.event_name == 'pull_request'
+        run: node scripts/sync.js --check
