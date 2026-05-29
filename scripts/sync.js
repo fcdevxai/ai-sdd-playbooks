@@ -150,9 +150,13 @@ for (const slug of slugs) {
   const { data: frontmatter, content } = matter(raw);
 
   // Extract skill body: everything before <!-- END_SKILL -->
+  // Use replace() instead of trim() to preserve trailing spaces on the last line
+  // (some skills use trailing double-spaces for markdown line breaks).
   const END_SKILL = '<!-- END_SKILL -->';
   const delimIdx = content.indexOf(END_SKILL);
-  const skillBody = (delimIdx !== -1 ? content.slice(0, delimIdx) : content).trim();
+  const skillBody = (delimIdx !== -1 ? content.slice(0, delimIdx) : content)
+    .replace(/^\n+/, '')   // strip leading blank lines only
+    .replace(/\n+$/, '');  // strip trailing newlines only (not spaces)
 
   // Extract sections for command rendering (uses full content)
   const sections = extractSections(content);

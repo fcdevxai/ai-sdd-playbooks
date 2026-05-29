@@ -9,7 +9,7 @@ description: Create a Conventional Commits commit, push the branch, and open a G
 
 Create a structured commit for the SDD implementation, push the branch, and open a Pull Request with a reviewer-friendly description generated inline.
 
-> **Requires Copilot agent mode** — this skill runs `git` and `gh` terminal commands.
+> **Requires Copilot agent mode** — this skill runs `git` and `gh` terminal commands.  
 > **Requires GitHub CLI** (`gh`) authenticated to the repository.
 
 Do not commit if `code-review-report.md` verdict is `REQUIRES FIXES`.
@@ -57,7 +57,7 @@ Use Conventional Commits format:
 | `test(module):` | Tests only, no production code |
 | `chore(module):` | Tooling, config, no logic change |
 
-Subject line: imperative mood, ≤72 chars, no period at the end.
+Subject line: imperative mood, ≤72 chars, no period at the end.  
 Body: what changed and why. Include spec reference.
 
 ### 4. Commit and push
@@ -84,6 +84,43 @@ Before opening the PR, produce the PR description following these rules:
 ```markdown
 # <Short title>
 
+## Summary
+<2–3 sentences>
+
+## What Changed
+- grouped by area: Backend, Frontend, Tests
+
+## Validation
+### Automated
+<passing tests>
+### Manual
+<steps or "None">
+
+## Reviewer Notes
+<where to focus>
+
+## Risks
+<only real risks, or omit>
+
+## Rollback
+<one sentence>
+```
+
+Run `git diff main...[branch]` to inspect changes before writing the description.
+
+### 6. Open Pull Request
+
+```bash
+gh pr create \
+  --title "[type]([module]): [subject]" \
+  --body "[PR description from step 5]" \
+  --base main
+```
+
+### 6. Confirm
+
+Report: list of committed files, commit hash, PR URL.
+
 ---
 
 ## Output
@@ -97,6 +134,6 @@ Before opening the PR, produce the PR description following these rules:
 
 - Never commit if `code-review-report.md` verdict is `REQUIRES FIXES`.
 - Never commit `.env`, secrets, or build artifacts.
-- Always generate the PR description inline — never delegate to an external skill.
+- Always generate the PR description inline following the rules in step 5 — never delegate to an external skill.
 - Commit message must be in English.
 - Do not force-push unless the user explicitly requests it.

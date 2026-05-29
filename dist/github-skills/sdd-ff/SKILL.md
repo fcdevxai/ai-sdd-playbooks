@@ -39,12 +39,49 @@ Read before generating tasks:
 
 ### 3. Generate tasks.md
 
-```markdown
+````markdown
 # Tasks — [Feature name]
 
 **Ticket**: [ticket-slug]
 **Spec**: openspec/changes/[ticket-slug]/proposal.md
 **Status**: ready
+
+---
+
+## Phase 1 — Backend
+
+### Task 1.1 — [Atomic name]
+- **Files to create/modify**: `app/...`
+- **Creation command**: `php artisan make:...` (if applicable)
+- **Success criterion**: test `tests/Feature/.../TestName.php` passes
+- **Linked acceptance criterion**: #N from proposal.md
+
+## Phase 2 — Frontend
+
+### Task 2.1 — [Atomic name]
+- **Files to create/modify**: `resources/js/...`
+- **Success criterion**: [verifiable expected behavior]
+- **Linked acceptance criterion**: #N from proposal.md
+
+## Phase 3 — Tests
+
+### Task 3.1 — Feature tests
+- `php artisan make:test --phpunit [TestName]`
+- Covers acceptance criteria: #1, #2, #N
+- Validation command: `php artisan test --compact tests/Feature/...`
+
+## Phase 4 — Closure
+
+### Task 4.1 — Format and regenerate
+- `vendor/bin/pint --dirty --format agent`
+- `php artisan wayfinder:generate` (if routes changed)
+- `npm run types:check` (if TypeScript changed)
+- `php artisan test --compact --filter=[feature]`
+````
+
+### 4. Confirm
+
+Report the total number of tasks and ask the user whether to proceed with `sdd-apply [ticket-slug]`.
 
 ---
 

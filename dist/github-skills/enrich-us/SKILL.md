@@ -3,85 +3,226 @@ name: enrich-us
 description: Turn a rough task or idea into a decision-closed, senior-reviewable requirement by asking structured questions grounded in the existing codebase. Only draft the final artifact after all key decisions are resolved and the user confirms. Activate when the user says "enrich-us", describes a new feature idea, or wants to start the SDD cycle from scratch.
 ---
 
-# SDD Enrich — Refine User Story
+# Enrich User Story
 
 ## Purpose
 
-Turn a rough task or idea into a decision-closed, senior-reviewable requirement specification. Ask structured questions grounded in the existing codebase. Only draft the final artifact after all key decisions are resolved and the user confirms.
+Help the user transform a vague task or idea into a **decision-closed, technically clear requirement**.
 
-Do not write code. Do not assume missing decisions. Do not draft if any decision remains open.
+This artifact must be understandable by a senior engineer and serve as input for Spec-Driven Development (SDD) planning.
+
+Do not optimize for wording.  
+Optimize for **clarity, completeness, and closed decisions**.
 
 ---
 
 ## Context
 
-Before asking questions, read:
+You MUST read the following file before asking any questions:
 
-1. `openspec/specs/system.md` — global architecture, conventions, data model
-2. `openspec/specs/[most-likely-affected-domain]/spec.md` — current state of the impacted module
-3. Relevant source files (controllers, models, pages) to understand what already exists
+docs/agent_architecture.md
 
-Ground all questions in what you find — never ask about things that are already defined.
+If you cannot access or read this file, stop and inform the user.
 
 ---
 
 ## Behavior
 
-### 1. Understand the idea
+### 1. Understand the request
 
-Ask the user to describe the feature or problem in plain language if they haven't already. Do not assume scope.
+Read the input and briefly identify:
+- what the user wants
+- what problem it solves
+- what is unclear
 
-### 2. Read the codebase
-
-Before asking any question, read the relevant parts of the codebase. Identify:
-
-- What already exists that this feature interacts with
-- What decisions are genuinely open (not answered by the codebase)
-- What constraints come from the existing architecture
-
-### 3. Ask structured questions
-
-Group open questions into categories. Only ask questions whose answers are truly needed to write a complete spec. Never ask about things already defined in the codebase or specs.
-
-Categories:
-- **Scope**: What is in and out of scope?
-- **Behavior**: What does the system do in the happy path? Edge cases? Failure cases?
-- **Data**: What data is created, read, updated, or deleted?
-- **Authorization**: Who can perform this action?
-- **UI/UX**: What does the user see and when?
-- **Constraints**: What must NOT change? What are the non-goals?
-
-### 4. Wait for all answers
-
-Do not draft until the user has answered all questions. If a question gets an ambiguous answer, clarify once.
-
-### 5. Draft the proposal
-
-Only after all decisions are closed, produce the draft:
-
-```markdown
----
-status: draft
-ticket: [ticket-slug — ask user if not provided]
-owner: [developer — or "pending"]
-date: [YYYY-MM-DD]
 ---
 
-# [Feature name]
+### 2. Ask clarifying questions
+
+Ask questions in the same language used by the user.
+
+Your goal is NOT to explore — it is to **force decisions**.
+
+Rules:
+- tone: conversational
+- ask as many questions as needed to fully close decisions (no artificial limit)
+- each question must resolve a concrete decision
+- avoid redundant or overlapping questions
+- prefer trade-off questions (A vs B) over open-ended ones
+- whenever possible, include a suggested default
+
+---
+
+### Mandatory decision dimensions
+
+Your questions MUST collectively cover these dimensions:
+
+1. Solution shape  
+   (e.g. new endpoint vs extending existing behavior)
+
+2. Expected output  
+   (what must be returned and in what form)
+
+3. Behavior  
+   (normal flow, edge cases, and failure scenarios)
+
+4. Actor and usage context  
+   (who uses this and why)
+
+5. Scope boundaries  
+   (what is in scope vs out of scope)
+
+6. Success criteria  
+   (how we know this is correctly implemented)
+
+If any of these is unclear, you MUST ask about it.
+
+---
+
+### Code-grounded suggestions (CRITICAL)
+
+Before proposing any suggested default:
+
+- inspect the existing codebase when relevant
+- identify current patterns, endpoints, naming conventions, and data structures
+- align with the architecture described in `docs/agent_architecture.md`
+
+Suggested defaults must be grounded in:
+
+- existing endpoints or API structure  
+- current request/response contracts  
+- existing services or flows  
+- real constraints visible in the codebase  
+
+Avoid generic suggestions if code-based evidence is available.
+
+When suggesting defaults:
+
+- explain briefly why the recommendation fits the current system
+- when possible, reference specific files, routes, or components
+
+---
+
+### 3. Iterate until decisions are closed
+
+- If answers are incomplete → ask again  
+- If something is ambiguous → ask again  
+- Do not proceed while decisions remain open  
+
+---
+
+### 4. Confirm before writing
+
+When all key decisions are resolved, ask:
+
+"Everything looks clear now. Do you want me to draft the final requirement?"
+
+Do not write it yet.
+
+---
+
+### 5. Draft only after confirmation
+
+Only if the user explicitly confirms, write the final artifact.
 
 ---
 
 ## Output
 
-A complete `proposal.md` draft with `status: draft`, ready for human review and approval before `sdd-new`.
+### If there are still open decisions
+
+Respond in the same language as the user:
+
+## Understanding
+
+<what you believe the user wants>
+
+## Questions
+
+1. <question>
+
+   Suggested default:
+   <recommended option grounded in code and architecture>
+
+2. <question>
+
+   Suggested default:
+   <recommended option grounded in code and architecture>
+
+---
+
+### If everything is clear but not confirmed
+
+Respond in the same language as the user:
+
+## Status
+
+All key decisions are clear and no relevant ambiguity remains.
+
+## Confirmation
+
+Do you want me to draft the final requirement?
+
+---
+
+### If confirmed
+
+Respond in the same language as the user:
+
+# Requirement: <clear title>
+
+## Story
+
+As a <actor>,  
+I want <capability>,  
+so that <outcome>.
+
+## Objective
+
+<what this enables>
+
+## Context
+
+<problem and why it matters>
+
+## Scope
+
+### In scope
+
+- <item>
+- <item>
+
+### Out of scope
+
+- <item>
+- <item>
+
+## Closed decisions
+
+- <decision>
+- <decision>
+
+## Expected behavior
+
+- <normal behavior>
+- <edge case behavior>
+- <failure behavior>
+
+## Expected output
+
+- <what is returned and in what shape>
+
+## Success criteria
+
+- <observable condition>
+- <validation outcome>
 
 ---
 
 ## Rules
 
-- Do not write code
-- Do not assume missing decisions
-- Do not draft if any decision remains open
-- Always respond in the user's language
-- Optimize for clarity, not verbosity
-- Never skip the codebase reading step — questions must be grounded in what exists
+- Do not write code  
+- Do not assume missing decisions  
+- Do not draft if decisions remain open  
+- Always respond in the user's language  
+- Optimize for clarity, not verbosity  

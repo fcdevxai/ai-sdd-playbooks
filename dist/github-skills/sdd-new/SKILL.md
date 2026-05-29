@@ -9,8 +9,8 @@ description: Create the SDD feature folder and initial artifacts (OWNER.md, prop
 
 Create `openspec/changes/[ticket-slug]/` and its initial artifacts from the draft produced by `enrich-us`. This is the first step after all decisions are closed.
 
-Do not proceed if no `proposal.md` draft exists.
-Do not set `status: pending` — only a human reviewer can approve the proposal.
+Do not proceed if no `proposal.md` draft exists.  
+Do not set `status: pending` yourself — only a human reviewer can approve the proposal.
 
 ---
 
@@ -48,7 +48,7 @@ Create `openspec/changes/[ticket-slug]/` if it does not exist.
 
 ### 4. Complete proposal.md
 
-Finalize the `enrich-us` draft so all sections are fully closed:
+Finalize the `enrich-us` draft so all sections are fully closed (no "if applicable", no "or", no "could be"):
 
 ```markdown
 ---
@@ -59,6 +59,35 @@ date: [YYYY-MM-DD]
 ---
 
 # [Feature name]
+
+## Objective
+## Guiding principle
+## Impacted modules
+## Expected behavior
+### Happy path (Given/When/Then)
+### Edge cases
+## Acceptance criteria
+<!-- Testable list — each must have a test in tests/ -->
+## Error cases
+<!-- What happens on failure — each with expected behavior -->
+## Constraints and non-goals
+## Open technical decisions
+<!-- Empty if none. -->
+```
+
+`status` stays `draft` until a human reviewer changes it to `status: pending`.
+
+### 5. Create tasks.md placeholder
+
+```markdown
+# Tasks — [Feature name]
+
+**Ticket**: [ticket-slug]
+**Spec**: openspec/changes/[ticket-slug]/proposal.md
+**Status**: waiting (proposal not yet approved)
+
+Run `sdd-ff [ticket-slug]` after the proposal is approved (status: pending).
+```
 
 ---
 

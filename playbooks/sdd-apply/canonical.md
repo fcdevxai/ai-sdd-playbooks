@@ -75,11 +75,36 @@ php artisan test --compact --filter=[feature]
 
 ### 5. Generate testing-report.md
 
-```markdown
+````markdown
 # Testing Report — [Feature name]
 
 **Ticket**: [ticket-slug]
 **Date**: [YYYY-MM-DD]
+
+## Verified acceptance criteria
+
+| # | Criterion | Test | Status |
+|---|---|---|---|
+| 1 | [criterion from proposal.md] | `tests/Feature/.../TestName::method` | ✅ |
+
+## Completed tasks
+
+- [x] Task 1.1 — [name]
+- [x] Task 1.2 — [name]
+
+## Commands run
+
+```bash
+php artisan test --compact --filter=[feature]
+vendor/bin/pint --dirty --format agent
+npm run types:check
+```
+
+## Final result
+
+✅ All acceptance criteria have passing tests.
+Ready for `sdd-code-review [ticket-slug]`.
+````
 
 ---
 
