@@ -32,16 +32,16 @@ fi
 #  Returns space-separated selections (e.g., "1 2" if both selected)
 # ──────────────────────────────────────────────────────────────────────────────
 interactive_ai_select() {
-  echo ""
-  echo "¿Qué IA usas para desarrollar?"
-  echo ""
-  echo "  1) GitHub Copilot"
-  echo "  2) Claude"
-  echo "  3) Ambos"
-  echo ""
+  echo "" >&2
+  echo "¿Qué IA usas para desarrollar?" >&2
+  echo "" >&2
+  echo "  1) GitHub Copilot" >&2
+  echo "  2) Claude" >&2
+  echo "  3) Ambos" >&2
+  echo "" >&2
   
   while true; do
-    read -rp "Selecciona una opción (1, 2 o 3): " choice
+    read -rp "Selecciona una opción (1, 2 o 3): " choice >&2
     case "$choice" in
       1)
         echo "copilot"
@@ -56,7 +56,7 @@ interactive_ai_select() {
         return
         ;;
       *)
-        echo "Opción inválida. Por favor selecciona 1, 2 o 3."
+        echo "Opción inválida. Por favor selecciona 1, 2 o 3." >&2
         ;;
     esac
   done
