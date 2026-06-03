@@ -1,4 +1,4 @@
-# /enrich-us — SDD Enrich — Refinar User Story
+# /sdd-enrich-us — SDD Enrich — Refinar User Story
 
 ## Objetivo
 
@@ -7,7 +7,7 @@ Convertir una idea o tarea en bruto en un requerimiento cerrado, listo para revi
 ## Uso
 
 ```
-/enrich-us [ticket-slug]
+/sdd-enrich-us [ticket-slug]
 ```
 
 ## Cuándo ejecutar

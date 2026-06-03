@@ -33,7 +33,7 @@ node scripts/sync.js --check  # check for drift (used in CI)
 
 | Slug | Phase |
 |---|---|
-| `enrich-us` | Requirements |
+| `sdd-enrich-us` | Requirements |
 | `sdd-new` | Scaffolding |
 | `sdd-ff` | Planning |
 | `sdd-apply` | Implementation |

@@ -1,15 +1,9 @@
 ---
-slug: enrich-us
-title_en: "Enrich User Story"
-title_es: "SDD Enrich — Refinar User Story"
-description: "Turn a rough task or idea into a decision-closed, senior-reviewable requirement by asking structured questions grounded in the existing codebase. Only draft the final artifact after all key decisions are resolved and the user confirms. Activate when the user says \"enrich-us\", describes a new feature idea, or wants to start the SDD cycle from scratch."
-description_es: "Convierte una idea o tarea en bruto en un requerimiento listo para revisión, haciendo preguntas estructuradas sobre el codebase. Solo genera el borrador cuando todas las decisiones están cerradas."
-when_es: "Al inicio del ciclo SDD — antes de `/sdd-new`. Cuando el usuario tiene una idea o tarea y necesita formalizarla en un requerimiento."
-output_file: "proposal.md (draft)"
-verdict_pass: ""
-verdict_fail: ""
-requires_terminal: false
+name: sdd-enrich-us
+description: Turn a rough task or idea into a decision-closed, senior-reviewable requirement by asking structured questions grounded in the existing codebase. Only draft the final artifact after all key decisions are resolved and the user confirms. Activate when the user says "sdd-enrich-us", describes a new feature idea, or wants to start the SDD cycle from scratch.
 ---
+
+# SDD Enrich — Enrich User Story
 
 ## Purpose
 
@@ -232,54 +226,3 @@ so that <outcome>.
 - Do not draft if decisions remain open  
 - Always respond in the user's language  
 - Optimize for clarity, not verbosity  
-<!-- END_SKILL -->
-
----
-
-## Objetivo
-
-Convertir una idea o tarea en bruto en un requerimiento cerrado, listo para revisión senior, haciendo preguntas estructuradas sobre el codebase existente. Solo genera el borrador final cuando todas las decisiones clave están resueltas y el usuario confirma.
-
----
-
-## Instrucciones
-
-1. Pide al usuario que describa la feature o problema en lenguaje llano si no lo ha hecho.
-2. Lee las partes relevantes del codebase (`openspec/specs/system.md`, specs del módulo afectado, archivos de implementación existentes) antes de hacer cualquier pregunta.
-3. Identifica las decisiones genuinamente abiertas — no preguntes sobre lo que ya está definido en el código o en los specs.
-4. Agrupa las preguntas en categorías: Scope, Comportamiento, Datos, Autorización, UI/UX, Restricciones.
-5. Espera a que todas las preguntas estén respondidas antes de redactar.
-6. Genera el borrador de `proposal.md` con `status: draft`.
-7. Presenta el borrador y pregunta: "¿Apruebas esta propuesta? Responde 'sí' para continuar con `/sdd-new [ticket-slug]`."
-
----
-
-## Checklist
-
-- [ ] Codebase leído antes de hacer preguntas
-- [ ] Todas las decisiones de scope cerradas
-- [ ] Happy path con Given/When/Then completo
-- [ ] Edge cases identificados
-- [ ] Criterios de aceptación testeables (verificables con código)
-- [ ] Casos de error con respuesta esperada
-- [ ] Restricciones y non-goals explícitos
-- [ ] Usuario confirma la propuesta antes de continuar
-
----
-
-## Formato de reporte
-
-No genera reporte. El output es el borrador de `proposal.md` presentado al usuario para aprobación.
-
----
-
-## Criterio de bloqueo
-
-No continuar a `/sdd-new` sin confirmación explícita del usuario.
-
----
-
-## Qué NO reemplaza
-
-- La revisión humana del proposal (el usuario debe cambiar `status: draft` a `status: pending`)
-- Decisiones de arquitectura que requieren contexto de negocio profundo
