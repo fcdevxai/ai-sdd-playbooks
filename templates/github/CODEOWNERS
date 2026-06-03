@@ -1,0 +1,19 @@
+# CODEOWNERS
+#
+# Archivos que requieren revisión antes de mergear.
+# La sintaxis sigue el estándar de GitHub CODEOWNERS.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# TODO: reemplaza @tech-lead con el handle real del reviewer de tu equipo.
+
+# Spec de sistema global — cambios de arquitectura global
+openspec/specs/system.md @tech-lead
+
+# Specs permanentes archivadas — solo el Tech Lead puede modificarlas
+openspec/specs/ @tech-lead
+
+# GitHub Actions — cambios de CI/CD requieren revisión
+.github/workflows/ @tech-lead
+
+# CODEOWNERS mismo
+.github/CODEOWNERS @tech-lead

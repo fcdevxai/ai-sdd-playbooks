@@ -1,0 +1,85 @@
+name: "Spec Lint - Validar estructura de spec en PR"
+
+on:
+  pull_request:
+    paths:
+      - 'openspec/changes/**'
+      # TODO: agrega aquí los paths de código fuente de tu proyecto
+      # Ejemplos:
+      # - 'src/**'
+      # - 'app/**'
+      # - 'resources/**'
+      # - 'tests/**'
+      # - 'lib/**'
+
+jobs:
+  spec-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Buscar spec activa para la rama
+        id: find-spec
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          # Extrae el ticket slug (primera parte del nombre de rama hasta el primer /)
+          # Soporta formatos: feat-012-desc, PROJ-1234-desc, fix-auth-etc
+          TICKET_SLUG=$(echo "$BRANCH" | sed 's/-[^-]*$//' | head -c 60)
+
+          # Busca la carpeta de spec cuyo nombre comienza con el slug o contiene el ticket ID
+          SPEC_DIR=$(find openspec/changes -maxdepth 1 -type d 2>/dev/null | grep -m1 "$TICKET_SLUG" || true)
+
+          if [ -z "$SPEC_DIR" ]; then
+            echo "⚠️  No se encontró spec activa para la rama '$BRANCH'."
+            echo "   Si es una feature, crea la spec con /sdd-new antes de abrir el PR."
+            echo "   Si es un fix menor o chore, este warning puede ignorarse."
+            echo "spec_found=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "✅ Spec encontrada: $SPEC_DIR"
+            echo "spec_found=true" >> "$GITHUB_OUTPUT"
+            echo "spec_dir=$SPEC_DIR" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verificar estructura mínima de la spec
+        if: steps.find-spec.outputs.spec_found == 'true'
+        run: |
+          SPEC_DIR="${{ steps.find-spec.outputs.spec_dir }}"
+          REQUIRED_FILES=("proposal.md" "tasks.md" "OWNER.md")
+          FAILED=false
+
+          for FILE in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$SPEC_DIR/$FILE" ]; then
+              echo "❌ ERROR: Falta $FILE en $SPEC_DIR"
+              FAILED=true
+            fi
+          done
+
+          if [ "$FAILED" = true ]; then
+            exit 1
+          fi
+
+          echo "✅ Estructura de spec válida"
+
+      - name: Verificar secciones obligatorias en proposal.md
+        if: steps.find-spec.outputs.spec_found == 'true'
+        run: |
+          SPEC_DIR="${{ steps.find-spec.outputs.spec_dir }}"
+          PROPOSAL="$SPEC_DIR/proposal.md"
+          FAILED=false
+
+          if ! grep -q "## Criterios de aceptación" "$PROPOSAL"; then
+            echo "❌ ERROR: proposal.md no tiene sección '## Criterios de aceptación'"
+            FAILED=true
+          fi
+
+          if ! grep -q "## Casos de error" "$PROPOSAL"; then
+            echo "❌ ERROR: proposal.md no tiene sección '## Casos de error'"
+            echo "   Una spec sin casos de error es una spec a medias."
+            FAILED=true
+          fi
+
+          if [ "$FAILED" = true ]; then
+            exit 1
+          fi
+
+          echo "✅ Secciones obligatorias presentes en proposal.md"

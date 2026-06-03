@@ -13,7 +13,8 @@
 #   SUBMODULE_DIR  default: .ai-sdd-playbooks
 #   AI_TARGET          default: (interactive)   set to "copilot", "claude", or "both" to skip prompt
 #   CREATE_DOCS        default: (interactive)   set to "yes" or "no" to skip prompt for missing docs/ files
-#   CREATE_CLAUDE_FILES default: (interactive)  set to "yes" or "no" to skip prompt for missing .claude/ files
+#   CREATE_CLAUDE_FILES  default: (interactive)  set to "yes" or "no" to skip prompt for missing .claude/ files
+#   CREATE_GITHUB_FILES  default: (interactive)  set to "yes" or "no" to skip prompt for missing .github/ files
 
 set -euo pipefail
 
@@ -260,6 +261,76 @@ if [[ ${#MISSING_DOCS[@]} -gt 0 ]]; then
     echo "       - docs/doc_architecture.md"
     echo "       - docs/doc_verification_guide.md"
     echo ""
+  fi
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  Validate .github/ SDD files (only when Copilot is selected)
+# ──────────────────────────────────────────────────────────────────────────────
+if "$SYNC_COPILOT"; then
+  GITHUB_FILES=(
+    ".github/CODEOWNERS"
+    ".github/PULL_REQUEST_TEMPLATE.md"
+    ".github/ISSUE_TEMPLATE/user-story.md"
+    ".github/workflows/archive-cleanup.yml"
+    ".github/workflows/spec-lint.yml"
+  )
+
+  MISSING_GITHUB=()
+  for f in "${GITHUB_FILES[@]}"; do
+    [[ ! -f "$f" ]] && MISSING_GITHUB+=("$f")
+  done
+
+  if [[ ${#MISSING_GITHUB[@]} -gt 0 ]]; then
+    echo "⚠️  Faltan archivos SDD en .github/:"
+    for f in "${MISSING_GITHUB[@]}"; do
+      echo "   - ${f}"
+    done
+    echo ""
+    echo "   Estos archivos habilitan el flujo SDD en GitHub (CI, PR template, issue template)."
+    echo ""
+
+    # Non-interactive: check CREATE_GITHUB_FILES env var
+    if [[ -n "${CREATE_GITHUB_FILES:-}" ]]; then
+      if [[ "${CREATE_GITHUB_FILES,,}" == "yes" || "${CREATE_GITHUB_FILES,,}" == "y" ]]; then
+        CREATE_GITHUB=true
+      else
+        CREATE_GITHUB=false
+      fi
+    else
+      # Interactive: ask user
+      read -rp "¿Deseas que cree templates base para estos archivos? (s/n): " response
+      if [[ "${response,,}" == "s" || "${response,,}" == "y" || "${response,,}" == "yes" || "${response,,}" == "sí" ]]; then
+        CREATE_GITHUB=true
+      else
+        CREATE_GITHUB=false
+      fi
+    fi
+
+    if "$CREATE_GITHUB"; then
+      GITHUB_TEMPLATES="${SUBMODULE_DIR}/templates/github"
+      mkdir -p .github/ISSUE_TEMPLATE .github/workflows
+
+      [[ ! -f ".github/CODEOWNERS" ]]                      && cp "${GITHUB_TEMPLATES}/CODEOWNERS" ".github/CODEOWNERS"                                          && echo "  ✓ Created .github/CODEOWNERS"
+      [[ ! -f ".github/PULL_REQUEST_TEMPLATE.md" ]]        && cp "${GITHUB_TEMPLATES}/PULL_REQUEST_TEMPLATE.md" ".github/PULL_REQUEST_TEMPLATE.md"              && echo "  ✓ Created .github/PULL_REQUEST_TEMPLATE.md"
+      [[ ! -f ".github/ISSUE_TEMPLATE/user-story.md" ]]    && cp "${GITHUB_TEMPLATES}/ISSUE_TEMPLATE/user-story.md" ".github/ISSUE_TEMPLATE/user-story.md"      && echo "  ✓ Created .github/ISSUE_TEMPLATE/user-story.md"
+      [[ ! -f ".github/workflows/archive-cleanup.yml" ]]   && cp "${GITHUB_TEMPLATES}/workflows/archive-cleanup.yml" ".github/workflows/archive-cleanup.yml"    && echo "  ✓ Created .github/workflows/archive-cleanup.yml"
+      [[ ! -f ".github/workflows/spec-lint.yml" ]]         && cp "${GITHUB_TEMPLATES}/workflows/spec-lint.yml" ".github/workflows/spec-lint.yml"                && echo "  ✓ Created .github/workflows/spec-lint.yml"
+
+      echo ""
+      echo "  📝 Templates creados. Debes personalizar:"
+      echo "     1. .github/CODEOWNERS              → reemplaza @tech-lead con el handle real"
+      echo "     2. .github/PULL_REQUEST_TEMPLATE.md → añade comandos de test/lint de tu stack"
+      echo "     3. .github/workflows/spec-lint.yml  → añade los paths de código fuente de tu proyecto"
+      echo ""
+    else
+      echo ""
+      echo "  ⚠️  IMPORTANTE: Sin estos archivos el flujo SDD en GitHub estará incompleto."
+      echo "     - Sin spec-lint.yml    → los PRs no validan estructura de specs"
+      echo "     - Sin archive-cleanup  → las proposals obsoletas no generan alertas"
+      echo "     - Sin PR template      → los desarrolladores no tienen checklist SDD"
+      echo ""
+    fi
   fi
 fi
 

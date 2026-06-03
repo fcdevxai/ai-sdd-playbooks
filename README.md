@@ -13,9 +13,17 @@ templates/
 │   ├── agent_architecture.md      → AI agent workflow guide template
 │   ├── doc_architecture.md        → technical architecture template
 │   └── doc_verification_guide.md  → verification commands template
-└── claude/                        → base templates for Claude Code setup
-    ├── CLAUDE.md                  → Claude agent context template (SDD + TODO sections)
-    └── settings.json              → Claude permissions template (secure SDD defaults)
+├── claude/                        → base templates for Claude Code setup
+│   ├── CLAUDE.md                  → Claude agent context template (SDD + TODO sections)
+│   └── settings.json              → Claude permissions template (secure SDD defaults)
+└── github/                        → base templates for GitHub SDD integration
+    ├── CODEOWNERS                 → protege openspec/specs/ y workflows
+    ├── PULL_REQUEST_TEMPLATE.md   → checklist SDD en cada PR
+    ├── ISSUE_TEMPLATE/
+    │   └── user-story.md            → issue template para el ciclo /sdd-enrich-us
+    └── workflows/
+        ├── archive-cleanup.yml      → alerta semanal de proposals obsoletas
+        └── spec-lint.yml            → valida estructura de specs en cada PR
 scripts/
 ├── sync.js                        → generator
 └── sync-consumer.sh               → consumer project sync script
@@ -74,14 +82,14 @@ bash sync-playbooks.sh
 **Non-interactive mode** (for CI/scripts):
 
 ```bash
-# Sync only GitHub Copilot skills, skip docs prompt
-AI_TARGET=copilot CREATE_DOCS=no bash sync-playbooks.sh
+# Sync only GitHub Copilot skills, skip all prompts
+AI_TARGET=copilot CREATE_DOCS=no CREATE_GITHUB_FILES=no bash sync-playbooks.sh
 
 # Sync only Claude commands, create all missing files
 AI_TARGET=claude CREATE_DOCS=yes CREATE_CLAUDE_FILES=yes bash sync-playbooks.sh
 
 # Sync both, create all missing files
-AI_TARGET=both CREATE_DOCS=yes CREATE_CLAUDE_FILES=yes bash sync-playbooks.sh
+AI_TARGET=both CREATE_DOCS=yes CREATE_GITHUB_FILES=yes CREATE_CLAUDE_FILES=yes bash sync-playbooks.sh
 ```
 
 **Custom paths:**

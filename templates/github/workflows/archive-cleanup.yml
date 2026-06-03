@@ -1,0 +1,49 @@
+name: "Alerta de Proposals Obsoletas"
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Cada lunes a las 9:00 UTC
+
+jobs:
+  check-stale-proposals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detectar proposals con más de 14 días sin actividad
+        run: |
+          STALE_PROPOSALS=()
+
+          for DIR in openspec/changes/*/; do
+            if [ -d "$DIR" ]; then
+              # Última fecha de modificación de cualquier archivo en la carpeta
+              LAST_MODIFIED=$(git log -1 --format="%ci" -- "$DIR" 2>/dev/null || true)
+
+              if [ -n "$LAST_MODIFIED" ]; then
+                DAYS_AGO=$(( ($(date +%s) - $(date -d "$LAST_MODIFIED" +%s)) / 86400 ))
+
+                if [ "$DAYS_AGO" -gt 14 ]; then
+                  OWNER="desconocido"
+                  OWNER_FILE="$DIR/OWNER.md"
+                  if [ -f "$OWNER_FILE" ]; then
+                    OWNER=$(grep -m1 "Developer:" "$OWNER_FILE" | sed 's/.*Developer: //' || echo "desconocido")
+                  fi
+                  STALE_PROPOSALS+=("$DIR (${DAYS_AGO} días sin actividad, owner: $OWNER)")
+                fi
+              fi
+            fi
+          done
+
+          if [ ${#STALE_PROPOSALS[@]} -gt 0 ]; then
+            echo "⚠️  PROPOSALS OBSOLETAS DETECTADAS (>14 días sin actividad):"
+            for PROP in "${STALE_PROPOSALS[@]}"; do
+              echo "  - $PROP"
+            done
+            echo ""
+            echo "Acción requerida: archivar con /sdd-archive, eliminar, o retomar activamente."
+            echo "Cada proposal obsoleta es una feature a medias que no llega a producción."
+          else
+            echo "✅ No hay proposals obsoletas. Buen trabajo."
+          fi
