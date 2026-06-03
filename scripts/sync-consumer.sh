@@ -28,72 +28,37 @@ if [[ "${1:-}" == "--check" ]]; then
 fi
 
 # ──────────────────────────────────────────────────────────────────────────────
-#  Interactive checkbox selector (requires bash 4.3+ for namerefs)
-#  Usage: checkbox_select result_var "Option A" "Option B" ...
-#  Populates result_var with an array of selected option strings.
+#  Interactive multi-select menu
+#  Returns space-separated selections (e.g., "1 2" if both selected)
 # ──────────────────────────────────────────────────────────────────────────────
-checkbox_select() {
-  local -n _cb_result="$1"
-  shift
-  local options=("$@")
-  local n=${#options[@]}
-  local selected=()
-  local current=0
-
-  for ((i = 0; i < n; i++)); do
-    selected+=(false)
-  done
-
-  _cb_draw() {
-    printf "  ¿Qué IA usas para desarrollar?\n"
-    printf "  (↑↓ navegar · ESPACIO seleccionar · ENTER confirmar)\n\n"
-    for ((i = 0; i < n; i++)); do
-      local mark="[ ]"
-      [[ "${selected[$i]}" == true ]] && mark="[x]"
-      if [[ $i -eq $current ]]; then
-        printf "  \e[1;36m▶ %s %s\e[0m\n" "$mark" "${options[$i]}"
-      else
-        printf "    %s %s\n" "$mark" "${options[$i]}"
-      fi
-    done
-  }
-
-  local total_lines=$((n + 3))   # header lines + options
-
-  tput civis 2>/dev/null || true  # hide cursor
-  _cb_draw
-
+interactive_ai_select() {
+  echo ""
+  echo "¿Qué IA usas para desarrollar?"
+  echo ""
+  echo "  1) GitHub Copilot"
+  echo "  2) Claude"
+  echo "  3) Ambos"
+  echo ""
+  
   while true; do
-    local key seq
-    IFS= read -rsn1 key
-
-    if [[ $key == $'\x1b' ]]; then
-      IFS= read -rsn2 -t 0.1 seq || true
-      case "$seq" in
-        '[A') ((current > 0))     && ((current--)) ;;
-        '[B') ((current < n - 1)) && ((current++)) ;;
-      esac
-    elif [[ $key == ' ' ]]; then
-      if [[ "${selected[$current]}" == true ]]; then
-        selected[$current]=false
-      else
-        selected[$current]=true
-      fi
-    elif [[ $key == '' || $key == $'\n' ]]; then
-      break
-    fi
-
-    # Redraw in place
-    printf '\e[%dA\e[J' "$total_lines"
-    _cb_draw
-  done
-
-  tput cnorm 2>/dev/null || true  # restore cursor
-  printf '\n'
-
-  _cb_result=()
-  for ((i = 0; i < n; i++)); do
-    [[ "${selected[$i]}" == true ]] && _cb_result+=("${options[$i]}")
+    read -rp "Selecciona una opción (1, 2 o 3): " choice
+    case "$choice" in
+      1)
+        echo "copilot"
+        return
+        ;;
+      2)
+        echo "claude"
+        return
+        ;;
+      3)
+        echo "both"
+        return
+        ;;
+      *)
+        echo "Opción inválida. Por favor selecciona 1, 2 o 3."
+        ;;
+    esac
   done
 }
 
@@ -118,19 +83,15 @@ resolve_ai_target() {
     return
   fi
 
-  # Interactive path: checkbox selector
-  local choices=()
-  checkbox_select choices "GitHub Copilot" "Claude"
-
-  if [[ ${#choices[@]} -eq 0 ]]; then
-    echo "⚠️  No seleccionaste ninguna opción. Saliendo."
-    exit 0
-  fi
-
-  for c in "${choices[@]}"; do
-    [[ "$c" == "GitHub Copilot" ]] && SYNC_COPILOT=true
-    [[ "$c" == "Claude" ]]         && SYNC_CLAUDE=true
-  done
+  # Interactive path: simple menu selector
+  local selection
+  selection=$(interactive_ai_select)
+  
+  case "$selection" in
+    copilot) SYNC_COPILOT=true ;;
+    claude)  SYNC_CLAUDE=true ;;
+    both)    SYNC_COPILOT=true; SYNC_CLAUDE=true ;;
+  esac
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
