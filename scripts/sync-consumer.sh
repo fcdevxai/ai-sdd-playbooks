@@ -11,8 +11,9 @@
 #   SKILLS_DEST    default: .ai/skills      (set to .github/skills if not using symlink)
 #   COMMANDS_DEST  default: .claude/commands
 #   SUBMODULE_DIR  default: .ai-sdd-playbooks
-#   AI_TARGET      default: (interactive)   set to "copilot", "claude", or "both" to skip prompt
-#   CREATE_DOCS    default: (interactive)   set to "yes" or "no" to skip prompt for missing docs/ files
+#   AI_TARGET          default: (interactive)   set to "copilot", "claude", or "both" to skip prompt
+#   CREATE_DOCS        default: (interactive)   set to "yes" or "no" to skip prompt for missing docs/ files
+#   CREATE_CLAUDE_FILES default: (interactive)  set to "yes" or "no" to skip prompt for missing .claude/ files
 
 set -euo pipefail
 
@@ -259,6 +260,71 @@ if [[ ${#MISSING_DOCS[@]} -gt 0 ]]; then
     echo "       - docs/doc_architecture.md"
     echo "       - docs/doc_verification_guide.md"
     echo ""
+  fi
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  Validate .claude/ config files (only when Claude is selected)
+# ──────────────────────────────────────────────────────────────────────────────
+if "$SYNC_CLAUDE"; then
+  CLAUDE_MD=".claude/CLAUDE.md"
+  CLAUDE_SETTINGS=".claude/settings.json"
+
+  MISSING_CLAUDE=()
+  [[ ! -f "$CLAUDE_MD" ]]       && MISSING_CLAUDE+=("CLAUDE.md")
+  [[ ! -f "$CLAUDE_SETTINGS" ]] && MISSING_CLAUDE+=("settings.json")
+
+  if [[ ${#MISSING_CLAUDE[@]} -gt 0 ]]; then
+    echo "⚠️  Faltan archivos de configuración de Claude en .claude/:"
+    for f in "${MISSING_CLAUDE[@]}"; do
+      echo "   - .claude/${f}"
+    done
+    echo ""
+    echo "   Estos archivos son necesarios para que Claude Code funcione correctamente."
+    echo ""
+
+    # Non-interactive: check CREATE_CLAUDE_FILES env var
+    if [[ -n "${CREATE_CLAUDE_FILES:-}" ]]; then
+      if [[ "${CREATE_CLAUDE_FILES,,}" == "yes" || "${CREATE_CLAUDE_FILES,,}" == "y" ]]; then
+        CREATE_CLAUDE=true
+      else
+        CREATE_CLAUDE=false
+      fi
+    else
+      # Interactive: ask user
+      read -rp "¿Deseas que cree templates base para estos archivos? (s/n): " response
+      if [[ "${response,,}" == "s" || "${response,,}" == "y" || "${response,,}" == "yes" || "${response,,}" == "sí" ]]; then
+        CREATE_CLAUDE=true
+      else
+        CREATE_CLAUDE=false
+      fi
+    fi
+
+    if "$CREATE_CLAUDE"; then
+      mkdir -p .claude
+      CLAUDE_TEMPLATES="${SUBMODULE_DIR}/templates/claude"
+
+      [[ ! -f "$CLAUDE_MD" ]]       && cp "${CLAUDE_TEMPLATES}/CLAUDE.md" "$CLAUDE_MD"       && echo "  ✓ Created ${CLAUDE_MD}"
+      [[ ! -f "$CLAUDE_SETTINGS" ]] && cp "${CLAUDE_TEMPLATES}/settings.json" "$CLAUDE_SETTINGS" && echo "  ✓ Created ${CLAUDE_SETTINGS}"
+
+      echo ""
+      echo "  📝 Templates creados. Debes personalizar .claude/CLAUDE.md con:"
+      echo "     1. Nombre y descripción de tu proyecto"
+      echo "     2. Stack tecnológico específico"
+      echo "     3. Módulos del sistema"
+      echo "     4. Convenciones de código del proyecto"
+      echo "     (El settings.json ya tiene permisos base seguros para SDD)"
+      echo ""
+    else
+      echo ""
+      echo "  ⚠️  IMPORTANTE: Claude Code necesita estos archivos para operar correctamente."
+      echo "     Sin ellos, el agente no tendrá contexto del proyecto ni restricciones de seguridad."
+      echo ""
+      echo "     Crea manualmente:"
+      echo "       - .claude/CLAUDE.md      (contexto del proyecto para el agente)"
+      echo "       - .claude/settings.json  (permisos allow/deny del agente)"
+      echo ""
+    fi
   fi
 fi
 

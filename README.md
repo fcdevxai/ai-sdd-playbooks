@@ -9,10 +9,13 @@ playbooks/[slug]/canonical.md      → source of truth per flow
 templates/
 ├── skill.md.hbs                   → SKILL.md template
 ├── command.md.hbs                 → command.md template
-└── docs/                          → base templates for project docs
-    ├── agent_architecture.md      → AI agent workflow guide template
-    ├── doc_architecture.md        → technical architecture template
-    └── doc_verification_guide.md  → verification commands template
+├── docs/                          → base templates for project docs
+│   ├── agent_architecture.md      → AI agent workflow guide template
+│   ├── doc_architecture.md        → technical architecture template
+│   └── doc_verification_guide.md  → verification commands template
+└── claude/                        → base templates for Claude Code setup
+    ├── CLAUDE.md                  → Claude agent context template (SDD + TODO sections)
+    └── settings.json              → Claude permissions template (secure SDD defaults)
 scripts/
 ├── sync.js                        → generator
 └── sync-consumer.sh               → consumer project sync script
@@ -74,11 +77,11 @@ bash sync-playbooks.sh
 # Sync only GitHub Copilot skills, skip docs prompt
 AI_TARGET=copilot CREATE_DOCS=no bash sync-playbooks.sh
 
-# Sync only Claude commands, create docs if missing
-AI_TARGET=claude CREATE_DOCS=yes bash sync-playbooks.sh
+# Sync only Claude commands, create all missing files
+AI_TARGET=claude CREATE_DOCS=yes CREATE_CLAUDE_FILES=yes bash sync-playbooks.sh
 
-# Sync both, create docs if missing
-AI_TARGET=both CREATE_DOCS=yes bash sync-playbooks.sh
+# Sync both, create all missing files
+AI_TARGET=both CREATE_DOCS=yes CREATE_CLAUDE_FILES=yes bash sync-playbooks.sh
 ```
 
 **Custom paths:**
