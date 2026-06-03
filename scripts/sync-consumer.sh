@@ -184,6 +184,20 @@ if "$SYNC_COPILOT"; then
     cp "${src_dir}SKILL.md" "${dest_dir}/SKILL.md"
     echo "  ✓ [Copilot] ${dest_dir}/SKILL.md"
   done
+
+  # Ensure .github/skills → .ai/skills symlink exists so GitHub Copilot can find the skills
+  if [[ "$SKILLS_DEST" != ".github/skills" ]]; then
+    mkdir -p .github
+    if [[ -L ".github/skills" ]]; then
+      : # symlink already exists — leave it
+    elif [[ -d ".github/skills" ]]; then
+      echo "  ⚠️  .github/skills ya existe como directorio real (no como symlink)."
+      echo "     Si quieres que apunte a ${SKILLS_DEST}, elimínalo manualmente y vuelve a ejecutar el script."
+    else
+      ln -s "../${SKILLS_DEST}" ".github/skills"
+      echo "  ✓ [Copilot] .github/skills → ${SKILLS_DEST} (symlink creado)"
+    fi
+  fi
 fi
 
 if "$SYNC_CLAUDE"; then
