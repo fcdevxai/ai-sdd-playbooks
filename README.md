@@ -9,6 +9,8 @@ playbooks/[slug]/canonical.md      → source of truth per flow
 templates/
 ├── skill.md.hbs                   → SKILL.md template
 ├── command.md.hbs                 → command.md template
+├── openspec/                      → base templates for OpenSpec structure
+│   └── system.md                  → global system spec template (generic)
 ├── docs/                          → base templates for project docs
 │   ├── agent_architecture.md      → AI agent workflow guide template
 │   ├── doc_architecture.md        → technical architecture template
@@ -72,7 +74,10 @@ bash sync-playbooks.sh
 **Interactive mode features:**
 
 1. **AI target selector**: checkbox menu to choose which AI(s) to sync (GitHub Copilot, Claude, or both)
-2. **Documentation setup**: detects missing `docs/` files and offers to create base templates:
+2. **OpenSpec setup**: detects missing `openspec/` base structure and offers to create:
+  - `openspec/specs/system.md` — global system spec template
+  - `openspec/changes/` — active features workspace
+3. **Documentation setup**: detects missing `docs/` files and offers to create base templates:
    - `docs/agent_architecture.md` — AI agent workflow guide
    - `docs/doc_architecture.md` — technical architecture reference
    - `docs/doc_verification_guide.md` — verification commands guide
@@ -83,13 +88,13 @@ bash sync-playbooks.sh
 
 ```bash
 # Sync only GitHub Copilot skills, skip all prompts
-AI_TARGET=copilot CREATE_DOCS=no CREATE_GITHUB_FILES=no bash sync-playbooks.sh
+AI_TARGET=copilot CREATE_OPENSPEC=no CREATE_DOCS=no CREATE_GITHUB_FILES=no bash sync-playbooks.sh
 
 # Sync only Claude commands, create all missing files
-AI_TARGET=claude CREATE_DOCS=yes CREATE_CLAUDE_FILES=yes bash sync-playbooks.sh
+AI_TARGET=claude CREATE_OPENSPEC=yes CREATE_DOCS=yes CREATE_CLAUDE_FILES=yes bash sync-playbooks.sh
 
 # Sync both, create all missing files
-AI_TARGET=both CREATE_DOCS=yes CREATE_GITHUB_FILES=yes CREATE_CLAUDE_FILES=yes bash sync-playbooks.sh
+AI_TARGET=both CREATE_OPENSPEC=yes CREATE_DOCS=yes CREATE_GITHUB_FILES=yes CREATE_CLAUDE_FILES=yes bash sync-playbooks.sh
 ```
 
 **Custom paths:**

@@ -13,8 +13,9 @@
 #   SUBMODULE_DIR  default: .ai-sdd-playbooks
 #   AI_TARGET          default: (interactive)   set to "copilot", "claude", or "both" to skip prompt
 #   CREATE_DOCS        default: (interactive)   set to "yes" or "no" to skip prompt for missing docs/ files
-#   CREATE_CLAUDE_FILES  default: (interactive)  set to "yes" or "no" to skip prompt for missing .claude/ files
-#   CREATE_GITHUB_FILES  default: (interactive)  set to "yes" or "no" to skip prompt for missing .github/ files
+#   CREATE_CLAUDE_FILES   default: (interactive)  set to "yes" or "no" to skip prompt for missing .claude/ files
+#   CREATE_GITHUB_FILES   default: (interactive)  set to "yes" or "no" to skip prompt for missing .github/ files
+#   CREATE_OPENSPEC       default: (interactive)  set to "yes" or "no" to skip prompt for missing openspec/ structure
 
 set -euo pipefail
 
@@ -274,6 +275,65 @@ if [[ ${#MISSING_DOCS[@]} -gt 0 ]]; then
     echo "       - docs/agent_architecture.md"
     echo "       - docs/doc_architecture.md"
     echo "       - docs/doc_verification_guide.md"
+    echo ""
+  fi
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  Validate OpenSpec base structure (required for SDD workflows)
+# ──────────────────────────────────────────────────────────────────────────────
+OPEN_SPEC_DIR="openspec/specs"
+OPEN_CHANGES_DIR="openspec/changes"
+OPEN_SYSTEM_SPEC="openspec/specs/system.md"
+
+MISSING_OPENSPEC=()
+[[ ! -d "$OPEN_SPEC_DIR" ]]    && MISSING_OPENSPEC+=("openspec/specs/")
+[[ ! -d "$OPEN_CHANGES_DIR" ]] && MISSING_OPENSPEC+=("openspec/changes/")
+[[ ! -f "$OPEN_SYSTEM_SPEC" ]] && MISSING_OPENSPEC+=("openspec/specs/system.md")
+
+if [[ ${#MISSING_OPENSPEC[@]} -gt 0 ]]; then
+  echo "⚠️  Falta estructura base de OpenSpec en el proyecto:"
+  for p in "${MISSING_OPENSPEC[@]}"; do
+    echo "   - ${p}"
+  done
+  echo ""
+  echo "   Esta estructura es requerida para ejecutar correctamente el ciclo SDD."
+  echo ""
+
+  # Non-interactive: check CREATE_OPENSPEC env var
+  if [[ -n "${CREATE_OPENSPEC:-}" ]]; then
+    if [[ "${CREATE_OPENSPEC,,}" == "yes" || "${CREATE_OPENSPEC,,}" == "y" ]]; then
+      CREATE_OPS=true
+    else
+      CREATE_OPS=false
+    fi
+  else
+    # Interactive: ask user
+    read -rp "¿Deseas que cree la estructura base de OpenSpec? (s/n): " response
+    if [[ "${response,,}" == "s" || "${response,,}" == "y" || "${response,,}" == "yes" || "${response,,}" == "sí" ]]; then
+      CREATE_OPS=true
+    else
+      CREATE_OPS=false
+    fi
+  fi
+
+  if "$CREATE_OPS"; then
+    mkdir -p "$OPEN_SPEC_DIR" "$OPEN_CHANGES_DIR"
+    OPENSPEC_TEMPLATES="${SUBMODULE_DIR}/templates/openspec"
+
+    [[ ! -f "$OPEN_SYSTEM_SPEC" ]] && cp "${OPENSPEC_TEMPLATES}/system.md" "$OPEN_SYSTEM_SPEC" && echo "  ✓ Created ${OPEN_SYSTEM_SPEC}"
+    [[ ! -f "${OPEN_CHANGES_DIR}/.gitkeep" ]] && touch "${OPEN_CHANGES_DIR}/.gitkeep"
+
+    echo ""
+    echo "  📝 Base OpenSpec creada. Debes personalizar openspec/specs/system.md con:"
+    echo "     1. Contexto y principios de producto"
+    echo "     2. Stack tecnológico real"
+    echo "     3. Flujos y convenciones de tu proyecto"
+    echo ""
+  else
+    echo ""
+    echo "  ⚠️  IMPORTANTE: Sin openspec/specs/ y openspec/changes/ el flujo SDD queda incompleto."
+    echo "     Los comandos /sdd-* dependen de esta estructura para planificar y ejecutar features."
     echo ""
   fi
 fi
