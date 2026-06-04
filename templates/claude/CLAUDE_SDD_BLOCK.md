@@ -31,11 +31,12 @@ openspec/
 
 | Comando | Fase | Qué hace |
 |---|---|---|
-| `/sdd-enrich-us [ticket]` | Inicio | Enriquece user story, produce `proposal.md` draft |
+| `/sdd-enrich-us [ticket]` | Ideación | Enriquece user story, produce `proposal.md` draft |
 | `/sdd-new [ticket] [desc]` | Inicio | Crea carpeta `openspec/changes/[ticket]/` con todos los artefactos |
 | `/sdd-ff [ticket]` | Planificación | Granulariza `tasks.md` desde la proposal aprobada |
-| `/sdd-apply [ticket]` | Ejecución | Ejecuta spec activa (TDD, sin improvisar fuera de scope) |
-| `/sdd-code-review [ticket]` | Ejecución | Revisión automática contra spec |
+| `/sdd-apply [ticket]` | Implementación | Ejecuta spec activa (TDD, sin improvisar fuera de scope) |
+| `/sdd-code-review [ticket]` | Revisión | Revisión automática contra spec |
+| `/sdd-ux-gate` | Revisión | `ux-gate-report.md` con veredicto UX/UI (`READY FOR PR UX` / `REQUIRES UX FIXES`) |
 | `/sdd-commit [ticket]` | Cierre | Commit estructurado con referencia a spec |
 | `/sdd-verify [ticket]` | Cierre | Verifica criterios de aceptación post-PR |
 | `/sdd-archive [ticket]` | Cierre | Integra delta en `openspec/specs/`, limpia `openspec/changes/` |
