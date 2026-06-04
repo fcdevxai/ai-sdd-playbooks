@@ -13,7 +13,7 @@
 #   SUBMODULE_DIR  default: .ai-sdd-playbooks
 #   AI_TARGET          default: (interactive)   set to "copilot", "claude", or "both" to skip prompt
 #   CREATE_DOCS        default: (interactive)   set to "yes" or "no" to skip prompt for missing docs/ files
-#   CREATE_CLAUDE_FILES   default: (interactive)  set to "yes" or "no" to skip prompt for missing .claude/ files
+#   CREATE_CLAUDE_FILES   default: (interactive)  set to "yes" or "no" to skip prompt for missing Claude base files
 #   CREATE_GITHUB_FILES   default: (interactive)  set to "yes" or "no" to skip prompt for missing .github/ files
 #   CREATE_OPENSPEC       default: (interactive)  set to "yes" or "no" to skip prompt for missing openspec/ structure
 
@@ -95,6 +95,57 @@ resolve_ai_target() {
     claude)  SYNC_CLAUDE=true ;;
     both)    SYNC_COPILOT=true; SYNC_CLAUDE=true ;;
   esac
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  Upsert managed SDD block inside root CLAUDE.md
+# ──────────────────────────────────────────────────────────────────────────────
+upsert_claude_sdd_block() {
+  local target_file="$1"
+  local sdd_template="$2"
+  local start_marker="<!-- BEGIN SDD PLAYBOOKS -->"
+  local end_marker="<!-- END SDD PLAYBOOKS -->"
+  local tmp_file
+
+  if [[ ! -f "$sdd_template" ]]; then
+    echo "  ⚠️  Template no encontrado: ${sdd_template}"
+    return
+  fi
+
+  tmp_file=$(mktemp)
+
+  if grep -qF "$start_marker" "$target_file" && grep -qF "$end_marker" "$target_file"; then
+    awk -v start="$start_marker" -v end="$end_marker" -v tpl="$sdd_template" '
+      BEGIN { inside = 0 }
+      index($0, start) {
+        print
+        while ((getline line < tpl) > 0) {
+          print line
+        }
+        close(tpl)
+        inside = 1
+        next
+      }
+      index($0, end) {
+        inside = 0
+        print
+        next
+      }
+      !inside { print }
+    ' "$target_file" > "$tmp_file"
+    mv "$tmp_file" "$target_file"
+    echo "  ✓ Updated SDD block in ${target_file}"
+  else
+    cat "$target_file" > "$tmp_file"
+    {
+      echo ""
+      echo "$start_marker"
+      cat "$sdd_template"
+      echo "$end_marker"
+    } >> "$tmp_file"
+    mv "$tmp_file" "$target_file"
+    echo "  ✓ Inserted SDD block in ${target_file}"
+  fi
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -409,23 +460,26 @@ if "$SYNC_COPILOT"; then
 fi
 
 # ──────────────────────────────────────────────────────────────────────────────
-#  Validate .claude/ config files (only when Claude is selected)
+#  Validate Claude setup (root CLAUDE.md + .claude/settings.json)
 # ──────────────────────────────────────────────────────────────────────────────
 if "$SYNC_CLAUDE"; then
-  CLAUDE_MD=".claude/CLAUDE.md"
+  CLAUDE_ROOT_MD="CLAUDE.md"
   CLAUDE_SETTINGS=".claude/settings.json"
+  CLAUDE_TEMPLATES="${SUBMODULE_DIR}/templates/claude"
+  CLAUDE_ROOT_TEMPLATE="${CLAUDE_TEMPLATES}/CLAUDE.md"
+  CLAUDE_SDD_TEMPLATE="${CLAUDE_TEMPLATES}/CLAUDE_SDD_BLOCK.md"
 
   MISSING_CLAUDE=()
-  [[ ! -f "$CLAUDE_MD" ]]       && MISSING_CLAUDE+=("CLAUDE.md")
-  [[ ! -f "$CLAUDE_SETTINGS" ]] && MISSING_CLAUDE+=("settings.json")
+  [[ ! -f "$CLAUDE_ROOT_MD" ]] && MISSING_CLAUDE+=("CLAUDE.md (raíz del proyecto)")
+  [[ ! -f "$CLAUDE_SETTINGS" ]] && MISSING_CLAUDE+=(".claude/settings.json")
 
   if [[ ${#MISSING_CLAUDE[@]} -gt 0 ]]; then
-    echo "⚠️  Faltan archivos de configuración de Claude en .claude/:"
+    echo "⚠️  Faltan archivos base para Claude Code:"
     for f in "${MISSING_CLAUDE[@]}"; do
-      echo "   - .claude/${f}"
+      echo "   - ${f}"
     done
     echo ""
-    echo "   Estos archivos son necesarios para que Claude Code funcione correctamente."
+    echo "   Claude usa CLAUDE.md en la raíz. settings.json define permisos del agente."
     echo ""
 
     # Non-interactive: check CREATE_CLAUDE_FILES env var
@@ -447,29 +501,25 @@ if "$SYNC_CLAUDE"; then
 
     if "$CREATE_CLAUDE"; then
       mkdir -p .claude
-      CLAUDE_TEMPLATES="${SUBMODULE_DIR}/templates/claude"
 
-      [[ ! -f "$CLAUDE_MD" ]]       && cp "${CLAUDE_TEMPLATES}/CLAUDE.md" "$CLAUDE_MD"       && echo "  ✓ Created ${CLAUDE_MD}"
+      [[ ! -f "$CLAUDE_ROOT_MD" ]] && cp "$CLAUDE_ROOT_TEMPLATE" "$CLAUDE_ROOT_MD" && echo "  ✓ Created ${CLAUDE_ROOT_MD}"
       [[ ! -f "$CLAUDE_SETTINGS" ]] && cp "${CLAUDE_TEMPLATES}/settings.json" "$CLAUDE_SETTINGS" && echo "  ✓ Created ${CLAUDE_SETTINGS}"
 
       echo ""
-      echo "  📝 Templates creados. Debes personalizar .claude/CLAUDE.md con:"
-      echo "     1. Nombre y descripción de tu proyecto"
-      echo "     2. Stack tecnológico específico"
-      echo "     3. Módulos del sistema"
-      echo "     4. Convenciones de código del proyecto"
-      echo "     (El settings.json ya tiene permisos base seguros para SDD)"
+      echo "  📝 Claude base creada. Debes personalizar CLAUDE.md con tu contexto de proyecto."
+      echo "     El bloque SDD entre marcadores será administrado automáticamente por sync-playbooks.sh"
       echo ""
     else
       echo ""
-      echo "  ⚠️  IMPORTANTE: Claude Code necesita estos archivos para operar correctamente."
-      echo "     Sin ellos, el agente no tendrá contexto del proyecto ni restricciones de seguridad."
-      echo ""
-      echo "     Crea manualmente:"
-      echo "       - .claude/CLAUDE.md      (contexto del proyecto para el agente)"
-      echo "       - .claude/settings.json  (permisos allow/deny del agente)"
+      echo "  ⚠️  IMPORTANTE: Claude Code necesita CLAUDE.md en raíz y .claude/settings.json."
+      echo "     Sin ellos, el agente puede ignorar patrones SDD o ejecutar sin límites correctos."
       echo ""
     fi
+  fi
+
+  # Keep SDD guidance in sync without overwriting developer-specific context.
+  if [[ -f "$CLAUDE_ROOT_MD" ]]; then
+    upsert_claude_sdd_block "$CLAUDE_ROOT_MD" "$CLAUDE_SDD_TEMPLATE"
   fi
 fi
 

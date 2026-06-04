@@ -1,10 +1,10 @@
 ---
 slug: sdd-code-review
-title_en: "SDD Code Review — Spec Compliance Review"
-title_es: "SDD Code Review — Revisión Automática Pre-PR"
-description: "Review implemented code against the spec before opening a PR. Validate spec coverage, scope compliance, Laravel/React conventions, and generate code-review-report.md with a READY FOR PR or REQUIRES FIXES verdict. Activate when the user says \"sdd-code-review\", \"review against spec\", \"pre-PR review\", or asks to validate the implementation against the proposal."
-description_es: "Revisa el código implementado contra la spec, detecta inconsistencias y genera un code-review-report.md con veredicto final antes de abrir PR."
-when_es: "Después de `/sdd-apply` y antes de `/sdd-commit`. Cuando `testing-report.md` está generado."
+title_en: "SDD Code Review - Spec Compliance Review"
+title_es: "SDD Code Review - Revision Automatizada Pre-PR"
+description: "Review implemented code against the spec before opening a PR. Validate spec coverage, scope compliance, project conventions, and generate code-review-report.md with a READY FOR PR or REQUIRES FIXES verdict. Activate when the user says \"sdd-code-review\", \"review against spec\", \"pre-PR review\", or asks to validate the implementation against the proposal."
+description_es: "Revisa el codigo implementado contra la spec, detecta inconsistencias y genera un code-review-report.md con veredicto final antes de abrir PR."
+when_es: "Despues de `/sdd-apply` y antes de `/sdd-commit`, cuando `testing-report.md` esta generado."
 output_file: "code-review-report.md"
 verdict_pass: "READY FOR PR"
 verdict_fail: "REQUIRES FIXES"
@@ -13,9 +13,9 @@ requires_terminal: false
 
 ## Purpose
 
-Review implemented code against `proposal.md` before it reaches human review. Catch spec violations, scope creep, missing error handling, and convention issues early. Generate a `code-review-report.md` with a binary verdict.
+Review implemented code against `proposal.md` before human review. Catch spec violations, scope creep, missing error handling, and convention issues early. Generate `code-review-report.md` with a binary verdict.
 
-This review validates *that the code implements what was agreed*. It does not validate *whether the agreed criteria were correct* — that is the human reviewer's job.
+This review validates that code implements agreed criteria. It does not validate whether criteria themselves were correct (human review responsibility).
 
 ---
 
@@ -23,47 +23,39 @@ This review validates *that the code implements what was agreed*. It does not va
 
 Read before reviewing:
 
-1. `openspec/changes/[ticket-slug]/proposal.md` — acceptance criteria and constraints (the only success criteria)
-2. `openspec/changes/[ticket-slug]/testing-report.md` — which tests were generated
-3. `openspec/changes/[ticket-slug]/tasks.md` — which files were created or modified
-4. `openspec/specs/system.md` — naming conventions and architecture rules
-5. All files listed as created/modified in `tasks.md`
+1. `openspec/changes/[ticket-slug]/proposal.md` - acceptance criteria and constraints
+2. `openspec/changes/[ticket-slug]/testing-report.md` - generated tests/checks
+3. `openspec/changes/[ticket-slug]/tasks.md` - files created/modified
+4. `openspec/specs/system.md` - architecture and naming rules
+5. `docs/doc_architecture.md` and `docs/doc_verification_guide.md` - project conventions and quality commands
+6. All files listed as created/modified in `tasks.md`
 
 ---
 
 ## Behavior
 
-### 1. Run the checklist
+### 1. Run checklist
 
 **Spec coverage**
-- [ ] Every acceptance criterion in `proposal.md` has at least one test covering it
-- [ ] Every error case in `proposal.md` has explicit handling in the code
-- [ ] `testing-report.md` maps all acceptance criteria to their tests
+- [ ] Every acceptance criterion in `proposal.md` has at least one passing test/check
+- [ ] Every error case in `proposal.md` has explicit handling and evidence
+- [ ] `testing-report.md` maps criteria to evidence
 
 **Scope**
 - [ ] No files modified outside modules allowed by `## Constraints and non-goals`
-- [ ] No features added that are not in the spec (no over-engineering)
-- [ ] No hardcoded URLs in TypeScript — Wayfinder functions used everywhere
+- [ ] No feature added outside spec scope
+- [ ] Contract changes are intentional and documented
 
-**Laravel conventions**
-- [ ] Form Requests used for all validation (not inline validation in controllers)
-- [ ] Policies used for authorization (not manual guard checks in controllers)
-- [ ] No business logic in controllers
-- [ ] No orchestration logic in Eloquent models
-- [ ] Constructor property promotion in all new PHP classes
-- [ ] Explicit return types and parameter types in all new PHP methods
-- [ ] `#[Test]` attribute on all test methods (not `test_` prefix)
-- [ ] Factories created for every new Eloquent model
-- [ ] `vendor/bin/pint --dirty` passes with no remaining diff
-
-**Frontend conventions**
-- [ ] `npm run types:check` passes (if TypeScript was changed)
-- [ ] Component and prop naming follows `openspec/specs/system.md`
+**Conventions and quality gates**
+- [ ] Naming/structure follow `openspec/specs/system.md`
+- [ ] Layer boundaries follow `docs/doc_architecture.md`
+- [ ] Required project quality commands were executed (format/lint/type-check/tests) per `docs/doc_verification_guide.md`
+- [ ] New tests/checks exist for changed behavior
 
 ### 2. Generate report
 
 ````markdown
-# Code Review Report — [Feature name]
+# Code Review Report - [Feature name]
 
 **Ticket**: [ticket-slug]
 **Date**: [YYYY-MM-DD]
@@ -72,28 +64,28 @@ Read before reviewing:
 ## Checklist
 
 ### Spec coverage
-- [✅/❌] Criterion #1 covered by `TestName::method`
-- [✅/❌] Error case X handled in `ControllerName@method`
+- [PASS/FAIL] Criterion #1 covered by `[test/check]`
+- [PASS/FAIL] Error case #1 handled and verified
 
 ### Scope
-- [✅/❌] No changes outside allowed modules
+- [PASS/FAIL] No changes outside allowed modules
 
 ### Conventions
-- [✅/❌] Form Requests used for all validation
-...
+- [PASS/FAIL] Architecture/layer conventions respected
+- [PASS/FAIL] Required quality commands executed
 
 ## Issues found
 
-### Issue 1 — [Title]
-- **File**: `app/Http/Controllers/NameController.php:42`
-- **Problem**: [what is wrong and why it violates the spec or conventions]
-- **Suggested fix**: [how to correct it]
+### Issue 1 - [Title]
+- **File**: `[path/to/file:line]`
+- **Problem**: [why this violates spec/scope/convention]
+- **Suggested fix**: [how to correct]
 
 ## Verdict
 
-**READY FOR PR** / **REQUIRES FIXES**
+READY FOR PR / REQUIRES FIXES
 
-[If REQUIRES FIXES: numbered list of issues that must be resolved before opening a PR]
+[If REQUIRES FIXES: numbered list of blockers to resolve before PR]
 ````
 
 ---
@@ -106,11 +98,10 @@ Read before reviewing:
 
 ## Rules
 
-- Any acceptance criterion without a covering test → verdict must be `REQUIRES FIXES`.
-- Any file modified outside `## Constraints and non-goals` → verdict must be `REQUIRES FIXES`.
-- Pint diff present → verdict must be `REQUIRES FIXES`.
-- `READY FOR PR` means the spec is correctly implemented, not that the spec itself was correct.
-- Do not suggest features or improvements outside the spec scope.
+- Any acceptance criterion without passing evidence -> verdict must be `REQUIRES FIXES`.
+- Any file modified outside `## Constraints and non-goals` -> verdict must be `REQUIRES FIXES`.
+- Any required project quality gate not executed -> verdict must be `REQUIRES FIXES`.
+- Do not suggest improvements outside spec scope.
 
 <!-- END_SKILL -->
 
@@ -118,64 +109,40 @@ Read before reviewing:
 
 ## Objetivo
 
-Hacer una primera revisión del código generado contra la spec, detectar inconsistencias y resolverlas antes de que llegue al revisor humano. Genera un `code-review-report.md` con veredicto final.
+Hacer una primera revision del codigo generado contra la spec, detectar inconsistencias y resolverlas antes de revision humana. Genera `code-review-report.md` con veredicto final.
 
 ---
 
 ## Instrucciones
 
-1. Lee `openspec/changes/[ticket-slug]/proposal.md` — los criterios de aceptación son los únicos criterios de éxito.
-2. Lee `openspec/changes/[ticket-slug]/testing-report.md` para entender qué tests se generaron.
-3. Lee el código implementado (archivos modificados según `tasks.md`).
-4. Valida cada punto del checklist a continuación.
-5. Guarda el reporte en `openspec/changes/[ticket-slug]/code-review-report.md`.
+1. Lee `openspec/changes/[ticket-slug]/proposal.md`.
+2. Lee `openspec/changes/[ticket-slug]/testing-report.md`.
+3. Lee `tasks.md` y el codigo implementado.
+4. Valida checklist de cobertura, scope, convenciones y calidad.
+5. Guarda reporte en `openspec/changes/[ticket-slug]/code-review-report.md`.
 
 ---
 
 ## Checklist
 
 ### Cobertura de spec
-- [ ] Cada criterio de aceptación de `proposal.md` tiene al menos un test que lo cubre
-- [ ] Cada caso de error de `proposal.md` tiene manejo explícito en el código
-- [ ] El `testing-report.md` refleja todos los criterios de aceptación
+- [ ] Cada criterio de aceptacion tiene evidencia passing
+- [ ] Cada caso de error tiene manejo explicito y evidencia
+- [ ] `testing-report.md` refleja todos los criterios
 
 ### Scope
-- [ ] El código no modifica módulos marcados como non-goals en `proposal.md`
-- [ ] No se agregaron features no mencionadas en la spec (over-engineering)
-- [ ] No hay hardcoded URLs en TypeScript (se usa Wayfinder)
+- [ ] No hay cambios fuera de `proposal.md`
+- [ ] No hay over-engineering fuera de spec
+- [ ] Cambios de contrato justificados/documentados
 
-### Convenciones
-- [ ] Nombres de clases, métodos y variables siguen las convenciones de `openspec/specs/system.md`
-- [ ] Form Requests usados para toda validación (no validación en controllers)
-- [ ] Policies usadas para autorización (no guards en controllers)
-- [ ] Constructor property promotion en todas las clases PHP nuevas
-- [ ] Tipos explícitos en todos los métodos PHP nuevos
-- [ ] Atributo `#[Test]` en todos los métodos de test (no prefijo `test_`)
-
-### Calidad
-- [ ] No hay business logic en controllers
-- [ ] No hay lógica de orquestación en modelos
-- [ ] Factories creadas para cada nuevo modelo
-- [ ] `vendor/bin/pint --dirty --format agent` ejecutado (sin diff pendiente)
-- [ ] `npm run types:check` pasa (si hay TypeScript)
-
----
-
-## Formato de reporte
-
-`openspec/changes/[ticket-slug]/code-review-report.md` con tabla de cobertura de spec, checklist de convenciones, lista de issues con archivo/línea/problema/corrección, y veredicto final.
+### Convenciones y calidad
+- [ ] Convenciones de `openspec/specs/system.md` respetadas
+- [ ] Reglas de arquitectura de `docs/doc_architecture.md` respetadas
+- [ ] Comandos de calidad definidos en `docs/doc_verification_guide.md` ejecutados
+- [ ] Tests/checks nuevos cubren comportamiento modificado
 
 ---
 
 ## Criterio de bloqueo
 
-El veredicto `REQUIERE CORRECCIONES` bloquea el avance a `/sdd-commit`. No abrir PR hasta resolver todos los issues.
-
----
-
-## Qué NO puede validar el agente (requiere revisión humana)
-
-- Si el criterio de aceptación captura correctamente la necesidad de negocio
-- Si la restricción técnica era la correcta en primer lugar
-- Si la arquitectura elegida es la más adecuada a largo plazo
-- Si existen casos de error que la spec no contemplaba pero deberían estar
+El veredicto `REQUIRES FIXES` bloquea avance a `/sdd-commit`. No abrir PR hasta resolver todos los issues.

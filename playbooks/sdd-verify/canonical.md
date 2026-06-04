@@ -1,23 +1,21 @@
 ---
 slug: sdd-verify
-title_en: "SDD Verify — Post-Merge Acceptance Verification"
-title_es: "SDD Verify — Verificar Criterios de Aceptación post-PR"
-description: "Verify that all acceptance criteria in the spec have passing tests after the PR is merged. Run the feature test suite, map each criterion to its test, check for regressions, and generate verification-report.md. Activate when the user says \"sdd-verify\", \"verify acceptance criteria\", \"post-merge verification\", or asks to verify a merged feature before archiving. Requires Copilot agent mode with terminal access."
-description_es: "Verifica que todos los criterios de aceptación de la spec se cumplen en el estado actual del código, post-merge. Genera verification-report.md."
-when_es: "Después de que el PR fue aprobado y mergeado en main. Antes de `/sdd-archive`."
+title_en: "SDD Verify - Post-Merge Acceptance Verification"
+title_es: "SDD Verify - Verificar Criterios de Aceptacion post-PR"
+description: "Verify that all acceptance criteria in the spec have passing tests/checks after the PR is merged. Run feature verification commands, map each criterion to evidence, check regressions, and generate verification-report.md. Activate when the user says \"sdd-verify\", \"verify acceptance criteria\", \"post-merge verification\", or asks to verify a merged feature before archiving. Requires agent mode with terminal access."
+description_es: "Verifica que todos los criterios de aceptacion de la spec se cumplen en el estado actual del codigo, post-merge. Genera verification-report.md."
+when_es: "Despues de que el PR fue aprobado y mergeado en main. Antes de `/sdd-archive`."
 output_file: "verification-report.md"
-verdict_pass: "✅ FEATURE VERIFIED"
-verdict_fail: "❌ GAPS DETECTED"
+verdict_pass: "FEATURE VERIFIED"
+verdict_fail: "GAPS DETECTED"
 requires_terminal: true
 ---
 
 ## Purpose
 
-After the PR is merged, confirm every acceptance criterion in `proposal.md` has a passing test in the current codebase. Detect regressions. Generate a `verification-report.md` that gates `sdd-archive`.
+After PR merge, confirm every acceptance criterion in `proposal.md` has passing evidence (tests/checks) in the current codebase. Detect regressions. Generate a `verification-report.md` that gates `sdd-archive`.
 
-> **Requires Copilot agent mode** — this skill runs `php artisan test`.
-
-Run this after PR merge and before `sdd-archive`.
+Run this after merge and before `sdd-archive`.
 
 ---
 
@@ -25,43 +23,38 @@ Run this after PR merge and before `sdd-archive`.
 
 Read before verifying:
 
-1. `openspec/changes/[ticket-slug]/proposal.md` — full list of acceptance criteria and error cases
-2. `openspec/changes/[ticket-slug]/testing-report.md` — tests generated during `sdd-apply`
+1. `openspec/changes/[ticket-slug]/proposal.md` - full list of acceptance criteria and error cases
+2. `openspec/changes/[ticket-slug]/testing-report.md` - tests/checks generated during `sdd-apply`
+3. `docs/doc_verification_guide.md` - project-specific verification commands
 
 ---
 
 ## Behavior
 
-### 1. Run feature tests
+### 1. Run feature-level verification
 
-```bash
-php artisan test --compact tests/Feature/
-```
+Run the project command(s) that validate the affected feature/domain (from `docs/doc_verification_guide.md`).
 
-### 2. Map criteria to tests
+### 2. Map criteria to evidence
 
 For each acceptance criterion in `proposal.md`:
 
-- Identify the test method covering it.
-- Confirm the test passes.
-- If no test covers a criterion → mark as **gap**.
+- Identify the test/check covering it.
+- Confirm the test/check passes in current code.
+- If no evidence covers a criterion -> mark as gap.
 
 ### 3. Verify error cases
 
-For each error case in `proposal.md`, confirm there is a passing test that exercises the failure path.
+For each error case in `proposal.md`, confirm there is passing evidence for the failure path.
 
 ### 4. Regression check
 
-```bash
-php artisan test --compact
-```
-
-Confirm zero failures and zero errors across the full suite.
+Run the required regression command(s) from `docs/doc_verification_guide.md` and confirm no blocking failures.
 
 ### 5. Generate verification-report.md
 
 ````markdown
-# Verification Report — [Feature name]
+# Verification Report - [Feature name]
 
 **Ticket**: [ticket-slug]
 **Verification date**: [YYYY-MM-DD]
@@ -69,49 +62,42 @@ Confirm zero failures and zero errors across the full suite.
 
 ## Acceptance criteria
 
-| # | Criterion | Test | Result |
+| # | Criterion | Test/Check | Result |
 |---|---|---|---|
-| 1 | [criterion from proposal.md] | `tests/Feature/.../Test::method` | ✅ PASSES |
+| 1 | [criterion from proposal.md] | `[test/check reference]` | PASS |
 
 ## Error cases verified
 
-| # | Error case | Test | Result |
+| # | Error case | Test/Check | Result |
 |---|---|---|---|
-| 1 | [error case from proposal.md] | `tests/Feature/.../Test::method` | ✅ PASSES |
+| 1 | [error case from proposal.md] | `[test/check reference]` | PASS |
 
-## Full test suite
+## Regression status
 
-**Result**: [X tests, 0 failures, 0 errors]
+**Result**: `[summary of regression command output]`
 
 ---
 
 ## Verdict
 
-✅ **FEATURE VERIFIED** — all acceptance criteria have passing tests.
-Proceed with `sdd-archive [ticket-slug]`.
+FEATURE VERIFIED / GAPS DETECTED
 
----
-OR:
-
-❌ **GAPS DETECTED** — the following criteria have no covering test:
-- Criterion #N: [description]
-
-Resolve gaps before running `sdd-archive`.
+[If GAPS DETECTED: list criteria or checks missing/pending]
 ````
 
 ---
 
 ## Output
 
-`openspec/changes/[ticket-slug]/verification-report.md` with verdict `✅ FEATURE VERIFIED` or `❌ GAPS DETECTED`.
+`openspec/changes/[ticket-slug]/verification-report.md` with verdict `FEATURE VERIFIED` or `GAPS DETECTED`.
 
 ---
 
 ## Rules
 
-- Any acceptance criterion without a passing test → verdict must be `❌ GAPS DETECTED`.
-- Any regression in the full test suite → verdict must be `❌ GAPS DETECTED`.
-- Never proceed to `sdd-archive` if verdict is `❌ GAPS DETECTED`.
+- Any acceptance criterion without passing evidence -> verdict must be `GAPS DETECTED`.
+- Any blocking regression -> verdict must be `GAPS DETECTED`.
+- Never proceed to `sdd-archive` if verdict is `GAPS DETECTED`.
 
 <!-- END_SKILL -->
 
@@ -119,50 +105,28 @@ Resolve gaps before running `sdd-archive`.
 
 ## Objetivo
 
-Verificar que todos los criterios de aceptación de la spec se cumplen en el estado actual del código, post-merge del PR. Genera un reporte de verificación final.
+Verificar que todos los criterios de aceptacion de la spec se cumplen en el estado actual del codigo, post-merge. Genera un reporte de verificacion final.
 
 ---
 
 ## Instrucciones
 
-1. Lee `openspec/changes/[ticket-slug]/proposal.md` — lista completa de criterios de aceptación.
-2. Lee `openspec/changes/[ticket-slug]/testing-report.md` para los tests del ciclo `/sdd-apply`.
-3. Ejecuta los tests de la feature: `php artisan test --compact tests/Feature/[Domain]/`
-4. Para cada criterio de aceptación:
-   - Identifica el test que lo cubre
-   - Confirma que el test pasa en el estado actual del código
-   - Si no tiene test → señalar como gap
-5. Verifica que no hay regresiones: `php artisan test --compact`
-6. Genera `openspec/changes/[ticket-slug]/verification-report.md`
+1. Lee `openspec/changes/[ticket-slug]/proposal.md`.
+2. Lee `openspec/changes/[ticket-slug]/testing-report.md`.
+3. Ejecuta los comandos de verificacion de feature/dominio definidos en `docs/doc_verification_guide.md`.
+4. Para cada criterio de aceptacion: identifica evidencia passing; si no existe, marcar gap.
+5. Verifica casos de error con evidencia passing.
+6. Ejecuta regresion segun guia del proyecto.
+7. Genera `openspec/changes/[ticket-slug]/verification-report.md`.
 
 ---
 
 ## Checklist
 
-- [ ] `proposal.md` leído — todos los criterios de aceptación listados
-- [ ] `testing-report.md` leído — tests del ciclo apply identificados
-- [ ] Tests de la feature ejecutados y pasan
-- [ ] Cada criterio de aceptación mapeado a un test
-- [ ] Criterios sin test marcados como gaps
-- [ ] Suite completa ejecutada — sin regresiones
+- [ ] `proposal.md` leido - criterios de aceptacion listados
+- [ ] `testing-report.md` leido - evidencia inicial identificada
+- [ ] Verificacion de feature/dominio ejecutada
+- [ ] Cada criterio de aceptacion mapeado a evidencia
+- [ ] Criterios sin evidencia marcados como gaps
+- [ ] Regresion ejecutada segun guia del proyecto
 - [ ] `verification-report.md` generado con veredicto
-
----
-
-## Formato de reporte
-
-`openspec/changes/[ticket-slug]/verification-report.md` con tabla de criterios vs tests, resultado de suite completa y veredicto final.
-
----
-
-## Criterio de bloqueo
-
-El veredicto debe ser `❌ GAPS DETECTADOS` si algún criterio de aceptación no tiene test que pase. No proceder con `/sdd-archive` sin veredicto `✅ FEATURE VERIFICADA`.
-
----
-
-## Qué NO reemplaza
-
-- La aprobación del PR por el revisor humano
-- El análisis de si los criterios de aceptación capturan correctamente la necesidad de negocio
-- La validación UX/UI (cubierta por `/sdd-ux-gate`)

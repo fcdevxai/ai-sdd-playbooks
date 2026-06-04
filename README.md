@@ -16,7 +16,8 @@ templates/
 │   ├── doc_architecture.md        → technical architecture template
 │   └── doc_verification_guide.md  → verification commands template
 ├── claude/                        → base templates for Claude Code setup
-│   ├── CLAUDE.md                  → Claude agent context template (SDD + TODO sections)
+│   ├── CLAUDE.md                  → root CLAUDE.md template (project context + managed SDD block)
+│   ├── CLAUDE_SDD_BLOCK.md        → managed SDD block injected/updated inside root CLAUDE.md
 │   └── settings.json              → Claude permissions template (secure SDD defaults)
 └── github/                        → base templates for GitHub SDD integration
     ├── CODEOWNERS                 → protege openspec/specs/ y workflows
@@ -81,6 +82,10 @@ bash sync-playbooks.sh
    - `docs/agent_architecture.md` — AI agent workflow guide
    - `docs/doc_architecture.md` — technical architecture reference
    - `docs/doc_verification_guide.md` — verification commands guide
+4. **Claude coexistence model**: when Claude is selected, sync checks:
+  - `CLAUDE.md` in project root (required by Claude as primary context)
+  - `.claude/settings.json` (agent permissions)
+  - updates only the SDD section between markers in `CLAUDE.md`, preserving developer-specific content
 
 > **Important**: The generated SKILLs reference these docs files. Customize the templates for your project's stack and architecture.
 

@@ -1,10 +1,10 @@
 ---
 slug: sdd-ff
-title_en: "SDD FF — Granularize Tasks"
-title_es: "SDD FF — Granularizar Tareas"
+title_en: "SDD FF - Granularize Tasks"
+title_es: "SDD FF - Granularizar Tareas"
 description: "Granularize an approved proposal.md (status: pending) into an executable phase-based tasks.md plan. Activate when the user says \"sdd-ff\", \"granularize tasks\", \"plan tasks\", \"create tasks.md\", or wants to generate the execution plan after proposal approval."
-description_es: "Lee una proposal.md aprobada y genera un tasks.md ejecutable, organizado por fases. Cada tarea debe ser atómica con criterio de éxito verificable."
-when_es: "Después de que el usuario aprueba `proposal.md` (status: pending). Antes de `/sdd-apply`."
+description_es: "Lee una proposal.md aprobada y genera un tasks.md ejecutable, organizado por fases. Cada tarea debe ser atomica con criterio de exito verificable."
+when_es: "Despues de que el usuario aprueba `proposal.md` (status: pending). Antes de `/sdd-apply`."
 output_file: "tasks.md"
 verdict_pass: ""
 verdict_fail: ""
@@ -23,10 +23,11 @@ Do not proceed if `proposal.md` has `status: draft`.
 
 Read before generating tasks:
 
-1. `openspec/changes/[ticket-slug]/proposal.md` — acceptance criteria, constraints, error cases. Verify `status: pending`.
-2. `openspec/changes/[ticket-slug]/design.md` — technical architecture decisions (if it exists)
-3. `openspec/specs/system.md` — global conventions, layer rules, naming
-4. Existing implementation files relevant to affected modules (controllers, models, Inertia pages) — understand current conventions before planning
+1. `openspec/changes/[ticket-slug]/proposal.md` - acceptance criteria, constraints, error cases. Verify `status: pending`.
+2. `openspec/changes/[ticket-slug]/design.md` - technical architecture decisions (if it exists)
+3. `openspec/specs/system.md` - global conventions, layer rules, naming
+4. `docs/doc_architecture.md` and `docs/doc_verification_guide.md` - project structure and verification commands
+5. Existing implementation files relevant to affected modules
 
 ---
 
@@ -34,19 +35,19 @@ Read before generating tasks:
 
 ### 1. Validate proposal status
 
-- If `status: draft` → stop. The proposal must be approved (`status: pending`) before task planning. Ask the user to review and approve it first.
-- If `status: pending` → proceed.
+- If `status: draft` -> stop. Proposal must be approved (`status: pending`) before task planning.
+- If `status: pending` -> proceed.
 
 ### 2. Analyze scope
 
-- Map each acceptance criterion to the layers it touches (backend, frontend, tests).
+- Map each acceptance criterion to impacted layers (API/domain/ui/data/tests, as applicable).
 - Identify files to create or modify per layer.
-- Identify `php artisan make:` commands needed for new classes.
+- Identify task-level creation/setup commands only when truly needed (project-specific).
 
 ### 3. Generate tasks.md
 
 ````markdown
-# Tasks — [Feature name]
+# Tasks - [Feature name]
 
 **Ticket**: [ticket-slug]
 **Spec**: openspec/changes/[ticket-slug]/proposal.md
@@ -54,40 +55,38 @@ Read before generating tasks:
 
 ---
 
-## Phase 1 — Backend
+## Phase 1 - Core implementation
 
-### Task 1.1 — [Atomic name]
-- **Files to create/modify**: `app/...`
-- **Creation command**: `php artisan make:...` (if applicable)
-- **Success criterion**: test `tests/Feature/.../TestName.php` passes
+### Task 1.1 - [Atomic name]
+- **Files to create/modify**: `[path/a]`, `[path/b]`
+- **Optional creation/setup command**: `[command]` (if applicable)
+- **Success criterion**: `[verifiable result: passing test/check or observable behavior]`
 - **Linked acceptance criterion**: #N from proposal.md
 
-## Phase 2 — Frontend
+## Phase 2 - Interface or integration
 
-### Task 2.1 — [Atomic name]
-- **Files to create/modify**: `resources/js/...`
-- **Success criterion**: [verifiable expected behavior]
+### Task 2.1 - [Atomic name]
+- **Files to create/modify**: `[path/c]`
+- **Success criterion**: `[verifiable expected behavior]`
 - **Linked acceptance criterion**: #N from proposal.md
 
-## Phase 3 — Tests
+## Phase 3 - Tests
 
-### Task 3.1 — Feature tests
-- `php artisan make:test --phpunit [TestName]`
+### Task 3.1 - Feature/domain tests
 - Covers acceptance criteria: #1, #2, #N
-- Validation command: `php artisan test --compact tests/Feature/...`
+- Validation command(s): `[project test command for this area]`
 
-## Phase 4 — Closure
+## Phase 4 - Closure
 
-### Task 4.1 — Format and regenerate
-- `vendor/bin/pint --dirty --format agent`
-- `php artisan wayfinder:generate` (if routes changed)
-- `npm run types:check` (if TypeScript changed)
-- `php artisan test --compact --filter=[feature]`
+### Task 4.1 - Quality gates
+- `[project format command]`
+- `[project lint/type-check command(s)]`
+- `[project feature/domain test command]`
 ````
 
 ### 4. Confirm
 
-Report the total number of tasks and ask the user whether to proceed with `sdd-apply [ticket-slug]`.
+Report total number of tasks and ask whether to proceed with `sdd-apply [ticket-slug]`.
 
 ---
 
@@ -99,10 +98,10 @@ Report the total number of tasks and ask the user whether to proceed with `sdd-a
 
 ## Rules
 
-- Never mix backend and frontend in a single task — each task must be independently executable.
-- Every task must have a verifiable success criterion (a passing test or an observable behavior).
+- Never mix unrelated layers in a single task if it makes verification non-atomic.
+- Every task must have a verifiable success criterion.
 - Do not plan tasks for files outside `## Constraints and non-goals` in `proposal.md`.
-- If a task depends on another, state the dependency explicitly.
+- If a task depends on another, state dependency explicitly.
 
 <!-- END_SKILL -->
 
@@ -110,19 +109,19 @@ Report the total number of tasks and ask the user whether to proceed with `sdd-a
 
 ## Objetivo
 
-Leer `proposal.md` aprobada y generar las tareas granularizadas en `tasks.md`, listas para ejecutar con `/sdd-apply`. Cada tarea debe ser atómica con criterio de éxito verificable.
+Leer `proposal.md` aprobada y generar tareas granularizadas en `tasks.md`, listas para ejecutar con `/sdd-apply`. Cada tarea debe ser atomica con criterio de exito verificable.
 
 ---
 
 ## Instrucciones
 
 1. Lee `openspec/changes/[ticket-slug]/proposal.md`. Verifica `status: pending`. Si es `draft`, detente.
-2. Lee `openspec/changes/[ticket-slug]/design.md` para decisiones técnicas.
+2. Lee `openspec/changes/[ticket-slug]/design.md` para decisiones tecnicas.
 3. Lee `openspec/specs/system.md` para convenciones globales.
-4. Lee los archivos de implementación existentes relacionados para entender el estado actual del código.
-5. Para cada criterio de aceptación, identifica las capas que toca (backend, frontend, tests).
-6. Genera `tasks.md` con `status: ready`, organizado en fases (Backend → Frontend → Tests → Closure).
-7. Cada tarea: nombre atómico, archivos a crear/modificar, comando artisan si aplica, criterio de éxito, criterio de aceptación vinculado.
+4. Lee `docs/doc_architecture.md` y `docs/doc_verification_guide.md` para estructura y comandos reales del proyecto.
+5. Para cada criterio de aceptacion, identifica las capas que toca.
+6. Genera `tasks.md` con `status: ready`, organizado en fases.
+7. Cada tarea: nombre atomico, archivos a crear/modificar, comando opcional, criterio de exito, criterio de aceptacion vinculado.
 8. Reporta el total de tareas y pregunta si procede con `/sdd-apply [ticket-slug]`.
 
 ---
@@ -130,28 +129,9 @@ Leer `proposal.md` aprobada y generar las tareas granularizadas en `tasks.md`, l
 ## Checklist
 
 - [ ] `proposal.md` tiene `status: pending`
-- [ ] Cada criterio de aceptación mapeado a tareas concretas
-- [ ] Tareas separadas por capa (sin mezclar backend y frontend)
-- [ ] Cada tarea tiene criterio de éxito verificable (test o comportamiento observable)
-- [ ] Ninguna tarea fuera del scope de "Restricciones y non-goals"
-- [ ] Dependencias entre tareas documentadas explícitamente
+- [ ] Cada criterio de aceptacion mapeado a tareas concretas
+- [ ] Tareas separadas para permitir verificacion independiente
+- [ ] Cada tarea tiene criterio de exito verificable
+- [ ] Ninguna tarea fuera del scope de `proposal.md`
+- [ ] Dependencias entre tareas documentadas explicitamente
 - [ ] `tasks.md` guardado con `status: ready`
-
----
-
-## Formato de reporte
-
-No genera reporte. Presenta el `tasks.md` generado al usuario y pide confirmación para proceder con `/sdd-apply`.
-
----
-
-## Criterio de bloqueo
-
-No generar tareas si `proposal.md` tiene `status: draft`. El usuario debe aprobar primero.
-
----
-
-## Qué NO reemplaza
-
-- El diseño técnico detallado (se discute en `design.md` antes de `/sdd-ff`)
-- La estimación de esfuerzo (responsabilidad del equipo)

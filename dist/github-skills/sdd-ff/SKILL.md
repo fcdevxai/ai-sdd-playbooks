@@ -3,7 +3,7 @@ name: sdd-ff
 description: Granularize an approved proposal.md (status: pending) into an executable phase-based tasks.md plan. Activate when the user says "sdd-ff", "granularize tasks", "plan tasks", "create tasks.md", or wants to generate the execution plan after proposal approval.
 ---
 
-# SDD FF — Granularize Tasks
+# SDD FF - Granularize Tasks
 
 ## Purpose
 
@@ -17,10 +17,11 @@ Do not proceed if `proposal.md` has `status: draft`.
 
 Read before generating tasks:
 
-1. `openspec/changes/[ticket-slug]/proposal.md` — acceptance criteria, constraints, error cases. Verify `status: pending`.
-2. `openspec/changes/[ticket-slug]/design.md` — technical architecture decisions (if it exists)
-3. `openspec/specs/system.md` — global conventions, layer rules, naming
-4. Existing implementation files relevant to affected modules (controllers, models, Inertia pages) — understand current conventions before planning
+1. `openspec/changes/[ticket-slug]/proposal.md` - acceptance criteria, constraints, error cases. Verify `status: pending`.
+2. `openspec/changes/[ticket-slug]/design.md` - technical architecture decisions (if it exists)
+3. `openspec/specs/system.md` - global conventions, layer rules, naming
+4. `docs/doc_architecture.md` and `docs/doc_verification_guide.md` - project structure and verification commands
+5. Existing implementation files relevant to affected modules
 
 ---
 
@@ -28,19 +29,19 @@ Read before generating tasks:
 
 ### 1. Validate proposal status
 
-- If `status: draft` → stop. The proposal must be approved (`status: pending`) before task planning. Ask the user to review and approve it first.
-- If `status: pending` → proceed.
+- If `status: draft` -> stop. Proposal must be approved (`status: pending`) before task planning.
+- If `status: pending` -> proceed.
 
 ### 2. Analyze scope
 
-- Map each acceptance criterion to the layers it touches (backend, frontend, tests).
+- Map each acceptance criterion to impacted layers (API/domain/ui/data/tests, as applicable).
 - Identify files to create or modify per layer.
-- Identify `php artisan make:` commands needed for new classes.
+- Identify task-level creation/setup commands only when truly needed (project-specific).
 
 ### 3. Generate tasks.md
 
 ````markdown
-# Tasks — [Feature name]
+# Tasks - [Feature name]
 
 **Ticket**: [ticket-slug]
 **Spec**: openspec/changes/[ticket-slug]/proposal.md
@@ -48,40 +49,38 @@ Read before generating tasks:
 
 ---
 
-## Phase 1 — Backend
+## Phase 1 - Core implementation
 
-### Task 1.1 — [Atomic name]
-- **Files to create/modify**: `app/...`
-- **Creation command**: `php artisan make:...` (if applicable)
-- **Success criterion**: test `tests/Feature/.../TestName.php` passes
+### Task 1.1 - [Atomic name]
+- **Files to create/modify**: `[path/a]`, `[path/b]`
+- **Optional creation/setup command**: `[command]` (if applicable)
+- **Success criterion**: `[verifiable result: passing test/check or observable behavior]`
 - **Linked acceptance criterion**: #N from proposal.md
 
-## Phase 2 — Frontend
+## Phase 2 - Interface or integration
 
-### Task 2.1 — [Atomic name]
-- **Files to create/modify**: `resources/js/...`
-- **Success criterion**: [verifiable expected behavior]
+### Task 2.1 - [Atomic name]
+- **Files to create/modify**: `[path/c]`
+- **Success criterion**: `[verifiable expected behavior]`
 - **Linked acceptance criterion**: #N from proposal.md
 
-## Phase 3 — Tests
+## Phase 3 - Tests
 
-### Task 3.1 — Feature tests
-- `php artisan make:test --phpunit [TestName]`
+### Task 3.1 - Feature/domain tests
 - Covers acceptance criteria: #1, #2, #N
-- Validation command: `php artisan test --compact tests/Feature/...`
+- Validation command(s): `[project test command for this area]`
 
-## Phase 4 — Closure
+## Phase 4 - Closure
 
-### Task 4.1 — Format and regenerate
-- `vendor/bin/pint --dirty --format agent`
-- `php artisan wayfinder:generate` (if routes changed)
-- `npm run types:check` (if TypeScript changed)
-- `php artisan test --compact --filter=[feature]`
+### Task 4.1 - Quality gates
+- `[project format command]`
+- `[project lint/type-check command(s)]`
+- `[project feature/domain test command]`
 ````
 
 ### 4. Confirm
 
-Report the total number of tasks and ask the user whether to proceed with `sdd-apply [ticket-slug]`.
+Report total number of tasks and ask whether to proceed with `sdd-apply [ticket-slug]`.
 
 ---
 
@@ -93,7 +92,7 @@ Report the total number of tasks and ask the user whether to proceed with `sdd-a
 
 ## Rules
 
-- Never mix backend and frontend in a single task — each task must be independently executable.
-- Every task must have a verifiable success criterion (a passing test or an observable behavior).
+- Never mix unrelated layers in a single task if it makes verification non-atomic.
+- Every task must have a verifiable success criterion.
 - Do not plan tasks for files outside `## Constraints and non-goals` in `proposal.md`.
-- If a task depends on another, state the dependency explicitly.
+- If a task depends on another, state dependency explicitly.

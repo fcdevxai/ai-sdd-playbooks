@@ -1,8 +1,8 @@
-# /sdd-ff — SDD FF — Granularizar Tareas
+# /sdd-ff — SDD FF - Granularizar Tareas
 
 ## Objetivo
 
-Leer `proposal.md` aprobada y generar las tareas granularizadas en `tasks.md`, listas para ejecutar con `/sdd-apply`. Cada tarea debe ser atómica con criterio de éxito verificable.
+Leer `proposal.md` aprobada y generar tareas granularizadas en `tasks.md`, listas para ejecutar con `/sdd-apply`. Cada tarea debe ser atomica con criterio de exito verificable.
 
 ## Uso
 
@@ -12,38 +12,37 @@ Leer `proposal.md` aprobada y generar las tareas granularizadas en `tasks.md`, l
 
 ## Cuándo ejecutar
 
-Después de que el usuario aprueba `proposal.md` (status: pending). Antes de `/sdd-apply`.
+Despues de que el usuario aprueba `proposal.md` (status: pending). Antes de `/sdd-apply`.
 
 ## Instrucciones al agente
 
 1. Lee `openspec/changes/[ticket-slug]/proposal.md`. Verifica `status: pending`. Si es `draft`, detente.
-2. Lee `openspec/changes/[ticket-slug]/design.md` para decisiones técnicas.
+2. Lee `openspec/changes/[ticket-slug]/design.md` para decisiones tecnicas.
 3. Lee `openspec/specs/system.md` para convenciones globales.
-4. Lee los archivos de implementación existentes relacionados para entender el estado actual del código.
-5. Para cada criterio de aceptación, identifica las capas que toca (backend, frontend, tests).
-6. Genera `tasks.md` con `status: ready`, organizado en fases (Backend → Frontend → Tests → Closure).
-7. Cada tarea: nombre atómico, archivos a crear/modificar, comando artisan si aplica, criterio de éxito, criterio de aceptación vinculado.
+4. Lee `docs/doc_architecture.md` y `docs/doc_verification_guide.md` para estructura y comandos reales del proyecto.
+5. Para cada criterio de aceptacion, identifica las capas que toca.
+6. Genera `tasks.md` con `status: ready`, organizado en fases.
+7. Cada tarea: nombre atomico, archivos a crear/modificar, comando opcional, criterio de exito, criterio de aceptacion vinculado.
 8. Reporta el total de tareas y pregunta si procede con `/sdd-apply [ticket-slug]`.
 
 ## Checklist
 
 - [ ] `proposal.md` tiene `status: pending`
-- [ ] Cada criterio de aceptación mapeado a tareas concretas
-- [ ] Tareas separadas por capa (sin mezclar backend y frontend)
-- [ ] Cada tarea tiene criterio de éxito verificable (test o comportamiento observable)
-- [ ] Ninguna tarea fuera del scope de "Restricciones y non-goals"
-- [ ] Dependencias entre tareas documentadas explícitamente
+- [ ] Cada criterio de aceptacion mapeado a tareas concretas
+- [ ] Tareas separadas para permitir verificacion independiente
+- [ ] Cada tarea tiene criterio de exito verificable
+- [ ] Ninguna tarea fuera del scope de `proposal.md`
+- [ ] Dependencias entre tareas documentadas explicitamente
 - [ ] `tasks.md` guardado con `status: ready`
 
 ## Formato de reporte
 
-No genera reporte. Presenta el `tasks.md` generado al usuario y pide confirmación para proceder con `/sdd-apply`.
+
 
 ## Criterio de bloqueo
 
-No generar tareas si `proposal.md` tiene `status: draft`. El usuario debe aprobar primero.
+
 
 ## Qué NO reemplaza
 
-- El diseño técnico detallado (se discute en `design.md` antes de `/sdd-ff`)
-- La estimación de esfuerzo (responsabilidad del equipo)
+
