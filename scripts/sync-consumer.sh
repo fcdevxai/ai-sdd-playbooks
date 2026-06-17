@@ -268,11 +268,15 @@ echo ""
 AGENT_ARCH_DOC="docs/agent_architecture.md"
 DOC_ARCH="docs/doc_architecture.md"
 DOC_VERIFICATION="docs/doc_verification_guide.md"
+MANUAL_SDD="docs/manual-sdd-agentic-engineer.md"
+SDD_WORKFLOW="docs/sdd-workflow.md"
 
 MISSING_DOCS=()
 [[ ! -f "$AGENT_ARCH_DOC" ]]   && MISSING_DOCS+=("agent_architecture.md")
 [[ ! -f "$DOC_ARCH" ]]          && MISSING_DOCS+=("doc_architecture.md")
 [[ ! -f "$DOC_VERIFICATION" ]]  && MISSING_DOCS+=("doc_verification_guide.md")
+[[ ! -f "$MANUAL_SDD" ]]  && MISSING_DOCS+=("manual-sdd-agentic-engineer.md")
+[[ ! -f "$SDD_WORKFLOW" ]]  && MISSING_DOCS+=("sdd-workflow.md")
 
 if [[ ${#MISSING_DOCS[@]} -gt 0 ]]; then
   echo "⚠️  Faltan archivos necesarios en docs/:"
@@ -309,6 +313,8 @@ if [[ ${#MISSING_DOCS[@]} -gt 0 ]]; then
     [[ ! -f "$AGENT_ARCH_DOC" ]]  && cp "${TEMPLATES_SRC}/agent_architecture.md" "$AGENT_ARCH_DOC" && echo "  ✓ Created ${AGENT_ARCH_DOC}"
     [[ ! -f "$DOC_ARCH" ]]         && cp "${TEMPLATES_SRC}/doc_architecture.md" "$DOC_ARCH" && echo "  ✓ Created ${DOC_ARCH}"
     [[ ! -f "$DOC_VERIFICATION" ]] && cp "${TEMPLATES_SRC}/doc_verification_guide.md" "$DOC_VERIFICATION" && echo "  ✓ Created ${DOC_VERIFICATION}"
+    [[ ! -f "$MANUAL_SDD" ]] && cp "${TEMPLATES_SRC}/manual-sdd-agentic-engineer.md" "$MANUAL_SDD" && echo "  ✓ Created ${MANUAL_SDD}"
+    [[ ! -f "$SDD_WORKFLOW" ]] && cp "${TEMPLATES_SRC}/sdd-workflow.md" "$SDD_WORKFLOW" && echo "  ✓ Created ${SDD_WORKFLOW}"
     
     echo ""
     echo "  📝 Templates creados. Debes personalizarlos para tu proyecto:"
@@ -318,7 +324,7 @@ if [[ ${#MISSING_DOCS[@]} -gt 0 ]]; then
     echo ""
   else
     echo ""
-    echo "  ⚠️  IMPORTANTE: Los SKILLs de Copilot dependen de estos 3 archivos."
+    echo "  ⚠️  IMPORTANTE: Los SKILLs de Copilot dependen de estos archivos (salvo los asociado a SDD, que son manuales de como usar esta metodologia)."
     echo "     Sin ellos, los agentes no tendrán el contexto necesario para"
     echo "     tomar decisiones correctas sobre tu proyecto."
     echo ""
