@@ -69,6 +69,17 @@ openspec/
 
 ---
 
+## CodeGraph (intelligence sobre el codebase)
+
+Este repo está indexado por CodeGraph (existe `.codegraph/` en la raíz). **Para entender o localizar código, usar CodeGraph ANTES de `grep`/`find` o leer archivos completos**: una sola llamada devuelve el source verbatim de los símbolos relevantes más los call paths entre ellos, en mucho menos contexto que un ciclo de grep + lectura de N archivos.
+
+- **MCP tools** (si están disponibles): `codegraph_explore` responde la mayoría de las preguntas de código en una llamada (símbolos relevantes + rutas de llamada). `codegraph_node` devuelve el source de un símbolo + sus callers, o lee un archivo completo con números de línea. Si las tools aparecen como *deferred*, cargarlas por nombre vía tool search.
+- **Shell** (siempre funciona): `codegraph explore "<símbolos o pregunta>"` y `codegraph node <símbolo-o-archivo>`.
+
+**Cuándo NO usarlo**: para *contar* referencias de forma agregada (`grep -rl ... | wc -l` devuelve un entero y es más barato en tokens). CodeGraph rinde cuando el objetivo es *comprender* o *navegar* relaciones, no cuando solo se necesita un conteo.
+
+---
+
 ## Reglas del agente (críticas)
 
 1. **NUNCA modificar archivos fuera del scope de la spec activa** - la sección "Restricciones" de `proposal.md` define el boundary.
