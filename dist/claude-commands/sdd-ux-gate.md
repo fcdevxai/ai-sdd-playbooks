@@ -64,7 +64,7 @@ Después de `/sdd-code-review` y antes de `/sdd-commit`.
 
 ## Formato de reporte
 
-`openspec/changes/[ticket-slug]/ux-gate-report.md` con scope revisado, checklist UX/UI, issues con severidad/ubicación/problema/corrección, evidencia y veredicto.
+`openspec/changes/[ticket-slug]/ux-gate-report.md` con scope revisado, checklist UX/UI, issues con severidad/ubicación/problema/corrección, evidencia y veredicto `READY FOR PR UX` o `REQUIRES UX FIXES`.
 
 ## Criterio de bloqueo
 

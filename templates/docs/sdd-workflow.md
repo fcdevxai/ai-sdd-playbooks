@@ -269,7 +269,7 @@ La IA validará el comportamiento desde la perspectiva del usuario final:
 - Accesibilidad básica (navegación por teclado, labels, contraste)
 - Regresiones: flujos existentes no afectados
 
-Output: `openspec/changes/{slug}/ux-gate-report.md` con veredicto `LISTO PARA PR UX` o `REQUIERE CORRECCIONES UX`.
+Output: `openspec/changes/{slug}/ux-gate-report.md` con veredicto `READY FOR PR UX` o `REQUIRES UX FIXES`.
 
 Si hay correcciones → corrige → vuelve a ejecutar `/sdd-ux-gate`.
 

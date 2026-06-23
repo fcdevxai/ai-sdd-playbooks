@@ -134,3 +134,34 @@ jobs:
           fi
 
           echo "✅ Code review automático aprobado"
+
+      - name: Verificar ux-gate-report.md
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          SPEC_DIR="openspec/changes/${BRANCH}"
+          REPORT="$SPEC_DIR/ux-gate-report.md"
+
+          if [ ! -f "$REPORT" ]; then
+            echo "❌ ERROR: Falta 'ux-gate-report.md' en '$SPEC_DIR'"
+            echo "   Ejecuta /sdd-ux-gate en Claude Code antes de abrir el PR."
+            exit 1
+          fi
+
+          if grep -q "REQUIRES UX FIXES" "$REPORT"; then
+            echo "❌ ERROR: El /sdd-ux-gate encontró problemas UX sin resolver"
+            echo ""
+            echo "--- Contenido del reporte ---"
+            cat "$REPORT"
+            echo "----------------------------"
+            echo ""
+            echo "Corrige los issues UX y ejecuta /sdd-ux-gate de nuevo antes de continuar."
+            exit 1
+          fi
+
+          if ! grep -q "READY FOR PR UX" "$REPORT"; then
+            echo "⚠️  ADVERTENCIA: ux-gate-report.md no contiene el veredicto esperado."
+            echo "   Asegúrate de que el reporte incluya 'READY FOR PR UX' como veredicto final."
+            exit 1
+          fi
+
+          echo "✅ UX gate aprobado"
