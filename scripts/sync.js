@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * sync.js — Generates .github/skills/ and .claude/commands/ from canonical playbooks.
+ * sync.js — Generates .claude/commands/ from canonical playbooks.
  *
  * Usage:
  *   node scripts/sync.js          → generate files into dist/
@@ -10,7 +10,6 @@
 
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
 import matter from 'gray-matter';
 import { fileURLToPath } from 'url';
 
@@ -18,7 +17,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const PLAYBOOKS_DIR = path.join(ROOT, 'playbooks');
 const TEMPLATES_DIR = path.join(ROOT, 'templates');
-const DIST_SKILLS = path.join(ROOT, 'dist', 'github-skills');
 const DIST_COMMANDS = path.join(ROOT, 'dist', 'claude-commands');
 
 const CHECK_MODE = process.argv.includes('--check');
@@ -51,19 +49,6 @@ function extractSections(markdown) {
     sections[current] = buffer.join('\n').trim().replace(/\n*---\s*$/, '').trimEnd();
   }
   return sections;
-}
-
-// ── SKILL.md renderer ───────────────────────────────────────────────────────
-
-function renderSkill(frontmatter, body) {
-  const templatePath = path.join(TEMPLATES_DIR, 'skill.md.hbs');
-  const template = fs.readFileSync(templatePath, 'utf8');
-
-  return template
-    .replaceAll('{{NAME}}', frontmatter.slug)
-    .replaceAll('{{DESCRIPTION}}', frontmatter.description)
-    .replaceAll('{{TITLE}}', frontmatter.title_en || frontmatter.slug)
-    .replaceAll('{{BODY}}', body);
 }
 
 // ── command.md renderer ─────────────────────────────────────────────────────
@@ -149,21 +134,8 @@ for (const slug of slugs) {
   const raw = fs.readFileSync(canonicalPath, 'utf8');
   const { data: frontmatter, content } = matter(raw);
 
-  // Extract skill body: everything before <!-- END_SKILL -->
-  // Use replace() instead of trim() to preserve trailing spaces on the last line
-  // (some skills use trailing double-spaces for markdown line breaks).
-  const END_SKILL = '<!-- END_SKILL -->';
-  const delimIdx = content.indexOf(END_SKILL);
-  const skillBody = (delimIdx !== -1 ? content.slice(0, delimIdx) : content)
-    .replace(/^\n+/, '')   // strip leading blank lines only
-    .replace(/\n+$/, '');  // strip trailing newlines only (not spaces)
-
-  // Extract sections for command rendering (uses full content)
+  // Extract sections for command rendering (full content, ignoring <!-- END_SKILL --> delimiter)
   const sections = extractSections(content);
-
-  // Generate SKILL.md
-  const skillContent = renderSkill({ ...frontmatter, slug }, skillBody);
-  writeOrCheck(path.join(DIST_SKILLS, slug, 'SKILL.md'), skillContent);
 
   // Generate command.md
   const commandContent = renderCommand({ ...frontmatter, slug }, sections);
@@ -171,7 +143,6 @@ for (const slug of slugs) {
 }
 
 // Clean stale files
-cleanStale(DIST_SKILLS, validSlugs, true);
 cleanStale(DIST_COMMANDS, validSlugs, false);
 
 if (CHECK_MODE) {
@@ -183,5 +154,5 @@ if (CHECK_MODE) {
     process.exit(0);
   }
 } else {
-  console.log(`\n✅ Done. Generated ${slugs.length * 2} files.\n`);
+  console.log(`\n✅ Done. Generated ${slugs.length} commands.\n`);
 }
