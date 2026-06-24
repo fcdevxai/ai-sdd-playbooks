@@ -1,24 +1,8 @@
 ---
 slug: document-code
-title_en: "Document Code — Technical documentation in Confluence"
 title_es: "Documentación técnica de código en Confluence"
-description: "Generate structured technical documentation from source code and publish it to Confluence. Supports entities with impact analysis (ORM relationships, service/repository/controller references), backend services/controllers/repositories, and frontend components. Supports batch mode for all entities in a directory. Always reads source code before writing — never documents from memory. Activate when the user says \"document-code\" or asks to document a class, entity, or module in Confluence."
 when_es: "Cuando necesitas documentar código del proyecto (entidad, servicio, controlador o componente frontend) en Confluence."
 ---
-
-## Purpose
-
-Generate structured technical documentation from source code and publish it to Confluence. Supports three document types:
-
-- **Type A — Entity / Database**: ORM relationship analysis, service/repository/controller reference count (impact level: High/Medium/Low), fields table, relationships, and business rules.
-- **Type B — Backend (Service, Controller, Repository)**: dependencies, public methods with parameters and return types, events dispatched, and design notes.
-- **Type C — Frontend (JS/Twig component)**: data inputs, actions/events, usage examples, and dependencies.
-
-Supports batch mode to document all entities in a directory at once, with create-or-update logic per Confluence page.
-
-Always reads source files before writing — never documents from memory.
-
-<!-- END_SKILL -->
 
 ## Objetivo
 
@@ -224,135 +208,19 @@ Ejemplo: `Entity · Candidate`
 **Secciones** (en este orden exacto):
 
 ```
-## Overview
-Una o dos frases: qué representa esta entidad en el dominio del negocio.
 
-**File:** `[ENTITIES_PATH]/[EntityName][FILE_EXT]`
-**Repository:** `[Namespace del framework]\[EntityName]Repository` *(omitir si no aplica al ORM del proyecto)*
+## Checklist
 
-## Impact Level
-Nivel de impacto/relevancia de esta entidad dentro del sistema: High / Medium / Low.
-Incluir un resumen breve de los indicadores que determinaron el nivel:
-- ORM relationships: N
-- Referenced in services: N files
-- Referenced in repositories: N files
-- Referenced in controllers: N files
 
-## Database Table
-Nombre de la tabla en la base de datos (valor del @ORM\Table name).
 
-## Traits
-(Incluir esta sección SOLO si la entidad usa traits — use statements con traits propios del proyecto.)
-Tabla con columnas: Trait | What it adds
-Describir qué columnas o comportamiento agrega cada trait a la entidad.
-Omitir esta sección completamente si la entidad no usa traits.
+## Formato de reporte
 
-## Fields
-Tabla con columnas: Field | Column | Type | Nullable | Default | Description
-- Field: nombre de la propiedad PHP.
-- Column: nombre real de la columna en la base de datos (valor del @ORM\Column name, o igual al field si no se especifica).
-- Type: tipo de dato de la columna (string, integer, boolean, datetime, text, json, etc.).
-- Nullable: Yes / No.
-- Default: valor por defecto si existe, o "—" si no aplica.
-- Description: significado de negocio del campo. Indicar si es PK, FK, unique, o enum con sus valores posibles.
-Agrupar los campos por categoría semántica si la entidad tiene muchos campos (ej: "Identity & Authentication", "Profile", "Status & Lifecycle").
 
-## Relationships
-Tabla con columnas: Relation | Type | Target Entity | Description
-Tipos: OneToMany, ManyToOne, ManyToMany, OneToOne.
-Describir qué representa la relación en términos de negocio.
-
-## Business Rules
-Lista de reglas implícitas que el código aplica sobre esta entidad.
-Ejemplos: "Only one active record per candidate", "status transitions follow X flow".
-
-## Indexes & Constraints
-Si hay índices relevantes o constraints adicionales más allá de los FK/PK.
-Omitir esta sección si no hay índices adicionales declarados.
-```
-
----
-
-#### Tipo B — Backend (Service, Controller, Repository)
-
-**Título**: `[Layer] · [ClassName]`
-Ejemplo: `Service · CandidateService`, `Controller · JobOfferController`
-
-**Secciones**:
-
-```
-## Purpose
-Qué responsabilidad tiene este componente dentro de la arquitectura. Una o dos frases.
-
-## Location
-Ruta relativa del archivo en el proyecto.
-
-## Dependencies
-Tabla con columnas: Dependency | Type | Purpose
-Listar servicios inyectados, repositorios, helpers, etc.
-
-## Public Methods
-Por cada método público:
-
-### methodName(params): ReturnType
-- **Description**: qué hace.
-- **Parameters**: tabla con nombre, tipo, descripción.
-- **Returns**: qué devuelve y bajo qué condiciones.
-- **Throws**: excepciones que puede lanzar.
-- **Business logic**: reglas o decisiones de negocio relevantes que implementa.
-
-## Events Dispatched (si aplica)
-Tabla con columnas: Event | When | Description
-
-## Notes
-Decisiones de diseño no obvias, limitaciones conocidas, deuda técnica relevante.
-```
-
----
-
-#### Tipo C — Frontend (componente JS o Twig)
-
-**Título**: `Frontend · [ComponentName]`
-Ejemplo: `Frontend · JobOfferMatchButton`
-
-**Secciones**:
-
-```
-## Purpose
-Qué hace este componente visualmente y funcionalmente. Una o dos frases.
-
-## Location
-Ruta relativa del archivo en el proyecto.
-
-## Data Inputs
-Tabla con columnas: Variable / Prop | Type | Source | Description
-De dónde viene cada dato que el componente necesita (Twig vars, API, DOM, etc.)
-
-## Actions & Events
-Tabla con columnas: Action | Trigger | Description
-Qué hace el componente en respuesta a interacciones del usuario o eventos del sistema.
-
-## Dependencies
-Librerías JS, otros componentes, rutas de API, servicios Symfony que consume.
-
-## Usage Example
-Bloque de código mostrando cómo se incluye o instancia el componente.
-
-## Notes
-Comportamientos no obvios, condiciones especiales, limitaciones conocidas.
-```
-
----
-
-### Reglas generales
-
-- **Idioma**: inglés en todo el documento (títulos, secciones, contenido).
-- **Basarse siempre en el código leído**, no en suposiciones. Si algo no está claro en el código, indicarlo con `<!-- TODO: verify -->`.
-- **No documentar métodos privados** a menos que encapsulen lógica de negocio crítica no evidente desde los públicos.
-- **No incluir** detalles de implementación triviales (getters/setters simples, imports, configuración de Symfony estándar).
-- **Ser preciso con los tipos**: usar los tipos reales del código (no genéricos como "string" si es un enum o value object específico).
-- **Impact Level solo aplica a entidades** — no incluir esta sección en documentos Tipo B o Tipo C.
 
 ## Criterio de bloqueo
 
 Si `getAccessibleAtlassianResources` no devuelve recursos, informar al usuario que debe autenticarse con el MCP de Atlassian ejecutando `/mcp` y seleccionando "claude.ai Atlassian".
+
+## Qué NO reemplaza
+
+

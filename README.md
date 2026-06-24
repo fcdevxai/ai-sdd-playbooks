@@ -1,146 +1,154 @@
 # ai-sdd-playbooks
 
-Single source of truth for SDD AI workflow definitions. Generates both **Copilot Skills** (`.github/skills/`) and **Claude Commands** (`.claude/commands/`) from canonical playbook files.
+Biblioteca de comandos Claude Code para equipos de desarrollo. Centraliza las definiciones de flujos de trabajo en archivos canónicos y los distribuye a los proyectos consumidores vía git submodule.
 
-## Structure
+Cada playbook vive en `playbooks/[slug]/canonical.md` como fuente única de verdad. El script `sync-consumer.sh` los instala en `.claude/commands/` del proyecto destino.
+
+---
+
+## Comandos disponibles
+
+### Ciclo SDD
+
+Flujos que implementan la metodología Software-Driven Development. Se instalan siempre al ejecutar el sync.
+
+| Comando | Fase | Descripción |
+|---|---|---|
+| `/sdd-enrich-us` | Requirements | Enriquece una user story con criterios de aceptación y casos de error |
+| `/sdd-new` | Scaffolding | Crea los artefactos de la feature en `openspec/changes/` |
+| `/sdd-ff` | Planning | Granulariza tasks y aplica feature flags |
+| `/sdd-apply` | Implementation | Ejecuta el contrato de la spec |
+| `/sdd-code-review` | Review | Revisión automática contra la spec |
+| `/sdd-ux-gate` | UX Validation | Verifica criterios de UX antes de merge |
+| `/sdd-commit` | Ship | Genera el commit con referencia a la spec |
+| `/sdd-verify` | Verification | Verifica criterios de aceptación post-PR |
+| `/sdd-archive` | Closure | Archiva la feature completada |
+
+### Documentación técnica en Confluence
+
+Comandos add-on para automatizar documentación. Se ofrecen opcionalmente durante el sync — el equipo decide si los instala.
+
+| Comando | Descripción |
+|---|---|
+| `/document-code` | Lee código fuente y genera documentación técnica estructurada en Confluence. Soporta entidades/DB, servicios, controllers y componentes frontend. Incluye análisis de impacto y modo batch para documentar múltiples entidades en un solo ciclo. Compatible con Doctrine ORM, TypeORM, Eloquent y otros. |
+| `/write-in-confluence` | Redacta guías operacionales sobre funcionalidades de la plataforma y las publica en Confluence. Dirigido a equipos de Operaciones y Soporte, no a TI. |
+
+---
+
+## Estructura del repositorio
 
 ```
-playbooks/[slug]/canonical.md      → source of truth per flow
+playbooks/[slug]/canonical.md      → fuente de verdad por flujo
 templates/
-├── skill.md.hbs                   → SKILL.md template
-├── command.md.hbs                 → command.md template
-├── openspec/                      → base templates for OpenSpec structure
-│   └── system.md                  → global system spec template (generic)
-├── docs/                          → base templates for project docs
-│   ├── agent_architecture.md      → AI agent workflow guide template
-│   ├── doc_architecture.md        → technical architecture template
-│   └── doc_verification_guide.md  → verification commands template
-├── claude/                        → base templates for Claude Code setup
-│   ├── CLAUDE.md                  → root CLAUDE.md template (project context + managed SDD block)
-│   ├── CLAUDE_SDD_BLOCK.md        → managed SDD block injected/updated inside root CLAUDE.md
-│   └── settings.json              → Claude permissions template (secure SDD defaults)
-└── github/                        → base templates for GitHub SDD integration
-    ├── CODEOWNERS                 → protege openspec/specs/ y workflows
-    ├── PULL_REQUEST_TEMPLATE.md   → checklist SDD en cada PR
+├── command.md.hbs                 → template de comando Claude (uso interno del generador)
+├── openspec/
+│   └── system.md                  → template del system spec global
+├── docs/                          → templates base para documentación del proyecto
+│   ├── agent_architecture.md
+│   ├── doc_architecture.md
+│   ├── doc_verification_guide.md
+│   ├── manual-sdd-agentic-engineer.md
+│   └── sdd-workflow.md
+├── claude/                        → templates base para setup de Claude Code
+│   ├── CLAUDE.md
+│   ├── CLAUDE_SDD_BLOCK.md        → bloque SDD gestionado automáticamente dentro de CLAUDE.md
+│   └── settings.json
+└── github/                        → templates base para integración GitHub SDD
+    ├── CODEOWNERS
+    ├── PULL_REQUEST_TEMPLATE.md
     ├── ISSUE_TEMPLATE/
-    │   └── user-story.md            → issue template para el ciclo /sdd-enrich-us
+    │   └── user-story.md
     └── workflows/
-        ├── archive-cleanup.yml      → alerta semanal de proposals obsoletas
-        └── spec-lint.yml            → valida estructura de specs en cada PR
+        ├── archive-cleanup.yml    → alerta semanal de proposals obsoletas
+        └── spec-lint.yml          → valida estructura de specs en cada PR
 scripts/
-├── sync.js                        → generator
-└── sync-consumer.sh               → consumer project sync script
+├── sync.js                        → generador (produce dist/ desde playbooks/)
+└── sync-consumer.sh               → script de instalación en proyectos consumidores
 dist/
-├── github-skills/[slug]/          → generated SKILL.md files
-└── claude-commands/[slug].md      → generated command.md files
+└── claude-commands/[slug].md      → comandos SDD generados (copiados por sync-consumer.sh)
 ```
 
-## Usage
+---
+
+## Uso del generador (este repositorio)
 
 ```bash
 npm install
-node scripts/sync.js        # generate dist/
-node scripts/sync.js --check  # check for drift (used in CI)
+node scripts/sync.js          # genera dist/
+node scripts/sync.js --check  # verifica que dist/ esté en sync con playbooks/ (CI)
 ```
 
-## Flows
+---
 
-| Slug | Phase |
-|---|---|
-| `sdd-enrich-us` | Requirements |
-| `sdd-new` | Scaffolding |
-| `sdd-ff` | Planning |
-| `sdd-apply` | Implementation |
-| `sdd-code-review` | Review |
-| `sdd-ux-gate` | UX Validation |
-| `sdd-commit` | Ship |
-| `sdd-verify` | Verification |
-| `sdd-archive` | Closure |
+## Distribución (git submodule)
 
-## Distribution (git submodule)
-
-### Adding to a new project
+### Agregar a un proyecto nuevo
 
 ```bash
-# 1. Add submodule
+# 1. Agregar el submodule
 git submodule add https://github.com/fcdevxai/ai-sdd-playbooks.git .ai-sdd-playbooks
 
-# 2. Copy the sync script into your project (once)
+# 2. Copiar el script de sync al proyecto (una sola vez)
 cp .ai-sdd-playbooks/scripts/sync-consumer.sh sync-playbooks.sh
 
-# 3. Run sync (interactive mode)
+# 3. Ejecutar el sync (modo interactivo)
 bash sync-playbooks.sh
 ```
 
-**Interactive mode features:**
+### Qué hace el sync interactivo
 
-1. **AI target selector**: checkbox menu to choose which AI(s) to sync (GitHub Copilot, Claude, or both)
-2. **OpenSpec setup**: detects missing `openspec/` base structure and offers to create:
-  - `openspec/specs/system.md` — global system spec template
-  - `openspec/changes/` — active features workspace
-3. **Documentation setup**: detects missing `docs/` files and offers to create base templates:
-   - `docs/agent_architecture.md` — AI agent workflow guide
-   - `docs/doc_architecture.md` — technical architecture reference
-   - `docs/doc_verification_guide.md` — verification commands guide
-4. **Claude coexistence model**: when Claude is selected, sync checks:
-  - `CLAUDE.md` in project root (required by Claude as primary context)
-  - `.claude/settings.json` (agent permissions)
-  - updates only the SDD section between markers in `CLAUDE.md`, preserving developer-specific content
+El script instala los comandos y valida que la estructura del proyecto esté completa. Ejecuta los siguientes pasos en orden:
 
-> **Important**: The generated SKILLs reference these docs files. Customize the templates for your project's stack and architecture.
+1. **Comandos SDD core** — copia `dist/claude-commands/*.md` a `.claude/commands/` siempre.
 
-**Non-interactive mode** (for CI/scripts):
+2. **Comandos add-on de documentación** — detecta si `document-code` y `write-in-confluence` están disponibles pero no instalados, y pregunta si se desea instalarlos.
+
+3. **docs/** — verifica que existan los archivos de contexto del proyecto (`agent_architecture.md`, `doc_architecture.md`, etc.). Si faltan, ofrece crear templates base.
+
+4. **openspec/** — verifica la estructura base de OpenSpec (`openspec/specs/system.md`, `openspec/changes/`). Si falta, ofrece crearla.
+
+5. **`.github/`** — verifica los artefactos SDD de GitHub (CODEOWNERS, PR template, issue template, workflows). Si faltan, ofrece copiarlos desde templates.
+
+6. **Claude setup** — verifica `CLAUDE.md` en raíz y `.claude/settings.json`. Si faltan, ofrece crear templates base. Siempre mantiene en sync el bloque SDD entre marcadores dentro de `CLAUDE.md`.
+
+### Modo no-interactivo (CI / scripts)
+
+Todas las preguntas interactivas tienen su variable de entorno equivalente:
 
 ```bash
-# Sync only GitHub Copilot skills, skip all prompts
-AI_TARGET=copilot CREATE_OPENSPEC=no CREATE_DOCS=no CREATE_GITHUB_FILES=no bash sync-playbooks.sh
-
-# Sync only Claude commands, create all missing files
-AI_TARGET=claude CREATE_OPENSPEC=yes CREATE_DOCS=yes CREATE_CLAUDE_FILES=yes bash sync-playbooks.sh
-
-# Sync both, create all missing files
-AI_TARGET=both CREATE_OPENSPEC=yes CREATE_DOCS=yes CREATE_GITHUB_FILES=yes CREATE_CLAUDE_FILES=yes bash sync-playbooks.sh
+CREATE_OPENSPEC=yes \
+CREATE_DOCS=yes \
+CREATE_CLAUDE_FILES=yes \
+CREATE_GITHUB_FILES=yes \
+CREATE_DOC_COMMANDS=yes \
+bash sync-playbooks.sh
 ```
 
-**Custom paths:**
+### Rutas personalizadas
 
 ```bash
-SKILLS_DEST=".github/skills" COMMANDS_DEST=".claude/commands" bash sync-playbooks.sh
+COMMANDS_DEST=".claude/commands" bash sync-playbooks.sh
 ```
 
-### Updating playbooks
+### Actualizar playbooks
 
 ```bash
-# Pull latest playbooks from canonical
+# Traer la última versión del submodule
 git submodule update --remote .ai-sdd-playbooks
 
-# Sync (will ask which AI target to update)
+# Re-sincronizar
 bash sync-playbooks.sh
 
-# Or specify target explicitly
-AI_TARGET=both bash sync-playbooks.sh
-
-# Commit changes
-git add .ai-sdd-playbooks .ai/skills .claude/commands docs/
+# Commitear los cambios
+git add .ai-sdd-playbooks .claude/commands docs/
 git commit -m "chore: update playbooks from canonical"
 ```
 
 ### CI anti-drift
 
-Add a workflow step that runs `bash sync-playbooks.sh --check` after checking out with `submodules: true`. It exits 1 if committed files differ from the canonical, preventing untracked manual edits.
-
-**Example GitHub Actions workflow:**
+Agrega un step en tu workflow que ejecute `bash sync-playbooks.sh --check` después de hacer checkout con `submodules: true`. Sale con código 1 si los archivos en `.claude/commands/` difieren del canonical.
 
 ```yaml
 - name: Check playbooks are in sync
   run: bash sync-playbooks.sh --check
 ```
-
-**Scope check to specific AI** (useful if project only uses one):
-
-```yaml
-- name: Check Copilot skills are in sync
-  run: AI_TARGET=copilot bash sync-playbooks.sh --check
-```
-
-Without `AI_TARGET`, checks both Copilot and Claude files (default).
