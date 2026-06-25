@@ -66,21 +66,21 @@ jobs:
           PROPOSAL="openspec/changes/${BRANCH}/proposal.md"
           FAILED=0
 
-          if ! grep -q "## Criterios de aceptación" "$PROPOSAL"; then
-            echo "❌ ERROR: proposal.md no tiene la sección '## Criterios de aceptación'"
-            echo "   Los criterios de aceptación son obligatorios. Formato: AC-01, AC-02..."
+          if ! grep -q "## Acceptance criteria" "$PROPOSAL"; then
+            echo "❌ ERROR: proposal.md no tiene la sección '## Acceptance criteria'"
+            echo "   Los criterios de aceptación son obligatorios. Generados por /sdd-new."
             FAILED=1
           fi
 
-          if ! grep -q "## Casos de error" "$PROPOSAL"; then
-            echo "❌ ERROR: proposal.md no tiene la sección '## Casos de error'"
-            echo "   Una spec sin casos de error es una spec incompleta."
+          if ! grep -q "## Error cases" "$PROPOSAL"; then
+            echo "❌ ERROR: proposal.md no tiene la sección '## Error cases'"
+            echo "   Una spec sin casos de error es una spec incompleta. Generados por /sdd-new."
             FAILED=1
           fi
 
-          if ! grep -q "## Restricciones" "$PROPOSAL"; then
-            echo "❌ ERROR: proposal.md no tiene la sección '## Restricciones'"
-            echo "   Las restricciones definen el scope del agente y previenen cambios fuera de scope."
+          if ! grep -q "## Constraints and non-goals" "$PROPOSAL"; then
+            echo "❌ ERROR: proposal.md no tiene la sección '## Constraints and non-goals'"
+            echo "   Las restricciones definen el scope del agente y previenen cambios fuera de scope. Generadas por /sdd-new."
             FAILED=1
           fi
 
@@ -95,14 +95,14 @@ jobs:
           BRANCH="${{ github.head_ref }}"
           PROPOSAL="openspec/changes/${BRANCH}/proposal.md"
 
-          if grep -q "Estado: DRAFT" "$PROPOSAL"; then
-            echo "❌ ERROR: proposal.md está en estado DRAFT"
-            echo "   El proposal debe ser revisado y aprobado (Estado: APROBADA) antes de abrir un PR."
-            echo "   Cambia el estado en el encabezado del proposal.md."
+          if grep -q "status: draft" "$PROPOSAL"; then
+            echo "❌ ERROR: proposal.md tiene status: draft"
+            echo "   El proposal debe ser revisado y aprobado (status: pending) antes de abrir un PR."
+            echo "   Un revisor humano debe cambiar 'status: draft' a 'status: pending' en el frontmatter."
             exit 1
           fi
 
-          echo "✅ Proposal no está en estado DRAFT"
+          echo "✅ Proposal aprobado (status: pending)"
 
       - name: Verificar code-review-report.md
         run: |
@@ -116,7 +116,7 @@ jobs:
             exit 1
           fi
 
-          if grep -q "REQUIERE CORRECCIONES" "$REPORT"; then
+          if grep -q "REQUIRES FIXES" "$REPORT"; then
             echo "❌ ERROR: El /sdd-code-review automático encontró problemas sin resolver"
             echo ""
             echo "--- Contenido del reporte ---"
@@ -127,9 +127,9 @@ jobs:
             exit 1
           fi
 
-          if ! grep -q "LISTO PARA PR HUMANO" "$REPORT"; then
+          if ! grep -q "READY FOR PR" "$REPORT"; then
             echo "⚠️  ADVERTENCIA: code-review-report.md no contiene el veredicto esperado."
-            echo "   Asegúrate de que el reporte incluya 'LISTO PARA PR HUMANO' como veredicto final."
+            echo "   Asegúrate de que el reporte incluya 'READY FOR PR' como veredicto final."
             exit 1
           fi
 

@@ -26,15 +26,30 @@ const CHECK_MODE = process.argv.includes('--check');
 /**
  * Extracts named H2 sections from a markdown body.
  * Returns a map of { headingText: bodyContent }.
+ * Skips H2 detection inside code fences (backtick or tilde, 3+).
  */
 function extractSections(markdown) {
   const sections = {};
   const lines = markdown.split('\n');
   let current = null;
   let buffer = [];
+  let fenceDepth = 0;
+  let fenceChar = '';
 
   for (const line of lines) {
-    const h2Match = line.match(/^## (.+)$/);
+    const fenceMatch = line.match(/^(`{3,}|~{3,})/);
+    if (fenceMatch) {
+      const marker = fenceMatch[1];
+      if (fenceDepth === 0) {
+        fenceDepth = marker.length;
+        fenceChar = marker[0];
+      } else if (marker[0] === fenceChar && marker.length >= fenceDepth) {
+        fenceDepth = 0;
+        fenceChar = '';
+      }
+    }
+
+    const h2Match = fenceDepth === 0 && line.match(/^## (.+)$/);
     if (h2Match) {
       if (current !== null) {
         sections[current] = buffer.join('\n').trim().replace(/\n*---\s*$/, '').trimEnd();
@@ -54,8 +69,22 @@ function extractSections(markdown) {
 // ── command.md renderer ─────────────────────────────────────────────────────
 
 function renderCommand(frontmatter, sections) {
-  const templatePath = path.join(TEMPLATES_DIR, 'command.md.hbs');
+  const isEN = frontmatter.lang === 'en';
+  const templateFile = isEN ? 'command-en.md.hbs' : 'command.md.hbs';
+  const templatePath = path.join(TEMPLATES_DIR, templateFile);
   const template = fs.readFileSync(templatePath, 'utf8');
+
+  if (isEN) {
+    return template
+      .replaceAll('{{SLUG}}', frontmatter.slug)
+      .replaceAll('{{TITLE}}', frontmatter.title_en || frontmatter.slug)
+      .replaceAll('{{WHEN}}', frontmatter.when || '')
+      .replaceAll('{{PURPOSE}}', sections['Purpose'] || '')
+      .replaceAll('{{CONTEXT}}', sections['Context'] || '')
+      .replaceAll('{{BEHAVIOR}}', sections['Behavior'] || '')
+      .replaceAll('{{OUTPUT}}', sections['Output'] || '')
+      .replaceAll('{{RULES}}', sections['Rules'] || '');
+  }
 
   return template
     .replaceAll('{{SLUG}}', frontmatter.slug)

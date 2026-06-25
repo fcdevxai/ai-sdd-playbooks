@@ -209,6 +209,8 @@ Ejemplo: `Entity · Candidate`
 
 ```
 
+```
+
 ## Checklist
 
 

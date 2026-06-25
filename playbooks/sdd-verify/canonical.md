@@ -1,10 +1,11 @@
 ---
+lang: en
 slug: sdd-verify
 title_en: "SDD Verify - Post-Merge Acceptance Verification"
 title_es: "SDD Verify - Verificar Criterios de Aceptacion post-PR"
 description: "Verify that all acceptance criteria in the spec have passing tests/checks after the PR is merged. Run feature verification commands, map each criterion to evidence, check regressions, and generate verification-report.md. Activate when the user says \"sdd-verify\", \"verify acceptance criteria\", \"post-merge verification\", or asks to verify a merged feature before archiving. Requires agent mode with terminal access."
 description_es: "Verifica que todos los criterios de aceptacion de la spec se cumplen en el estado actual del codigo, post-merge. Genera verification-report.md."
-when_es: "Despues de que el PR fue aprobado y mergeado en main. Antes de `/sdd-archive`."
+when: "Despues de que el PR fue aprobado y mergeado en main. Antes de `/sdd-archive`."
 output_file: "verification-report.md"
 verdict_pass: "FEATURE VERIFIED"
 verdict_fail: "GAPS DETECTED"
@@ -99,34 +100,3 @@ FEATURE VERIFIED / GAPS DETECTED
 - Any blocking regression -> verdict must be `GAPS DETECTED`.
 - Never proceed to `sdd-archive` if verdict is `GAPS DETECTED`.
 
-<!-- END_SKILL -->
-
----
-
-## Objetivo
-
-Verificar que todos los criterios de aceptacion de la spec se cumplen en el estado actual del codigo, post-merge. Genera un reporte de verificacion final.
-
----
-
-## Instrucciones
-
-1. Lee `openspec/changes/[ticket-slug]/proposal.md`.
-2. Lee `openspec/changes/[ticket-slug]/testing-report.md`.
-3. Ejecuta los comandos de verificacion de feature/dominio definidos en `docs/doc_verification_guide.md`.
-4. Para cada criterio de aceptacion: identifica evidencia passing; si no existe, marcar gap.
-5. Verifica casos de error con evidencia passing.
-6. Ejecuta regresion segun guia del proyecto.
-7. Genera `openspec/changes/[ticket-slug]/verification-report.md`.
-
----
-
-## Checklist
-
-- [ ] `proposal.md` leido - criterios de aceptacion listados
-- [ ] `testing-report.md` leido - evidencia inicial identificada
-- [ ] Verificacion de feature/dominio ejecutada
-- [ ] Cada criterio de aceptacion mapeado a evidencia
-- [ ] Criterios sin evidencia marcados como gaps
-- [ ] Regresion ejecutada segun guia del proyecto
-- [ ] `verification-report.md` generado con veredicto
