@@ -45,6 +45,7 @@ El SDD se apoya en dos entornos que se complementan. No son redundantes: cada un
 | `/sdd-apply [ticket]` | Implementación | Código en TDD, checkboxes completados, Execution Report |
 | `/sdd-code-review [ticket]` | Revisión | `code-review-report.md` con veredicto spec-compliance |
 | `/sdd-ux-gate` | Revisión | `ux-gate-report.md` con veredicto UX/UI (`READY FOR PR UX` / `REQUIRES UX FIXES`) |
+| `/sdd-e2e-gate [ticket]` | Revisión | `e2e-gate-report.md` con veredicto de integración backend vía Playwright MCP (`READY FOR PR E2E` / `REQUIRES E2E FIXES`). Solo aplica a proyectos con interfaz web |
 | `/sdd-commit [ticket]` | Cierre | Commit Conventional Commits + descripción de rama |
 | `/sdd-verify [ticket]` | Cierre | Confirmación de que todos los ACs tienen tests pasando |
 | `/sdd-archive [ticket]` | Cierre | `openspec/specs/{domain}/spec.md` actualizado |
@@ -59,6 +60,7 @@ El SDD se apoya en dos entornos que se complementan. No son redundantes: cada un
 | `sdd-apply` | Implementación | Código en TDD, checkboxes completados, `testing-report.md` |
 | `sdd-code-review` | Revisión | `code-review-report.md` con veredicto spec-compliance |
 | `sdd-ux-gate` | Revisión | `ux-gate-report.md` con veredicto UX/UI (`READY FOR PR UX` / `REQUIRES UX FIXES`) |
+| `sdd-e2e-gate` | Revisión | `e2e-gate-report.md` con veredicto de integración backend vía Playwright MCP (`READY FOR PR E2E` / `REQUIRES E2E FIXES`). Solo aplica a proyectos con interfaz web |
 | `sdd-commit` | Cierre | Commit Conventional Commits + PR abierto (descripción inline) |
 | `sdd-verify` | Cierre | `verification-report.md` — todos los ACs tienen tests pasando |
 | `sdd-archive` | Cierre | `openspec/specs/{domain}/spec.md` actualizado |
@@ -98,10 +100,17 @@ Ambos entornos cubren el ciclo completo. Claude Code usa comandos `/`; Copilot u
                          ▼
               code-review-report.md (READY FOR PR / REQUIRES FIXES)
                          │
+         ├── Claude Code ──────► /sdd-ux-gate
          └── GitHub Copilot ──► sdd-ux-gate
                          │
                          ▼
               ux-gate-report.md (READY FOR PR UX / REQUIRES UX FIXES)
+                         │
+         ├── Claude Code ──────► /sdd-e2e-gate   (solo si el proyecto tiene interfaz web)
+         └── GitHub Copilot ──► sdd-e2e-gate
+                         │
+                         ▼
+              e2e-gate-report.md (READY FOR PR E2E / REQUIRES E2E FIXES / N/A / BLOCKED)
                          │
          ├── Claude Code ──────► /sdd-commit
          └── GitHub Copilot ──► sdd-commit  (descripción generada inline)
@@ -277,6 +286,29 @@ Si hay correcciones → corrige → vuelve a ejecutar `/sdd-ux-gate`.
 
 ---
 
+### Paso 9b — Validación E2E con `/sdd-e2e-gate`
+
+```
+/sdd-e2e-gate [ticket-slug]
+```
+
+La IA conduce el flujo crítico a través de la UI real usando Playwright MCP e inspecciona la integración real con el backend:
+
+- Peticiones de red disparadas (status, payload) y si la UI refleja la respuesta real (no datos mockeados/obsoletos)
+- Sesión/auth respetada en rutas protegidas
+- Al menos un caso de error del backend expuesto correctamente al usuario
+- Consola del navegador sin errores inesperados durante el flujo exitoso
+
+Output: `openspec/changes/{slug}/e2e-gate-report.md` con veredicto `READY FOR PR E2E` o `REQUIRES E2E FIXES`.
+
+> **Requiere el MCP `playwright` registrado** (`claude mcp add playwright npx @playwright/mcp@latest`). Si no está disponible, el veredicto es `BLOCKED - PLAYWRIGHT MCP NOT CONFIGURED` en vez de simular evidencia.
+>
+> **Para proyectos sin interfaz web** (APIs REST puras): este gate se omite automáticamente (`N/A`) y no bloquea el ciclo.
+
+Si hay correcciones → corrige → vuelve a ejecutar `/sdd-e2e-gate`.
+
+---
+
 ### Paso 10 — Commit y PR
 
 ```
@@ -335,6 +367,12 @@ Escribe `sdd-code-review [ticket-slug]`. El skill revisa el código contra `prop
 
 Escribe `sdd-ux-gate [ticket-slug]`. El skill valida el flujo UX/UI implementado (recorrido principal, estados loading/empty/error, responsive, accesibilidad básica) y genera `ux-gate-report.md` con veredicto `READY FOR PR UX` o `REQUIRES UX FIXES`.
 
+### Paso 7b — E2E Gate
+
+Escribe `sdd-e2e-gate [ticket-slug]`. El skill conduce el flujo crítico por la UI real con Playwright MCP e inspecta la integración real con el backend (peticiones de red, sesión/auth, errores de consola), y genera `e2e-gate-report.md` con veredicto `READY FOR PR E2E` o `REQUIRES E2E FIXES`.
+
+> Requiere el MCP `playwright` registrado. Se omite automáticamente (`N/A`) en proyectos sin interfaz web.
+
 ### Paso 8 — Commit y PR
 
 Escribe `sdd-commit [ticket-slug]`. El skill valida el veredicto, hace commit con Conventional Commits, pushea la rama, y abre el PR generando la descripción del PR inline.
@@ -363,6 +401,7 @@ openspec/changes/{slug}/
   tasks.md              ← plan ejecutable paso a paso             (Paso 4 — sdd-ff)
   code-review-report.md ← resultado de sdd-code-review            (Paso 6 — sdd-code-review)
   ux-gate-report.md     ← resultado de sdd-ux-gate                (Paso 7 — sdd-ux-gate)
+  e2e-gate-report.md    ← resultado de sdd-e2e-gate                (Paso 9b/7b — sdd-e2e-gate)
 ```
 
 ---
