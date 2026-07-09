@@ -48,6 +48,7 @@ Este repo está indexado por CodeGraph (existe `.codegraph/` en la raíz). **Par
 | `/sdd-apply [ticket]` | Implementación | Ejecuta spec activa (TDD, sin improvisar fuera de scope) |
 | `/sdd-code-review [ticket]` | Revisión | Revisión automática contra spec |
 | `/sdd-ux-gate` | Revisión | `ux-gate-report.md` con veredicto UX/UI (`READY FOR PR UX` / `REQUIRES UX FIXES`) |
+| `/sdd-e2e-gate` | Revisión | `e2e-gate-report.md` con veredicto de integración backend vía Playwright MCP (`READY FOR PR E2E` / `REQUIRES E2E FIXES`). Solo aplica a proyectos con interfaz web; se omite (N/A) en proyectos backend-only |
 | `/sdd-commit [ticket]` | Cierre | Commit estructurado con referencia a spec |
 | `/sdd-verify [ticket]` | Cierre | Verifica criterios de aceptación post-PR |
 | `/sdd-archive [ticket]` | Cierre | Integra delta en `openspec/specs/`, limpia `openspec/changes/` |

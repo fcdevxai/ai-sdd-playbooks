@@ -20,6 +20,7 @@ Flujos que implementan la metodología Software-Driven Development. Se instalan 
 | `/sdd-apply` | Implementation | Ejecuta el contrato de la spec |
 | `/sdd-code-review` | Review | Revisión automática contra la spec |
 | `/sdd-ux-gate` | UX Validation | Verifica criterios de UX antes de merge |
+| `/sdd-e2e-gate` | E2E Validation | Valida integración backend real vía Playwright MCP (browser). No aplica a proyectos sin interfaz web (APIs REST) — se omite automáticamente |
 | `/sdd-commit` | Ship | Genera el commit con referencia a la spec |
 | `/sdd-verify` | Verification | Verifica criterios de aceptación post-PR |
 | `/sdd-archive` | Closure | Archiva la feature completada |
