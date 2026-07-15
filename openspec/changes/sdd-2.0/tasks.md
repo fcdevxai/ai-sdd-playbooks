@@ -14,7 +14,7 @@ depends_on: design.md
 
 **Spec**: `openspec/changes/sdd-2.0/proposal.md` · **Design**: `openspec/changes/sdd-2.0/design.md`
 
-> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–11 are complete**; later phases are not started. Legacy 1.x stays operational throughout.
+> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–12 are complete**; Phase 13 is not started. Legacy 1.x stays operational throughout.
 
 Each phase is **independently reviewable and independently mergeable**, leaves the repository green (legacy 1.x keeps working throughout), and depends only on earlier phases. Task ids are `T<phase>.<index>`; each names its success criterion and required tests.
 
@@ -154,9 +154,10 @@ Each phase is **independently reviewable and independently mergeable**, leaves t
 ## Phase 12 — Add-on separation
 *Goal: optional add-ons never install implicitly.* — **AC-14** (decision 12)
 
-- [ ] **T12.1** Move Confluence flows to `addons/confluence/{document-code,write-in-confluence}/SKILL.md`.
-- [ ] **T12.2** Gate add-on install behind `sdd install --addon confluence` and/or `addons.confluence: true`.
-  - *Tests*: core install excludes add-ons; opt-in installs them.
+- [x] **T12.1** Move Confluence flows to `addons/confluence/{document-code,write-in-confluence}/SKILL.md`. ✓ (2.0 add-on skills; full 1.x detail remains in the frozen `playbooks/`)
+  - *Tests*: add-on skills lint clean against the contract. ✓ `test/skill-contract.test.js`
+- [x] **T12.2** Gate add-on install behind `sdd install --addon confluence` and/or `addons.confluence: true`. ✓ install merges `--addon` flags with `addons:` true keys from `sdd.config.yaml`
+  - *Tests*: core install excludes add-ons; opt-in (flag or config) installs them. ✓ `test/install.test.js`
 
 ## Phase 13 — Legacy freeze, publish & docs
 *Goal: ship 2.0 as an npm package with a documented, reversible migration path.* — **AC-16** (decision 11)

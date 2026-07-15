@@ -27,6 +27,13 @@ test('every authored skill lints clean (T5.1)', () => {
   assert.ok(results.length >= 8);
 });
 
+test('the Confluence add-on skills lint clean (T12.1)', () => {
+  const dir = fileURLToPath(new URL('../addons/confluence', import.meta.url));
+  const results = lintSkillsDir(dir);
+  assert.deepEqual(results.filter((r) => !r.valid), []);
+  assert.deepEqual(results.map((r) => r.name).sort(), ['document-code', 'write-in-confluence']);
+});
+
 test('the Phase 5 core skills are present (T5.2)', () => {
   for (const name of ['sdd-enrich-us', 'sdd-new', 'sdd-design', 'sdd-plan', 'sdd-apply', 'sdd-code-review', 'sdd-security-gate', 'sdd-runtime-gate', 'sdd-commit', 'sdd-verify', 'sdd-archive', 'sdd-next', 'sdd-ff', 'sdd-bootstrap-project']) {
     assert.ok(fs.existsSync(path.join(SKILLS_DIR, name, 'SKILL.md')), `${name} exists`);

@@ -86,6 +86,62 @@ test('installSkills writes nothing into a consumer repo (AC-02)', () => {
   assert.deepEqual(fs.readdirSync(repo), []); // untouched
 });
 
+test('sdd install (real package): core excludes Confluence add-ons (AC-14)', async () => {
+  const claude = tmp('sdd-claude-'); const agents = tmp('sdd-agents-'); const cwd = tmp('sdd-cwd-');
+  const saved = { c: process.env.SDD_CLAUDE_SKILLS_DIR, a: process.env.SDD_AGENTS_SKILLS_DIR };
+  process.env.SDD_CLAUDE_SKILLS_DIR = claude;
+  process.env.SDD_AGENTS_SKILLS_DIR = agents;
+  try {
+    const out = [];
+    await run(['install', '--json', '--cwd', cwd], { out: (m) => out.push(String(m)), err: () => {} });
+    const res = JSON.parse(out.join('\n'));
+    assert.deepEqual(res.addons, []);
+    assert.equal(fs.existsSync(path.join(claude, 'document-code')), false);
+    assert.equal(fs.existsSync(path.join(claude, 'write-in-confluence')), false);
+    assert.ok(res.core.includes('sdd-plan')); // core still installed
+  } finally {
+    if (saved.c === undefined) delete process.env.SDD_CLAUDE_SKILLS_DIR; else process.env.SDD_CLAUDE_SKILLS_DIR = saved.c;
+    if (saved.a === undefined) delete process.env.SDD_AGENTS_SKILLS_DIR; else process.env.SDD_AGENTS_SKILLS_DIR = saved.a;
+  }
+});
+
+test('sdd install --addon confluence installs the add-on (AC-14)', async () => {
+  const claude = tmp('sdd-claude-'); const agents = tmp('sdd-agents-'); const cwd = tmp('sdd-cwd-');
+  const saved = { c: process.env.SDD_CLAUDE_SKILLS_DIR, a: process.env.SDD_AGENTS_SKILLS_DIR };
+  process.env.SDD_CLAUDE_SKILLS_DIR = claude;
+  process.env.SDD_AGENTS_SKILLS_DIR = agents;
+  try {
+    const out = [];
+    await run(['install', '--addon', 'confluence', '--json', '--cwd', cwd], { out: (m) => out.push(String(m)), err: () => {} });
+    const res = JSON.parse(out.join('\n'));
+    assert.ok(res.addons.includes('confluence/document-code'));
+    assert.ok(res.addons.includes('confluence/write-in-confluence'));
+    assert.ok(fs.existsSync(path.join(claude, 'document-code', 'SKILL.md')));
+    assert.ok(fs.existsSync(path.join(agents, 'write-in-confluence', 'SKILL.md')));
+  } finally {
+    if (saved.c === undefined) delete process.env.SDD_CLAUDE_SKILLS_DIR; else process.env.SDD_CLAUDE_SKILLS_DIR = saved.c;
+    if (saved.a === undefined) delete process.env.SDD_AGENTS_SKILLS_DIR; else process.env.SDD_AGENTS_SKILLS_DIR = saved.a;
+  }
+});
+
+test('sdd install installs an add-on when addons.confluence:true in sdd.config.yaml (AC-14)', async () => {
+  const claude = tmp('sdd-claude-'); const agents = tmp('sdd-agents-'); const cwd = tmp('sdd-cwd-');
+  fs.writeFileSync(path.join(cwd, 'sdd.config.yaml'),
+    'version: 2\nmethodology:\n  compatible: ">=2.0.0 <3.0.0"\ncapabilities:\n  http: true\ngithub:\n  base_branch: main\n  require_pull_request: true\n  require_ci: true\naddons:\n  confluence: true\n');
+  const saved = { c: process.env.SDD_CLAUDE_SKILLS_DIR, a: process.env.SDD_AGENTS_SKILLS_DIR };
+  process.env.SDD_CLAUDE_SKILLS_DIR = claude;
+  process.env.SDD_AGENTS_SKILLS_DIR = agents;
+  try {
+    const out = [];
+    await run(['install', '--json', '--cwd', cwd], { out: (m) => out.push(String(m)), err: () => {} });
+    const res = JSON.parse(out.join('\n'));
+    assert.ok(res.addons.includes('confluence/document-code'));
+  } finally {
+    if (saved.c === undefined) delete process.env.SDD_CLAUDE_SKILLS_DIR; else process.env.SDD_CLAUDE_SKILLS_DIR = saved.c;
+    if (saved.a === undefined) delete process.env.SDD_AGENTS_SKILLS_DIR; else process.env.SDD_AGENTS_SKILLS_DIR = saved.a;
+  }
+});
+
 test('sdd install (CLI) targets the env dirs and creates no cwd files', async () => {
   const claude = tmp('sdd-claude-');
   const agents = tmp('sdd-agents-');

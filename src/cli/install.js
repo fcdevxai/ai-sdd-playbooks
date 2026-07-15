@@ -7,6 +7,7 @@
 import { EXIT } from './exit.js';
 import { resolveTargets } from '../install/targets.js';
 import { installSkills, readPackageVersion } from '../install/skills.js';
+import { loadConfig } from '../config/config.js';
 
 function parseInstallArgs(rest) {
   const addons = [];
@@ -17,7 +18,14 @@ function parseInstallArgs(rest) {
 }
 
 export async function installCommand(parsed, io) {
-  const { addons } = parseInstallArgs(parsed.rest);
+  const { addons: flagAddons } = parseInstallArgs(parsed.rest);
+  // Add-ons are opt-in: via --addon and/or `addons:` in the project's sdd.config.yaml.
+  const { config } = loadConfig({ cwd: parsed.flags.cwd || process.cwd() });
+  const configAddons = Object.entries(config.addons || {})
+    .filter(([, v]) => v === true)
+    .map(([k]) => k);
+  const addons = [...new Set([...flagAddons, ...configAddons])];
+
   const version = readPackageVersion();
   const targets = resolveTargets(process.env);
   const result = installSkills({ targets, version, addons });
