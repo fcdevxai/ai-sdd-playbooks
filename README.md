@@ -1,155 +1,130 @@
-# ai-sdd-playbooks
+# sdd — Spec-Driven Development
 
-Biblioteca de comandos Claude Code para equipos de desarrollo. Centraliza las definiciones de flujos de trabajo en archivos canónicos y los distribuye a los proyectos consumidores vía git submodule.
+SDD is a Spec-Driven Development methodology delivered as a **globally-installed**
+set of Agent Skills plus a deterministic **`sdd` CLI**, shared by **Claude Code**
+and **GitHub Copilot**. The methodology lives in one place; each project keeps
+only its own context and a lockfile pinning the compatible methodology range.
 
-Cada playbook vive en `playbooks/[slug]/canonical.md` como fuente única de verdad. El script `sync-consumer.sh` los instala en `.claude/commands/` del proyecto destino.
+> **2.0** is a ground-up redesign. The 1.x submodule/copy pipeline still works
+> and is **frozen in place** (see [Legacy & deprecation](#legacy--deprecation)).
+> The change is specified in [`openspec/changes/sdd-2.0/`](openspec/changes/sdd-2.0/).
 
----
+## Install (global, once)
 
-## Comandos disponibles
+```bash
+sdd install                 # copies core skills into ~/.claude/skills and ~/.agents/skills
+sdd install --addon confluence   # optional add-ons, opt-in only
+```
 
-### Ciclo SDD
+Core skills install into both runtime directories. Add-ons are never installed
+implicitly.
 
-Flujos que implementan la metodología Software-Driven Development. Se instalan siempre al ejecutar el sync.
+## Connect a project
 
-| Comando | Fase | Descripción |
-|---|---|---|
-| `/sdd-enrich-us` | Requirements | Enriquece una user story con criterios de aceptación y casos de error |
-| `/sdd-new` | Scaffolding | Crea los artefactos de la feature en `openspec/changes/` |
-| `/sdd-ff` | Planning | Granulariza tasks y aplica feature flags |
-| `/sdd-apply` | Implementation | Ejecuta el contrato de la spec |
-| `/sdd-code-review` | Review | Revisión automática contra la spec |
-| `/sdd-ux-gate` | UX Validation | Verifica criterios de UX antes de merge |
-| `/sdd-e2e-gate` | E2E Validation | Valida integración backend real vía Playwright MCP (browser). No aplica a proyectos sin interfaz web (APIs REST) — se omite automáticamente |
-| `/sdd-commit` | Ship | Genera el commit con referencia a la spec |
-| `/sdd-verify` | Verification | Verifica criterios de aceptación post-PR |
-| `/sdd-archive` | Closure | Archiva la feature completada |
+```bash
+sdd init         # scaffold/connect project-local files (never overwrites)
+sdd doctor       # read-only health check (--fix for safe additive fixes)
+```
 
-### Documentación técnica en Confluence
+`sdd init` creates only what's missing: `sdd.config.yaml`, `sdd.lock`,
+`AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`,
+`docs/{architecture,verification,sdd-workflow}.md`, `openspec/specs/system.md`,
+`openspec/changes/`, and `.github/workflows/sdd-validation.yml`. Existing
+equivalent docs are **adopted by configuration**, never overwritten. Core
+methodology files are **not** copied into the project.
 
-Comandos add-on para automatizar documentación. Se ofrecen opcionalmente durante el sync — el equipo decide si los instala.
+## Command reference
 
-| Comando | Descripción |
+| Command | Purpose |
 |---|---|
-| `/document-code` | Lee código fuente y genera documentación técnica estructurada en Confluence. Soporta entidades/DB, servicios, controllers y componentes frontend. Incluye análisis de impacto y modo batch para documentar múltiples entidades en un solo ciclo. Compatible con Doctrine ORM, TypeORM, Eloquent y otros. |
-| `/write-in-confluence` | Redacta guías operacionales sobre funcionalidades de la plataforma y las publica en Confluence. Dirigido a equipos de Operaciones y Soporte, no a TI. |
+| `sdd install` | Install/refresh core skills into the global agent dirs |
+| `sdd init` | Scaffold/connect the project-local structure (never overwrites) |
+| `sdd doctor` | Read-only diagnostics (`--fix` = safe additive fixes) |
+| `sdd status` | Print both dimensions: lifecycle + GitHub delivery |
+| `sdd next` | The single next valid action (combines both dimensions) |
+| `sdd validate` | Validate artifacts/config against the JSON Schemas (`--ci` for pipelines) |
+| `sdd sync` | Reconcile `sdd.lock` with the installed version (`--legacy` = 1.x dual-emit) |
+| `sdd migrate` | Convert a 1.x consumer to 2.0 (diff-then-confirm) |
 
----
+Global flags: `--json`, `--cwd`, `--config`, `--quiet`, `--yes`, `--version`.
 
-## Estructura del repositorio
+## Two-dimension state model
 
-```
-playbooks/[slug]/canonical.md      → fuente de verdad por flujo
-templates/
-├── command.md.hbs                 → template de comando Claude (uso interno del generador)
-├── openspec/
-│   └── system.md                  → template del system spec global
-├── docs/                          → templates base para documentación del proyecto
-│   ├── agent_architecture.md
-│   ├── doc_architecture.md
-│   ├── doc_verification_guide.md
-│   ├── manual-sdd-agentic-engineer.md
-│   └── sdd-workflow.md
-├── claude/                        → templates base para setup de Claude Code
-│   ├── CLAUDE.md
-│   ├── CLAUDE_SDD_BLOCK.md        → bloque SDD gestionado automáticamente dentro de CLAUDE.md
-│   └── settings.json
-└── github/                        → templates base para integración GitHub SDD
-    ├── CODEOWNERS
-    ├── PULL_REQUEST_TEMPLATE.md
-    ├── ISSUE_TEMPLATE/
-    │   └── user-story.md
-    └── workflows/
-        ├── archive-cleanup.yml    → alerta semanal de proposals obsoletas
-        └── spec-lint.yml          → valida estructura de specs en cada PR
-scripts/
-├── sync.js                        → generador (produce dist/ desde playbooks/)
-└── sync-consumer.sh               → script de instalación en proyectos consumidores
-dist/
-└── claude-commands/[slug].md      → comandos SDD generados (copiados por sync-consumer.sh)
-```
+`sdd status` reports **two independent dimensions**:
 
----
+- **lifecycle** (methodological, computed from local artifacts):
+  `proposal_draft → proposal_approved → designed → planned → implementing →
+  implemented → reviewed → security_cleared → runtime_cleared → verified →
+  archived`. `failed`/`blocked` are exception views.
+- **delivery** (local Git + GitHub): `uncommitted → committed → pr_open →
+  ci_pending → ci_passed | ci_failed → merged`, or `unknown` when GitHub context
+  is unavailable (never assumed).
 
-## Uso del generador (este repositorio)
+`sdd next` combines them into one action. **The CLI — not the language model —
+is the authority on state and next step.**
 
-```bash
-npm install
-node scripts/sync.js          # genera dist/
-node scripts/sync.js --check  # verifica que dist/ esté en sync con playbooks/ (CI)
-```
+## Lifecycle skills
 
----
+`sdd-enrich-us` (pre-process) → `sdd-new` → *human approval* → `sdd-design`
+(when required) → `sdd-plan` → `sdd-apply` → `sdd-code-review` →
+`sdd-security-gate` (when required) → `sdd-runtime-gate` → `sdd-commit` → *CI* →
+*merge* → `sdd-verify` → `sdd-archive`. `sdd-next` asks the CLI what to run.
 
-## Distribución (git submodule)
+- **Security is core.** Risk is classified in the proposal, refined in the
+  design, and enforced by `sdd-security-gate` (blocking findings block; it does
+  **not** replace a penetration test).
+- **One runtime gate.** `sdd-runtime-gate` replaces the old UX + E2E gates. It
+  selects adapters from project `capabilities` (`browser`, `http`, `cli`,
+  `worker`). A `false` capability is `not_applicable`; an unimplemented or
+  dependency-missing adapter **blocks** — it never fabricates `passed`.
 
-### Agregar a un proyecto nuevo
+## Capability model
 
-```bash
-# 1. Agregar el submodule
-git submodule add https://github.com/fcdevxai/ai-sdd-playbooks.git .ai-sdd-playbooks
-
-# 2. Copiar el script de sync al proyecto (una sola vez)
-cp .ai-sdd-playbooks/scripts/sync-consumer.sh sync-playbooks.sh
-
-# 3. Ejecutar el sync (modo interactivo)
-bash sync-playbooks.sh
-```
-
-### Qué hace el sync interactivo
-
-El script instala los comandos y valida que la estructura del proyecto esté completa. Ejecuta los siguientes pasos en orden:
-
-1. **Comandos SDD core** — copia `dist/claude-commands/*.md` a `.claude/commands/` siempre.
-
-2. **Comandos add-on de documentación** — detecta si `document-code` y `write-in-confluence` están disponibles pero no instalados, y pregunta si se desea instalarlos.
-
-3. **docs/** — verifica que existan los archivos de contexto del proyecto (`agent_architecture.md`, `doc_architecture.md`, etc.). Si faltan, ofrece crear templates base.
-
-4. **openspec/** — verifica la estructura base de OpenSpec (`openspec/specs/system.md`, `openspec/changes/`). Si falta, ofrece crearla.
-
-5. **`.github/`** — verifica los artefactos SDD de GitHub (CODEOWNERS, PR template, issue template, workflows). Si faltan, ofrece copiarlos desde templates.
-
-6. **Claude setup** — verifica `CLAUDE.md` en raíz y `.claude/settings.json`. Si faltan, ofrece crear templates base. Siempre mantiene en sync el bloque SDD entre marcadores dentro de `CLAUDE.md`.
-
-### Modo no-interactivo (CI / scripts)
-
-Todas las preguntas interactivas tienen su variable de entorno equivalente:
-
-```bash
-CREATE_OPENSPEC=yes \
-CREATE_DOCS=yes \
-CREATE_CLAUDE_FILES=yes \
-CREATE_GITHUB_FILES=yes \
-CREATE_DOC_COMMANDS=yes \
-bash sync-playbooks.sh
-```
-
-### Rutas personalizadas
-
-```bash
-COMMANDS_DEST=".claude/commands" bash sync-playbooks.sh
-```
-
-### Actualizar playbooks
-
-```bash
-# Traer la última versión del submodule
-git submodule update --remote .ai-sdd-playbooks
-
-# Re-sincronizar
-bash sync-playbooks.sh
-
-# Commitear los cambios
-git add .ai-sdd-playbooks .claude/commands docs/
-git commit -m "chore: update playbooks from canonical"
-```
-
-### CI anti-drift
-
-Agrega un step en tu workflow que ejecute `bash sync-playbooks.sh --check` después de hacer checkout con `submodules: true`. Sale con código 1 si los archivos en `.claude/commands/` difieren del canonical.
+Set what your project actually is in `sdd.config.yaml`:
 
 ```yaml
-- name: Check playbooks are in sync
-  run: bash sync-playbooks.sh --check
+capabilities:
+  browser: true    # web UI → Playwright-driven runtime checks
+  http: true       # REST surface → API runtime checks
+  cli: false       # experimental adapter
+  worker: false    # experimental adapter
 ```
+
+Backend-only projects (`browser: false`) never invoke Playwright.
+
+## Validation & CI
+
+`sdd validate --ci` validates frontmatter against JSON Schemas, checks legal
+lifecycle states, preconditions, gates, adapter consistency, and cross-artifact
+consistency — using **structured statuses**, never verdict-string/heading/emoji
+matching, and never mutating artifacts. The shipped
+`.github/workflows/sdd-validation.yml` runs only `sdd validate --ci`.
+
+## GitHub only
+
+2.0 supports **GitHub** exclusively as the remote provider (branches, PRs,
+Actions, checks, merge). GitLab/Bitbucket and generic forge abstractions are out
+of scope. `github.require_pull_request` and `github.require_ci` are mandatory.
+
+## Legacy & deprecation
+
+The 1.x pipeline (`playbooks/`, `dist/claude-commands/`, `scripts/sync.js`,
+`scripts/sync-consumer.sh`) is **frozen at its current paths** and keeps working
+for un-migrated submodule consumers. See [`legacy/README.md`](legacy/README.md).
+`sdd migrate` moves a consumer to 2.0 without deleting anything. The **physical
+removal** of 1.x is deferred to **3.0** (announced deprecation window).
+
+## Development (this repo)
+
+```bash
+npm ci
+npm test          # node --test
+npm run check     # legacy 1.x drift check
+```
+
+The repo dogfoods itself: `sdd status` / `sdd next` run against
+`openspec/changes/sdd-2.0/`.
+
+> **Publishing** (human-owned): choose the npm name/scope, remove `private` from
+> `package.json`, then `npm publish`. `npm pack --dry-run` shows the exact
+> contents.

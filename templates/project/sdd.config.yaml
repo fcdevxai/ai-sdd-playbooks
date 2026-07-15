@@ -1,0 +1,28 @@
+version: 2
+project:
+  name: my-project
+  language: en          # human-readable document language (bodies)
+methodology:
+  scope: user           # global install
+  compatible: ">=2.0.0 <3.0.0"
+capabilities:           # set the ones your project actually has (drives sdd-runtime-gate)
+  browser: false        # a web UI
+  http: false           # an HTTP/REST surface
+  cli: false            # a command-line surface (experimental adapter)
+  worker: false         # background workers/queues (experimental adapter)
+design:
+  always: false         # force sdd-design regardless of impact
+security:
+  default_risk: standard   # low | standard | elevated
+  threat_model: auto       # auto | always | never
+github:
+  base_branch: main        # never hardcoded in code; read from here or GitHub
+  require_pull_request: true
+  require_ci: true
+documents:                 # adopt existing docs by pointing these at their real paths
+  system_spec: openspec/specs/system.md
+  architecture: docs/architecture.md
+  verification: docs/verification.md
+  workflow: docs/sdd-workflow.md
+addons:
+  confluence: false        # add-ons never install implicitly

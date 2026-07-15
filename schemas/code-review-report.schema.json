@@ -1,0 +1,15 @@
+{
+  "$id": "https://sdd.dev/schemas/code-review-report.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SDD code-review-report artifact frontmatter",
+  "type": "object",
+  "required": ["schema", "schema_version", "change_id", "status"],
+  "properties": {
+    "schema": { "const": "code-review-report" },
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "change_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+    "status": { "enum": ["passed", "failed"] },
+    "created": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "updated": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+  }
+}

@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - name: Unit tests
+        run: npm test
+      - name: Legacy drift check (1.x)
+        run: npm run check
+      - name: Package contents (publish dry-run)
+        run: npm pack --dry-run
+      - name: CLI smoke test
+        run: node bin/sdd.js --version

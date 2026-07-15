@@ -1,0 +1,19 @@
+name: SDD validation
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  sdd-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      # Validate artifacts, config, lock, legal lifecycle state, gates, adapters.
+      # Structured checks only — no verdict/heading/emoji matching, no mutation.
+      - name: sdd validate --ci
+        run: npx --yes @fcdevxai/sdd validate --ci
