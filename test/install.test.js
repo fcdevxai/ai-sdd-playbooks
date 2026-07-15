@@ -142,6 +142,53 @@ test('sdd install installs an add-on when addons.confluence:true in sdd.config.y
   }
 });
 
+async function runInstall(args, claude, agents) {
+  const saved = { c: process.env.SDD_CLAUDE_SKILLS_DIR, a: process.env.SDD_AGENTS_SKILLS_DIR };
+  process.env.SDD_CLAUDE_SKILLS_DIR = claude;
+  process.env.SDD_AGENTS_SKILLS_DIR = agents;
+  try {
+    const out = [];
+    const err = [];
+    const code = await run(args, { out: (m) => out.push(String(m)), err: (m) => err.push(String(m)) });
+    return { code, out, err };
+  } finally {
+    if (saved.c === undefined) delete process.env.SDD_CLAUDE_SKILLS_DIR; else process.env.SDD_CLAUDE_SKILLS_DIR = saved.c;
+    if (saved.a === undefined) delete process.env.SDD_AGENTS_SKILLS_DIR; else process.env.SDD_AGENTS_SKILLS_DIR = saved.a;
+  }
+}
+const stamped = (dir) => fs.existsSync(path.join(dir, '.sdd-version'));
+
+test('sdd install --runtime claude installs only into the Claude dir', async () => {
+  const claude = tmp('sdd-c-'); const agents = tmp('sdd-a-'); const cwd = tmp('sdd-w-');
+  const { code } = await runInstall(['install', '--runtime', 'claude', '--cwd', cwd], claude, agents);
+  assert.equal(code, EXIT.OK);
+  assert.ok(stamped(claude));
+  assert.equal(stamped(agents), false);
+});
+
+test('sdd install --runtime copilot installs only into the Copilot (agents) dir', async () => {
+  const claude = tmp('sdd-c-'); const agents = tmp('sdd-a-'); const cwd = tmp('sdd-w-');
+  const { code } = await runInstall(['install', '--runtime', 'copilot', '--cwd', cwd], claude, agents);
+  assert.equal(code, EXIT.OK);
+  assert.ok(stamped(agents));
+  assert.equal(stamped(claude), false);
+});
+
+test('sdd install (default) and --runtime both install into both dirs', async () => {
+  const claude = tmp('sdd-c-'); const agents = tmp('sdd-a-'); const cwd = tmp('sdd-w-');
+  await runInstall(['install', '--cwd', cwd], claude, agents);
+  assert.ok(stamped(claude) && stamped(agents));
+  const claude2 = tmp('sdd-c-'); const agents2 = tmp('sdd-a-');
+  await runInstall(['install', '--runtime', 'both', '--cwd', cwd], claude2, agents2);
+  assert.ok(stamped(claude2) && stamped(agents2));
+});
+
+test('sdd install --runtime <invalid> is a usage error', async () => {
+  const { code, err } = await runInstall(['install', '--runtime', 'vscode', '--cwd', tmp('sdd-w-')], tmp('sdd-c-'), tmp('sdd-a-'));
+  assert.equal(code, EXIT.USAGE);
+  assert.match(err.join('\n'), /--runtime must be one of/);
+});
+
 test('sdd install (CLI) targets the env dirs and creates no cwd files', async () => {
   const claude = tmp('sdd-claude-');
   const agents = tmp('sdd-agents-');

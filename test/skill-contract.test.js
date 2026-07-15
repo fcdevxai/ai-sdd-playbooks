@@ -77,6 +77,14 @@ test('sdd-bootstrap-project is diff-then-approve; declining is a no-op (T11.3)',
   assert.match(b, /unchanged/i);
 });
 
+test('sdd-bootstrap-project detects and proposes capabilities (Option A)', () => {
+  const b = body('sdd-bootstrap-project');
+  assert.match(b, /capabilit/i);
+  assert.match(b, /browser/);
+  assert.match(b, /http/);
+  assert.match(b, /signal/i); // proposal is grounded in signals, not guesses
+});
+
 test('sdd-commit follows the GitHub model: no hardcoded branch, no auto-merge (C-11)', () => {
   const b = body('sdd-commit');
   assert.match(b, /[Nn]ever hardcode/);
