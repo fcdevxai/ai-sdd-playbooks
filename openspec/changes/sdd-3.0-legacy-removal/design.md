@@ -2,8 +2,8 @@
 schema: design
 schema_version: 1
 change_id: sdd-3.0-legacy-removal
-title: "SDD 3.0 — Legacy & old-reference removal design"
-status: approved
+title: "SDD 3.0 — Legacy removal + doc-template alignment design"
+status: approved   # re-approved 2026-07-15 (adds §9)
 owner: felipe.campos
 created: 2026-07-15
 updated: 2026-07-15
@@ -115,5 +115,83 @@ Driven by the Phase 0 grep inventory; the Phase 4 grep sweep must come back empt
 | AC-03 | §2 |
 | AC-04 | §3 (keep list), §7 |
 | AC-05 | §5 |
-| AC-06 | §4 (README) |
+| AC-06 | §4 (README), §9 |
 | AC-07 | §6 |
+| AC-08 | §9.1, §9.2, §9.3 |
+| AC-09 | §9.1, §9.4, §9.5 |
+
+## 9. Consumer doc-template alignment (amendment 2026-07-15 — AC-08/AC-09)
+
+Align the shipped consumer docs with the convention real projects use. The doc
+system already resolves a **logical name → path** (`src/config/docmap.js`), with
+`DEFAULT_DOCUMENTS` as fallback and an **open** `documents` schema
+(`additionalProperties: string`), so this is a defaults + templates + prose
+change — **no schema change**, and existing projects that pin their own
+`documents:` paths are unaffected.
+
+### 9.1 Model — keep keys, change default paths, add one doc
+
+Logical **keys stay stable and semantic**; only their default **paths** change,
+plus one new key.
+
+| Logical key | 2.0 default path | 3.0 default path |
+|---|---|---|
+| `system_spec` | `openspec/specs/system.md` | *(unchanged)* |
+| `architecture` | `docs/architecture.md` | `docs/doc_architecture.md` |
+| `verification` | `docs/verification.md` | `docs/doc_verification_guide.md` |
+| `workflow` | `docs/sdd-workflow.md` | *(unchanged)* |
+| **`agent_architecture`** *(new)* | — | `docs/agent_architecture.md` |
+
+`architecture` = **technical** architecture (layers, placement); the new
+`agent_architecture` = **how agents operate** here (what to inspect, task
+workflows, tool/skill activation, boundaries).
+
+### 9.2 Templates
+
+- Rename `templates/project/docs/architecture.md` → `doc_architecture.md`, and
+  `verification.md` → `doc_verification_guide.md` (git-mv to keep history).
+- Add `templates/project/docs/agent_architecture.md`: a **generic, stack-agnostic
+  skeleton** (structure lifted from the git-history 1.x `templates/docs/agent_architecture.md`,
+  modernized to point at the **global SDD skills + the `sdd` CLI**, not any
+  framework). It cross-links the sibling docs + `CLAUDE.md`/`AGENTS.md` but stays
+  a skeleton, not a filled-in guide.
+
+### 9.3 CLI wiring
+
+- `src/config/config.js` `DEFAULT_DOCUMENTS`: update the two paths, add
+  `agent_architecture: 'docs/agent_architecture.md'`.
+- `src/cli/init.js` `LOGICAL`: update the two paths, add
+  `['docs/agent_architecture.md', 'agent_architecture']`.
+- `src/cli/init.js` `CANDIDATE_PATTERNS`: add `agent_architecture` and make the
+  patterns **specific** so a file is not adopted as both docs — the
+  `agent_architecture` pattern requires "agent", and the plain `architecture`
+  pattern must **not** match a filename containing "agent" (R-05).
+- `templates/project/sdd.config.yaml` `documents:`: reflect the four paths (and,
+  in the same edit, bump `methodology.compatible` → `">=3.0.0 <4.0.0"`, from §5).
+
+### 9.4 Skills
+
+- Update project-doc references in prose from `docs/architecture.md` →
+  `docs/doc_architecture.md` and `docs/verification.md` →
+  `docs/doc_verification_guide.md` across `sdd-enrich-us`, `sdd-design`,
+  `sdd-plan`, `sdd-apply`, `sdd-code-review`, `sdd-verify`.
+- `sdd-bootstrap-project`: learn the **4th** doc — detection guidance + the
+  logical-key mapping now covers `agent_architecture`.
+- **Proposed** reference of the new doc: `sdd-apply` (and `sdd-bootstrap-project`)
+  point at `docs/agent_architecture.md` for "how agents operate here". Kept modest
+  on purpose — confirm the exact skill set at approval.
+
+### 9.5 Tests
+
+- `test/config.test.js` + `test/init.test.js`: assert the new default paths and
+  the 4th logical doc; cover that `agent_architecture.md`/`doc_architecture.md`
+  are not cross-adopted (R-05).
+- `test/e2e.test.js`: the four docs scaffold on a fresh `sdd init`.
+- The Phase 3 guard/grep is unaffected (it targets legacy **terms**, not doc
+  names); the final sweep additionally asserts **no leftover** `docs/architecture.md`
+  / `docs/verification.md` references (AC-08).
+
+### 9.6 Compatibility
+
+Only defaults + a fresh `sdd init` change. Consistent with "everyone starts on
+3.0"; no per-project migration.
