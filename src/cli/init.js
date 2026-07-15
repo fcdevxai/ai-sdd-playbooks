@@ -24,7 +24,11 @@ const FIXED = [
   ['AGENTS.md', 'AGENTS.md'],
   ['CLAUDE.md', 'CLAUDE.md'],
   ['copilot-instructions.md', '.github/copilot-instructions.md'],
+  ['github/CODEOWNERS', '.github/CODEOWNERS'],
+  ['github/PULL_REQUEST_TEMPLATE.md', '.github/PULL_REQUEST_TEMPLATE.md'],
+  ['github/ISSUE_TEMPLATE/user-story.md', '.github/ISSUE_TEMPLATE/user-story.md'],
   ['github/workflows/sdd-validation.yml', '.github/workflows/sdd-validation.yml'],
+  ['github/workflows/archive-cleanup.yml', '.github/workflows/archive-cleanup.yml'],
 ];
 
 const LOGICAL = [

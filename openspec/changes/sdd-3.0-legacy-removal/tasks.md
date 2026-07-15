@@ -17,8 +17,8 @@ depends_on: design.md
 > **Execution gate.** `proposal.md` and `design.md` were approved (2026-07-15),
 > **amended and re-approved the same day** (scope expansion: doc-template alignment).
 > Implementation proceeds one phase at a time, each stopping for human review.
-> **All phases (0–6) are complete.** Legacy removed, references purged, docs
-> aligned, presented as 3.0, and the verification sweep is green.
+> **All phases (0–7) are complete.** Legacy removed, references purged, docs +
+> GitHub templates aligned, presented as 3.0, verification sweep green.
 
 Each phase is independently reviewable and leaves the 2.0 functionality green.
 One phase per commit. Task ids are `T<phase>.<index>`.
@@ -76,6 +76,14 @@ One phase per commit. Task ids are `T<phase>.<index>`.
 - [x] **T6.3** `npm pack --dry-run`: ships only `bin/ src/ skills/ addons/ schemas/ templates/project/` + `package.json`/`README.md`/`CHANGELOG.md`; no legacy path. **Fix:** `CHANGELOG.md` was not being packed → added to `package.json` `files` (+ a `publish.test.js` assertion) to satisfy AC-05. ✓
 - [x] **T6.4** Sweep clean for every old term **and** the pre-rename doc paths. **The guard caught two leftovers the manual grep missed** (`templates/project/AGENTS.md` and `templates/project/openspec/system.md` still pointed at `docs/architecture.md`) — both fixed to `doc_architecture.md`, and the pre-rename paths were added to `test/no-legacy-refs.test.js` `FORBIDDEN` so this is enforced permanently. ✓
 
+## Phase 7 — Restore GitHub collaboration templates (amendment #2)
+*Goal: the project github/ template matches the house convention again.* — **AC-10** · design §10
+
+- [x] **T7.1** Added under `templates/project/github/`: `CODEOWNERS` (generic, `@your-org/reviewers` placeholder), `ISSUE_TEMPLATE/user-story.md` (English, `sdd-enrich-us` intake), `workflows/archive-cleanup.yml` (weekly stale-proposal alert; grep aligned to the real `- **Developer**:` OWNER.md format), and `PULL_REQUEST_TEMPLATE.md` **rewritten to 3.0** (statuses `approved`/`ready`/`passed`, `sdd validate`/`sdd next`; no `sdd-ff`/`pending`/verdict strings). All English, all 3.0-clean. ✓
+- [x] **T7.2** `src/cli/init.js` `FIXED`: added the four `[templateRel, destRel]` pairs (dest under `.github/`), `copyIfMissing` (never overwrites). ✓
+- [x] **T7.3** `test/init.test.js` asserts the four scaffold; `test/no-legacy-refs.test.js` green over `templates/project/` (R-06 guard confirms no legacy term); suite **167/167**. ✓
+- [x] **T7.4** Real `sdd init` lands all four under `.github/`; `archive-cleanup.yml` is valid YAML; `npm pack --dry-run` ships the five github templates under `templates/project/github/`. ✓
+
 ---
 
 ## Phase → acceptance-criteria coverage
@@ -89,3 +97,4 @@ One phase per commit. Task ids are `T<phase>.<index>`.
 | 4 | AC-08, AC-09 |
 | 5 | AC-05, AC-06 |
 | 6 | AC-01…AC-09 (sweep) |
+| 7 | AC-10 |

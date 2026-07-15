@@ -21,6 +21,8 @@ test('init on a fresh repo creates the full project-local set and no core copies
   for (const f of [
     'sdd.config.yaml', 'sdd.lock', 'AGENTS.md', 'CLAUDE.md',
     '.github/copilot-instructions.md', '.github/workflows/sdd-validation.yml',
+    '.github/CODEOWNERS', '.github/PULL_REQUEST_TEMPLATE.md',
+    '.github/ISSUE_TEMPLATE/user-story.md', '.github/workflows/archive-cleanup.yml',
     'docs/agent_architecture.md', 'docs/doc_architecture.md',
     'docs/doc_verification_guide.md', 'docs/sdd-workflow.md',
     'openspec/specs/system.md', 'openspec/changes',

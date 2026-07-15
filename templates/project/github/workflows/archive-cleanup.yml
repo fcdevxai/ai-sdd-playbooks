@@ -1,0 +1,38 @@
+name: Stale proposal alert
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'   # Mondays 09:00 UTC
+  workflow_dispatch:
+
+jobs:
+  check-stale-proposals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Flag proposals with no activity for over 14 days
+        run: |
+          STALE=()
+          for DIR in openspec/changes/*/; do
+            [ -d "$DIR" ] || continue
+            LAST=$(git log -1 --format="%ci" -- "$DIR" 2>/dev/null || true)
+            [ -n "$LAST" ] || continue
+            DAYS=$(( ( $(date +%s) - $(date -d "$LAST" +%s) ) / 86400 ))
+            if [ "$DAYS" -gt 14 ]; then
+              OWNER="unknown"
+              if [ -f "${DIR}OWNER.md" ]; then
+                OWNER=$(grep -m1 -i "Developer" "${DIR}OWNER.md" | sed -E 's/.*Developer[^:]*:[[:space:]]*//' || echo "unknown")
+              fi
+              STALE+=("$DIR (${DAYS}d idle, owner: ${OWNER:-unknown})")
+            fi
+          done
+          if [ ${#STALE[@]} -gt 0 ]; then
+            echo "::warning::Stale SDD proposals detected (>14 days idle):"
+            for S in "${STALE[@]}"; do echo "  - $S"; done
+            echo "Action: archive with the sdd-archive skill, delete, or actively resume."
+          else
+            echo "No stale proposals found."
+          fi

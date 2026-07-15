@@ -2,8 +2,8 @@
 schema: proposal
 schema_version: 1
 change_id: sdd-3.0-legacy-removal
-title: "SDD 3.0 — Legacy removal + consumer doc-template alignment"
-status: approved   # re-approved 2026-07-15 after scope expansion
+title: "SDD 3.0 — Legacy removal + consumer template alignment (docs + GitHub)"
+status: approved   # re-approved 2026-07-15 after amendment #2 (GitHub templates)
 owner: felipe.campos
 created: 2026-07-15
 updated: 2026-07-15
@@ -78,6 +78,12 @@ record of how 2.0 was built stays in `openspec/changes/sdd-2.0/` and in git.)
 - Add a 4th consumer doc `templates/project/docs/agent_architecture.md` (how agents operate in the repo) — a generic, stack-agnostic skeleton.
 - The doc model gains a matching logical document. `DEFAULT_DOCUMENTS`, the `documents:` template, `sdd init` scaffolding/adoption, and `sdd-bootstrap-project` learn the four docs; the skills that read project docs point at the renamed paths. The `documents` schema is already open (no schema change).
 
+**Restore — GitHub collaboration templates (2nd amendment, 2026-07-15)**
+
+- The 2.0 redesign slimmed `templates/project/github/` to just `sdd-validation.yml`. Restore, **modernized to 3.0**, the collaboration set: `CODEOWNERS`, `PULL_REQUEST_TEMPLATE.md`, `ISSUE_TEMPLATE/user-story.md`, and `workflows/archive-cleanup.yml` (weekly stale-proposal alert). `sdd init` scaffolds them (never overwrites).
+- The PR template is **rewritten** for 3.0 (structured statuses, `sdd next`) — it must not carry the old `sdd-ff`/`pending`/verdict-string wording.
+- **Not** restored: `workflows/lint.yml` / `workflows/tests.yml` (consumer project CI, never part of SDD) and `workflows/spec-lint.yml` (superseded by `sdd-validation.yml`).
+
 **Out of scope (non-goals)**
 
 - No new features; removal + cleanup + version/doc updates only.
@@ -96,6 +102,7 @@ record of how 2.0 was built stays in `openspec/changes/sdd-2.0/` and in git.)
 - **AC-07** CI (`.github/workflows/ci.yml`) no longer runs the legacy drift check, and `.github/workflows/generate.yml` is removed.
 - **AC-08** A fresh `sdd init` scaffolds the consumer docs under the house-convention names — `docs/agent_architecture.md`, `docs/doc_architecture.md`, `docs/doc_verification_guide.md`, `docs/sdd-workflow.md`; `DEFAULT_DOCUMENTS` and the `documents:` template point at these paths, and no source/skill/test/shipped-doc still references the pre-rename `docs/architecture.md` or `docs/verification.md`.
 - **AC-09** The doc model has a 4th logical document `agent_architecture`; `sdd-bootstrap-project` detects/maps all four docs (without cross-adopting `agent_architecture.md` ↔ `doc_architecture.md`); the skills that read project docs reference the renamed paths; and the full (adjusted) test suite is green.
+- **AC-10** `sdd init` also scaffolds the GitHub collaboration templates — `.github/CODEOWNERS`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/ISSUE_TEMPLATE/user-story.md`, and `.github/workflows/archive-cleanup.yml` — alongside `sdd-validation.yml`, all **3.0-clean** (no `sdd-ff`/`pending`/verdict-string/`1.x` wording; the `no-legacy-refs` guard covers them). `npm pack` ships them under `templates/project/github/`.
 
 ## Risks
 
@@ -104,6 +111,7 @@ record of how 2.0 was built stays in `openspec/changes/sdd-2.0/` and in git.)
 - **R-03 — Stale references left behind.** Removing files but not their mentions. *Mitigation:* the Phase 0 grep list drives a final grep sweep that must come back empty (AC-02).
 - **R-04 — Doc-rename ripple.** The doc paths are referenced in ~6 skills, config defaults, `init.js`, and tests; a missed spot leaves a dangling `docs/architecture.md`. *Mitigation:* the sweep also asserts no leftover pre-rename doc paths (AC-08); the rename lands in its own phase/commit.
 - **R-05 — Candidate cross-adoption.** `agent_architecture.md` and `doc_architecture.md` both contain "architect", so `sdd init`/`sdd-bootstrap-project` could adopt one as the other. *Mitigation:* specific candidate patterns (the plain architecture pattern excludes "agent"); a test covers both (AC-09).
+- **R-06 — Legacy reintroduction via a restored template.** The 1.x PR template referenced `sdd-ff`/`pending`/verdict strings; a verbatim restore would undo the purge. *Mitigation:* rewrite to 3.0 structured statuses; `no-legacy-refs` already scans `templates/project/`, so any regression fails the suite (AC-10).
 
 ## Amendment — 2026-07-15 (scope expansion)
 
@@ -114,6 +122,14 @@ projects use (`agent_architecture.md`, `doc_architecture.md`,
 and adopt the **full** house convention (rename **and** add `agent_architecture`).
 This adds the *Align* scope block, AC-08/AC-09, R-04/R-05, design §9, and Phases
 4–5 in `tasks.md`. Phases 0–2 (legacy removal) are unaffected and stay done.
+
+## Amendment #2 — 2026-07-15 (GitHub templates)
+
+After Phases 0–6 shipped, the owner noticed the 1.x `templates/github/` set
+(CODEOWNERS, PR/issue templates, archive-cleanup) had been slimmed to just
+`sdd-validation.yml` in 2.0. Decision (owner): **restore the collaboration set,
+modernized to 3.0**, folded into this change. Adds the *Restore* scope block,
+AC-10, R-06, design §10, and Phase 7 in `tasks.md`. Phases 0–6 are unaffected.
 
 ## Design
 

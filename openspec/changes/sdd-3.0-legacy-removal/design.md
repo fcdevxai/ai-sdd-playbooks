@@ -2,8 +2,8 @@
 schema: design
 schema_version: 1
 change_id: sdd-3.0-legacy-removal
-title: "SDD 3.0 — Legacy removal + doc-template alignment design"
-status: approved   # re-approved 2026-07-15 (adds §9)
+title: "SDD 3.0 — Legacy removal + template alignment design (docs + GitHub)"
+status: approved   # re-approved 2026-07-15 (adds §10)
 owner: felipe.campos
 created: 2026-07-15
 updated: 2026-07-15
@@ -119,6 +119,7 @@ Driven by the Phase 0 grep inventory; the Phase 4 grep sweep must come back empt
 | AC-07 | §6 |
 | AC-08 | §9.1, §9.2, §9.3 |
 | AC-09 | §9.1, §9.4, §9.5 |
+| AC-10 | §10 |
 
 ## 9. Consumer doc-template alignment (amendment 2026-07-15 — AC-08/AC-09)
 
@@ -195,3 +196,43 @@ workflows, tool/skill activation, boundaries).
 
 Only defaults + a fresh `sdd init` change. Consistent with "everyone starts on
 3.0"; no per-project migration.
+
+## 10. GitHub collaboration templates (amendment #2 2026-07-15 — AC-10)
+
+2.0 slimmed `templates/project/github/` to a single `sdd-validation.yml`. Restore
+the collaboration set, **modernized to 3.0**.
+
+### 10.1 Files added (under `templates/project/github/`)
+
+| Template | Scaffolded to | Notes |
+|---|---|---|
+| `CODEOWNERS` | `.github/CODEOWNERS` | Generic; placeholder owner; guards `openspec/specs/` + `.github/workflows/`. |
+| `PULL_REQUEST_TEMPLATE.md` | `.github/PULL_REQUEST_TEMPLATE.md` | **Rewritten** for 3.0 (see 10.3). |
+| `ISSUE_TEMPLATE/user-story.md` | `.github/ISSUE_TEMPLATE/user-story.md` | Light modernize — `sdd-enrich-us` intake. |
+| `workflows/archive-cleanup.yml` | `.github/workflows/archive-cleanup.yml` | Weekly stale-proposal (>14d) alert; robust `OWNER.md` lookup. |
+
+`sdd-validation.yml` stays. **Excluded:** `lint.yml`/`tests.yml` (consumer's own
+project CI) and `spec-lint.yml` (superseded by `sdd-validation.yml`).
+
+### 10.2 CLI wiring
+
+`src/cli/init.js` `FIXED` gains the four `[templateRel, destRel]` pairs (dest
+under `.github/`). `copyIfMissing` → never overwrites; adoption stays tiered only
+for the logical docs, these are fixed-path scaffolds like `sdd-validation.yml`.
+
+### 10.3 PR-template rewrite (3.0-clean, R-06)
+
+No `sdd-ff`, no `status: pending`, no verdict strings (`LISTO PARA PR`/`READY
+FOR PR`). Instead: spec reference (change id, `proposal.md`, branch), an
+acceptance-criteria checklist and an error-case checklist tied to `proposal.md`,
+an SDD-artifact checklist keyed to the real lifecycle
+(`sdd-enrich-us` → `sdd-new` → `status: approved` → `sdd-apply` →
+`sdd-code-review` → `sdd validate`/`sdd next`), a quality-command placeholder,
+an out-of-scope note, and a human-reviewer checklist. English, to match the rest
+of the shipped templates.
+
+### 10.4 Tests
+
+`test/init.test.js` asserts the four new files scaffold on a fresh `sdd init`.
+`test/no-legacy-refs.test.js` already scans `templates/project/`, so a stale PR
+template (any forbidden term) fails the suite — the R-06 guard.
