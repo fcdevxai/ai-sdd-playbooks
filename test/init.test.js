@@ -31,6 +31,26 @@ test('init on a fresh repo creates the full project-local set and no core copies
   assert.equal(validateConfig(readConfigFile(path.join(dir, 'sdd.config.yaml'))).valid, true);
 });
 
+test('init hints to run sdd-bootstrap-project when capabilities are all false', async () => {
+  const dir = tmp();
+  const { io, out } = capture();
+  await run(['init', '--cwd', dir], io);
+  assert.match(out.join('\n'), /sdd-bootstrap-project/);
+  // and the machine-readable flag
+  const jr = capture();
+  await run(['init', '--json', '--cwd', dir], jr.io);
+  assert.equal(JSON.parse(jr.out.join('\n')).capabilities_unset, true);
+});
+
+test('init does not hint when a capability is already enabled', async () => {
+  const dir = tmp();
+  fs.writeFileSync(path.join(dir, 'sdd.config.yaml'),
+    'version: 2\nmethodology:\n  compatible: ">=2.0.0 <3.0.0"\ncapabilities:\n  http: true\ngithub:\n  base_branch: main\n  require_pull_request: true\n  require_ci: true\n');
+  const { io, out } = capture();
+  await run(['init', '--cwd', dir], io);
+  assert.doesNotMatch(out.join('\n'), /sdd-bootstrap-project/);
+});
+
 test('init is idempotent: re-run creates nothing new and edits no content (AC-03)', async () => {
   const dir = tmp();
   await run(['init', '--cwd', dir], capture().io);

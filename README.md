@@ -43,10 +43,13 @@ methodology files are **not** copied into the project.
 `sdd init` is intentionally **non-interactive and deterministic**: it writes
 `sdd.config.yaml` with every `capability` set to **`false`** and never guesses.
 To configure them from the real project, run the **`sdd-bootstrap-project`**
-skill (in Claude Code or GitHub Copilot). It inspects the repo, **detects**
-capabilities from concrete signals — a frontend framework → `browser`, a server
-framework → `http`, a `package.json` `bin` → `cli`, a queue/broker → `worker` —
-and **proposes a diff you approve** (it never writes without approval).
+skill — an Agent Skill, triggered conversationally inside the repo in Claude Code
+or GitHub Copilot (say "sdd-bootstrap-project" or "onboard this repo into SDD"),
+not via the `sdd` CLI. It inspects the repo, **detects** capabilities from
+concrete signals — a frontend framework → `browser`, a server framework →
+`http`, a `package.json` `bin` → `cli`, a queue/broker → `worker` — and
+**proposes a diff you approve** (it never writes without approval). `sdd init`
+prints a reminder pointing here whenever capabilities are still all `false`.
 
 Until a capability is set, `sdd-runtime-gate` treats it as `not_applicable`, so
 setting them correctly is what turns on the right runtime checks (e.g. a web app
