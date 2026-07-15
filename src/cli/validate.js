@@ -20,6 +20,7 @@ import { validateArtifactFrontmatter, validateNamed } from '../schema/validate.j
 import { loadChange, findChangeDirs, computeDesignRequired } from '../config/artifacts.js';
 import { readConfigFile } from '../config/config.js';
 import { readLock } from '../config/lock.js';
+import { gateStatusFromAdapters } from '../adapters/index.js';
 import { evaluatePreconditions, SKILL_PRECONDITIONS } from '../lifecycle/preconditions.js';
 
 function parseValidateArgs(rest) {
@@ -57,6 +58,13 @@ function runValidate({ cwd, changeId, json, io }) {
       const errors = [...r.errors];
       if (a.frontmatter.change_id && a.frontmatter.change_id !== change.changeId) {
         errors.push(`change_id '${a.frontmatter.change_id}' does not match folder '${change.changeId}'`);
+      }
+      // runtime-gate: the declared status must equal the aggregate of its adapters (C-06/C-12)
+      if (r.valid && a.frontmatter.schema === 'runtime-gate-report' && a.frontmatter.adapters) {
+        const expected = gateStatusFromAdapters(a.frontmatter.adapters);
+        if (a.frontmatter.status !== expected) {
+          errors.push(`status '${a.frontmatter.status}' disagrees with adapters aggregate '${expected}'`);
+        }
       }
       results.push({ file: path.relative(cwd, a.path), valid: errors.length === 0, errors });
     }

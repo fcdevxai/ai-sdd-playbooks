@@ -28,7 +28,7 @@ test('every authored skill lints clean (T5.1)', () => {
 });
 
 test('the Phase 5 core skills are present (T5.2)', () => {
-  for (const name of ['sdd-enrich-us', 'sdd-new', 'sdd-design', 'sdd-plan', 'sdd-apply', 'sdd-code-review', 'sdd-security-gate', 'sdd-verify', 'sdd-archive', 'sdd-next', 'sdd-ff']) {
+  for (const name of ['sdd-enrich-us', 'sdd-new', 'sdd-design', 'sdd-plan', 'sdd-apply', 'sdd-code-review', 'sdd-security-gate', 'sdd-runtime-gate', 'sdd-verify', 'sdd-archive', 'sdd-next', 'sdd-ff']) {
     assert.ok(fs.existsSync(path.join(SKILLS_DIR, name, 'SKILL.md')), `${name} exists`);
   }
 });
@@ -60,6 +60,14 @@ test('sdd-ff is deprecated without a silent alias (C-05, T5.3)', () => {
   assert.match(b, /sdd next/);
   assert.match(b, /Never execute `sdd-plan`/); // does not run the planner
   assert.match(b, /Never produce `tasks\.md`/);  // does not generate tasks.md
+});
+
+test('sdd-runtime-gate never fabricates passed and blocks on missing dependency (T8.2/T8.3)', () => {
+  const b = body('sdd-runtime-gate');
+  assert.match(b, /Never fabricate `passed`/i);
+  assert.match(b, /DEPENDENCY_UNAVAILABLE/);
+  assert.match(b, /Playwright MCP/i);
+  assert.match(b, /not_applicable/);
 });
 
 test('sdd-security-gate states the non-replacement disclaimer and blocking rule (T7.2/T7.3)', () => {

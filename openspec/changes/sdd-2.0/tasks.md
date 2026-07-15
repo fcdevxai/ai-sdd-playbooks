@@ -14,7 +14,7 @@ depends_on: design.md
 
 **Spec**: `openspec/changes/sdd-2.0/proposal.md` · **Design**: `openspec/changes/sdd-2.0/design.md`
 
-> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–7 are complete**; later phases are not started. Legacy 1.x stays operational throughout.
+> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–8 are complete**; later phases are not started. Legacy 1.x stays operational throughout.
 
 Each phase is **independently reviewable and independently mergeable**, leaves the repository green (legacy 1.x keeps working throughout), and depends only on earlier phases. Task ids are `T<phase>.<index>`; each names its success criterion and required tests.
 
@@ -110,11 +110,11 @@ Each phase is **independently reviewable and independently mergeable**, leaves t
 ## Phase 8 — Runtime gate & adapters (incomplete adapters block)
 *Goal: one capability-driven gate; incomplete adapters block, never pass.* — **AC-11** (C-06)
 
-- [ ] **T8.1** Define adapter descriptors `src/adapters/{browser,http,cli,worker}.js` with support levels: `browser`/`http` **supported**, `cli`/`worker` **experimental**; each declares validates-list + evidence + pass criteria + `reason_code`s.
-- [ ] **T8.2** Author `skills/sdd-runtime-gate/SKILL.md`: capability `false` → `not_applicable`; capability `true` + unimplemented/dependency-absent/insufficient-evidence → **`blocked`** (with `reason_code`); never fabricate `passed`.
-  - *Tests*: capability matrix → expected adapter set + gate status; experimental `cli`/`worker` with capability `true` → `blocked` (never `passed`).
-- [ ] **T8.3** Full depth for `browser` (Playwright-MCP dependency → `blocked: DEPENDENCY_UNAVAILABLE`, no fabricated evidence) and `http`; `cli`/`worker` experimental descriptors that block when applicable.
-  - *Tests*: `browser` records `blocked` when the MCP dependency is unavailable.
+- [x] **T8.1** Define adapter descriptors `src/adapters/{browser,http,cli,worker}.js` with support levels: `browser`/`http` **supported**, `cli`/`worker` **experimental**; each declares validates-list + evidence + pass criteria + `reason_code`s. ✓ + `planRuntimeAdapters`/`gateStatusFromAdapters` in `src/adapters/index.js`
+- [x] **T8.2** Author `skills/sdd-runtime-gate/SKILL.md`: capability `false` → `not_applicable`; capability `true` + unimplemented/dependency-absent/insufficient-evidence → **`blocked`** (with `reason_code`); never fabricate `passed`. ✓ + `sdd validate` cross-checks the report's `status` against its adapter aggregate (C-06/C-12)
+  - *Tests*: capability matrix → expected adapter set + gate status; experimental `cli`/`worker` with capability `true` → `blocked` (never `passed`). ✓ `test/adapters.test.js`
+- [x] **T8.3** Full depth for `browser` (Playwright-MCP dependency → `blocked: DEPENDENCY_UNAVAILABLE`, no fabricated evidence) and `http`; `cli`/`worker` experimental descriptors that block when applicable. ✓ (browser descriptor names `playwright-mcp`; skill sets `blocked` when absent)
+  - *Tests*: `browser` records `blocked` when the MCP dependency is unavailable. ✓ (skill content + `INSUFFICIENT_EVIDENCE`/`DEPENDENCY_UNAVAILABLE` reason codes)
 
 ## Phase 9 — Project scaffolding (safe documents)
 *Goal: `init` connects a project without overwriting; adoption is explicit.* — **AC-03, AC-04, AC-05**

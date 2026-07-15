@@ -141,6 +141,31 @@ test('validate: unquoted YAML dates are accepted (normalized Date → string)', 
   assert.equal(code, EXIT.OK);
 });
 
+const RUNTIME_REPORT = (status, adapterStatus) => `---
+schema: runtime-gate-report
+schema_version: 1
+change_id: demo
+status: ${status}
+adapters:
+  http: { status: ${adapterStatus} }
+---
+`;
+
+test('validate: runtime-gate status consistent with adapters passes (C-06)', async () => {
+  const dir = makeRepo();
+  writeChange(dir, 'runtime-gate-report.md', RUNTIME_REPORT('passed', 'passed'));
+  const { io } = capture();
+  assert.equal(await run(['validate', '--cwd', dir], io), EXIT.OK);
+});
+
+test('validate: runtime-gate status disagreeing with adapters is a violation (C-06/C-12)', async () => {
+  const dir = makeRepo();
+  // declares passed but an applicable adapter is blocked → aggregate is blocked
+  writeChange(dir, 'runtime-gate-report.md', RUNTIME_REPORT('passed', 'blocked'));
+  const { io } = capture();
+  assert.equal(await run(['validate', '--cwd', dir], io), EXIT.VIOLATION);
+});
+
 test('validate --precondition: unknown skill is a usage error', async () => {
   const dir = makeRepo();
   writeChange(dir, 'proposal.md', VALID_PROPOSAL);
