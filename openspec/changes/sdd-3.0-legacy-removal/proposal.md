@@ -3,7 +3,7 @@ schema: proposal
 schema_version: 1
 change_id: sdd-3.0-legacy-removal
 title: "SDD 3.0 — Remove 1.x legacy compatibility"
-status: draft
+status: approved
 owner: felipe.campos
 created: 2026-07-15
 updated: 2026-07-15
@@ -100,4 +100,6 @@ note. The mechanics are otherwise straightforward deletion + doc/version updates
 
 ## Open technical decisions
 
-- **Config template `methodology.compatible` bump.** Proposed default `">=3.0.0 <4.0.0"` for new `sdd init` in 3.0. Existing projects keep their own pin. (Confirm at approval.)
+None. Resolved at approval: the config template default `methodology.compatible`
+bumps to `">=3.0.0 <4.0.0"` for new `sdd init` in 3.0; existing projects keep
+their own pin.

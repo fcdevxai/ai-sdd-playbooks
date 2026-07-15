@@ -14,9 +14,9 @@ depends_on: proposal.md
 
 **Spec**: `openspec/changes/sdd-3.0-legacy-removal/proposal.md`
 
-> **Execution gate.** All artifacts are `draft`. No phase starts until
-> `proposal.md` → `approved` (and, since `design_required` is true, `design.md`
-> → `approved`). This document is the work plan for review; implementation does
+> **Execution gate.** `proposal.md` is **approved** (2026-07-15). Since
+> `design_required` is true, no phase starts until `design.md` → `approved` too.
+> `design.md` is currently `draft`, awaiting human sign-off; implementation does
 > not begin yet.
 
 Each phase is **independently reviewable and mergeable** and leaves the 2.0
@@ -37,7 +37,7 @@ rhythm. Task ids are `T<phase>.<index>`.
 
 - [ ] **T1.1** Remove `sdd migrate`: delete `src/cli/migrate.js`, unwire it from `src/cli/dispatch.js`, remove it from `COMMAND_NAMES` + help, and delete `test/migrate.test.js`.
   - *Success*: `sdd --help` lists 7 commands; `sdd migrate` is handled as an unknown command (exit 3).
-  - *Tests*: update `test/dispatch.test.js` (7 commands, `migrate` unknown).
+  - *Tests*: update `test/dispatch.test.js` (7 commands, `migrate` unknown) and `test/traceability.test.js` (drop the `AC-13 → migrate` mapping and the 8-command AC-01; realign to the 3.0 surface — design §7).
 - [ ] **T1.2** Remove the `--legacy` dual-emit path from `src/cli/sync.js` (keep reconcile) and delete the `sync --legacy` byte-stable test from `test/sync.test.js`.
   - *Success*: `sdd sync` reconciles as before; `--legacy` is no longer recognized.
   - *Tests*: sync reconcile tests still pass; a test asserts `--legacy` no longer performs dual-emit.
