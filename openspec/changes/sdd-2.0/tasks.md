@@ -14,7 +14,7 @@ depends_on: design.md
 
 **Spec**: `openspec/changes/sdd-2.0/proposal.md` · **Design**: `openspec/changes/sdd-2.0/design.md`
 
-> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–9 are complete**; later phases are not started. Legacy 1.x stays operational throughout.
+> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–10 are complete**; later phases are not started. Legacy 1.x stays operational throughout.
 
 Each phase is **independently reviewable and independently mergeable**, leaves the repository green (legacy 1.x keeps working throughout), and depends only on earlier phases. Task ids are `T<phase>.<index>`; each names its success criterion and required tests.
 
@@ -133,14 +133,14 @@ Each phase is **independently reviewable and independently mergeable**, leaves t
 ## Phase 10 — GitHub delivery integration (new)
 *Goal: delivery (branch/commit/PR/checks/CI/merge) as a separate, GitHub-specific dimension.* — **AC-17, AC-18** (C-01, C-10, C-11)
 
-- [ ] **T10.1** Implement `src/github/{auth,repository,pull-request,checks}.js` (GitHub-specific, no generic forge layer). `repository.js` reads the local Git tree (`uncommitted`/`committed`); `pull-request.js`/`checks.js` map GitHub reality to the remaining delivery states of design §3.2.
-  - *Tests*: state mapping fixtures (local + GitHub sources).
-- [ ] **T10.2** Implement delivery resolution from **two sources**: `repository.js` reads the local Git tree for `uncommitted`/`committed` (offline); GitHub supplies `pr_open`/`ci_*`/`merged`. No auth/connectivity → GitHub-sourced state is `unknown` (`GITHUB_CONTEXT_UNAVAILABLE`); never assume CI/PR/merge; never persist current delivery in `sdd.lock` (C-10). `unknown` blocks only when remote info is required (`runtime_cleared`+), never local-only steps.
-  - *Tests*: `delivery.state == unknown` path; `uncommitted`/`committed` resolved offline; `planned + unknown` does **not** block `sdd-apply`; `runtime_cleared + unknown` blocks commit; no lock write of delivery; no assumed states.
-- [ ] **T10.3** Author `skills/sdd-commit/SKILL.md` per design §9.2 (C-11): validate preconditions → `sdd validate` → verify gates `passed`/`not_applicable` → detect base branch from `github.base_branch`/GitHub (**never** hardcode `main`/`master`) → commit → push → create/update PR (only if remote actions authorized) → return delivery state. Does not mark `ci_passed` on push; never auto-merges.
-  - *Tests*: base-branch-from-config (no hardcoded default); PR skipped when remote actions unauthorized; post-push state ≠ `ci_passed`.
-- [ ] **T10.4** Wire `sdd next` merge/CI recommendations (design §3.4): `wait_for_github_ci`, `merge`, `blocked: GITHUB_CI_FAILED`.
-  - *Tests*: combination-matrix fixtures for each delivery state.
+- [x] **T10.1** Implement `src/github/{auth,repository,pull-request,checks}.js` (GitHub-specific, no generic forge layer). `repository.js` reads the local Git tree (`uncommitted`/`committed`); `pull-request.js`/`checks.js` map GitHub reality to the remaining delivery states of design §3.2. ✓ + `src/github/index.js` composer with injectable runners
+  - *Tests*: state mapping fixtures (local + GitHub sources). ✓ `test/delivery.test.js`
+- [x] **T10.2** Implement delivery resolution from **two sources**: local Git for `uncommitted`/`committed` (offline); GitHub for `pr_open`/`ci_*`/`merged`. No auth/connectivity → GitHub-sourced state `unknown` (`GITHUB_CONTEXT_UNAVAILABLE`); never assume CI/PR/merge; never persist current delivery in `sdd.lock` (C-10). Wired into `sdd status`/`sdd next` (replaces the hardcoded unknown).
+  - *Tests*: `unknown`/`GIT_UNAVAILABLE`/`GITHUB_CONTEXT_UNAVAILABLE` paths; `uncommitted` resolved offline; `planned + unknown` does not block `sdd-apply`; `runtime_cleared + unknown` blocks; git-dirty repo → `sdd-commit`. ✓ `test/delivery.test.js`, `test/lifecycle-cli.test.js`, `test/engine.test.js`
+- [x] **T10.3** Author `skills/sdd-commit/SKILL.md` per design §9.2 (C-11): validate → verify gates → detect base branch from `github.base_branch`/GitHub (**never** hardcode `main`/`master`) → commit → push → create/update PR (only if remote actions authorized) → return delivery state. No `ci_passed` on push; never auto-merges.
+  - *Tests*: no hardcoded branch / no auto-merge / no ci_passed-on-push (content assertions). ✓ `test/skill-contract.test.js`
+- [x] **T10.4** Wire `sdd next` merge/CI recommendations (design §3.4): `wait_for_github_ci`, `merge`, `blocked: GITHUB_CI_FAILED`. ✓ (engine `DELIVERY_NEXT` now fed by the live reader)
+  - *Tests*: combination-matrix fixtures for each delivery state. ✓ `test/engine.test.js`
 
 ## Phase 11 — Migration & bootstrap
 *Goal: a 1.x consumer moves to 2.0 safely; AI doc refactor is human-approved.* — **AC-13, AC-15, AC-16**

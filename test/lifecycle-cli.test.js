@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { run, EXIT } from '../src/cli/dispatch.js';
 
 function makeRepo(changeId = 'demo') {
@@ -85,6 +86,20 @@ test('sdd next at reviewed → sdd-security-gate carries the disclaimer (T7.3)',
   const parsed = JSON.parse(out.join('\n'));
   assert.equal(parsed.next.skill, 'sdd-security-gate');
   assert.match(parsed.security_disclaimer, /penetration test/i);
+});
+
+test('sdd next reads real delivery: a dirty git repo at runtime_cleared → sdd-commit (Phase 10)', async () => {
+  const dir = makeRepo();
+  execFileSync('git', ['init', '-q'], { cwd: dir }); // untracked artifacts → uncommitted
+  writeArtifact(dir, 'demo', 'proposal.md', 'approved');
+  writeArtifact(dir, 'demo', 'tasks.md', 'passed');
+  writeArtifact(dir, 'demo', 'code-review-report.md', 'passed');
+  writeArtifact(dir, 'demo', 'security-report.md', 'passed');
+  writeArtifact(dir, 'demo', 'runtime-gate-report.md', 'passed');
+  const { io, out } = capture();
+  const code = await run(['next', '--cwd', dir], io);
+  assert.equal(code, EXIT.OK);
+  assert.match(out.join('\n'), /Next skill: sdd-commit/);
 });
 
 test('sdd status with no change folders is a usage error', async () => {

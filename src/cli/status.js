@@ -7,23 +7,13 @@
  * reader). The language model never decides state here — the CLI does.
  */
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
 import { EXIT } from './exit.js';
 import { loadChange, findChangeDirs } from '../config/artifacts.js';
 import { loadConfig } from '../config/config.js';
 import { readLock, lockPathFor } from '../config/lock.js';
 import { computeState } from '../lifecycle/engine.js';
 import { SECURITY_DISCLAIMER } from '../security/classify.js';
-
-function currentBranch(cwd) {
-  try {
-    return execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
-      cwd, stdio: ['ignore', 'pipe', 'ignore'],
-    }).toString().trim();
-  } catch {
-    return null;
-  }
-}
+import { resolveDelivery, gitRunner, currentBranch } from '../github/index.js';
 
 function resolveChangeDir(cwd, changeId) {
   const dirs = findChangeDirs(cwd);
@@ -33,15 +23,10 @@ function resolveChangeDir(cwd, changeId) {
     return match ? { dir: match } : { error: `change '${changeId}' not found` };
   }
   if (dirs.length === 1) return { dir: dirs[0] };
-  const branch = currentBranch(cwd);
+  const branch = currentBranch(gitRunner(cwd));
   const byBranch = branch && dirs.find((d) => path.basename(d) === branch);
   if (byBranch) return { dir: byBranch };
   return { error: `multiple changes found; pass a change-id (${dirs.map((d) => path.basename(d)).join(', ')})` };
-}
-
-// Delivery is supplied by src/github in a later phase; unknown for now (§3.2).
-function readDelivery() {
-  return { state: 'unknown', blocked_reason: 'GITHUB_CONTEXT_UNAVAILABLE' };
 }
 
 function prepare(cwd, changeId) {
@@ -50,7 +35,9 @@ function prepare(cwd, changeId) {
   const { config } = loadConfig({ cwd });
   const lock = readLock(lockPathFor(cwd, null));
   const change = loadChange(resolved.dir);
-  const result = computeState(config, lock, change.artifacts, readDelivery());
+  // Delivery: live from local Git + GitHub (or unknown). Never persisted (C-10).
+  const delivery = resolveDelivery({ cwd });
+  const result = computeState(config, lock, change.artifacts, delivery);
   return { change, result };
 }
 
