@@ -1,0 +1,18 @@
+{
+  "$id": "https://sdd.dev/schemas/tasks.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SDD tasks artifact frontmatter",
+  "type": "object",
+  "required": ["schema", "schema_version", "change_id", "status"],
+  "properties": {
+    "schema": { "const": "tasks" },
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "change_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+    "title": { "type": "string" },
+    "status": { "enum": ["draft", "ready", "in_progress", "passed", "blocked"] },
+    "owner": { "type": "string" },
+    "created": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "updated": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "depends_on": { "type": "string" }
+  }
+}

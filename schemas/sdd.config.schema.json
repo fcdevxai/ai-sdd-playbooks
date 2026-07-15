@@ -1,0 +1,63 @@
+{
+  "$id": "https://sdd.dev/schemas/sdd.config.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "sdd.config.yaml",
+  "type": "object",
+  "required": ["version", "methodology", "capabilities", "github"],
+  "properties": {
+    "version": { "const": 2 },
+    "project": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "language": { "type": "string" }
+      }
+    },
+    "methodology": {
+      "type": "object",
+      "required": ["compatible"],
+      "properties": {
+        "scope": { "enum": ["user", "project"] },
+        "compatible": { "type": "string" }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "browser": { "type": "boolean" },
+        "http": { "type": "boolean" },
+        "cli": { "type": "boolean" },
+        "worker": { "type": "boolean" }
+      }
+    },
+    "design": {
+      "type": "object",
+      "properties": { "always": { "type": "boolean" } }
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "default_risk": { "enum": ["low", "standard", "elevated"] },
+        "threat_model": { "enum": ["auto", "always", "never"] }
+      }
+    },
+    "github": {
+      "type": "object",
+      "required": ["base_branch", "require_pull_request", "require_ci"],
+      "properties": {
+        "base_branch": { "type": "string" },
+        "require_pull_request": { "const": true },
+        "require_ci": { "const": true }
+      }
+    },
+    "documents": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "addons": {
+      "type": "object",
+      "additionalProperties": { "type": "boolean" }
+    }
+  }
+}
