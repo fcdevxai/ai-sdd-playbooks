@@ -17,8 +17,8 @@ depends_on: design.md
 > **Execution gate.** `proposal.md` and `design.md` were approved (2026-07-15),
 > **amended and re-approved the same day** (scope expansion: doc-template alignment).
 > Implementation proceeds one phase at a time, each stopping for human review.
-> **Phases 0–5 are complete** (legacy removal + purge + doc alignment + version/docs);
-> Phase 6 (verification sweep) is not started.
+> **All phases (0–6) are complete.** Legacy removed, references purged, docs
+> aligned, presented as 3.0, and the verification sweep is green.
 
 Each phase is independently reviewable and leaves the 2.0 functionality green.
 One phase per commit. Task ids are `T<phase>.<index>`.
@@ -71,10 +71,10 @@ One phase per commit. Task ids are `T<phase>.<index>`.
 ## Phase 6 — Verification sweep
 *Goal: 2.0 intact, legacy fully gone, docs aligned.* — **AC-01…AC-09**
 
-- [ ] **T6.1** Full `node --test` green; `sdd --help` = 7 commands; `sdd --version` = `3.0.0`; skill count = 13; a fresh `sdd init` scaffolds the four aligned docs.
-- [ ] **T6.2** E2E: `sdd install` (+`--runtime`) → `init` → `status`/`next`/`validate` on a fixture consumer, with no legacy present.
-- [ ] **T6.3** `npm pack --dry-run` audit vs the Phase 0 baseline: only `bin/ src/ skills/ addons/ schemas/ templates/project/` (+ package.json/README/CHANGELOG).
-- [ ] **T6.4** Grep sweep returns empty for every old term **and** for the pre-rename `docs/architecture.md`/`docs/verification.md` paths (AC-02, AC-08).
+- [x] **T6.1** `node --test` **167/167**; `sdd --help` = 7 commands; `sdd --version` = `3.0.0`; skill count = **13**; a fresh `sdd init` scaffolds the four aligned docs. `sdd migrate` → exit 3. ✓
+- [x] **T6.2** E2E: `sdd install` (both → 13/13; `--runtime claude` → 13/0) → `init` (four docs, no legacy) → `status`/`next` (lifecycle `proposal_draft` → "await human") → `validate` (all valid). ✓
+- [x] **T6.3** `npm pack --dry-run`: ships only `bin/ src/ skills/ addons/ schemas/ templates/project/` + `package.json`/`README.md`/`CHANGELOG.md`; no legacy path. **Fix:** `CHANGELOG.md` was not being packed → added to `package.json` `files` (+ a `publish.test.js` assertion) to satisfy AC-05. ✓
+- [x] **T6.4** Sweep clean for every old term **and** the pre-rename doc paths. **The guard caught two leftovers the manual grep missed** (`templates/project/AGENTS.md` and `templates/project/openspec/system.md` still pointed at `docs/architecture.md`) — both fixed to `doc_architecture.md`, and the pre-rename paths were added to `test/no-legacy-refs.test.js` `FORBIDDEN` so this is enforced permanently. ✓
 
 ---
 

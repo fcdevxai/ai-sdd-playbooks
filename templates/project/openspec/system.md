@@ -18,7 +18,7 @@ See [AGENTS.md](../../AGENTS.md).
 
 ## Layer architecture
 
-See [docs/architecture.md](../../docs/architecture.md).
+See [docs/doc_architecture.md](../../docs/doc_architecture.md).
 
 ## Main data model
 

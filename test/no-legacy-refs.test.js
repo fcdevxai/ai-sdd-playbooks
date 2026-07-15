@@ -14,8 +14,12 @@ const SCAN_DIRS = ['src', 'bin', 'skills', 'addons', 'templates/project', 'test'
 const SCAN_FILES = ['README.md', 'CHANGELOG.md'];
 const EXTS = new Set(['.js', '.mjs', '.md', '.json', '.yaml', '.yml']);
 
-// Removed 1.x paths and old terms that must not reappear.
-const FORBIDDEN = [/playbooks\//, /dist\/claude/, /scripts\/sync/, /--legacy/, /sdd-ff/, /\b1\.x\b/, /deprecat/i];
+// Removed 1.x paths and old terms that must not reappear, plus the pre-rename
+// consumer doc paths superseded by the 3.0 alignment (AC-08).
+const FORBIDDEN = [
+  /playbooks\//, /dist\/claude/, /scripts\/sync/, /--legacy/, /sdd-ff/, /\b1\.x\b/, /deprecat/i,
+  /docs\/architecture\.md/, /docs\/verification\.md/,
+];
 
 function walk(dir) {
   const abs = path.join(ROOT, dir);

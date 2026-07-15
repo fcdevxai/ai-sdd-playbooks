@@ -13,7 +13,8 @@
     "skills/",
     "addons/",
     "schemas/",
-    "templates/project/"
+    "templates/project/",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "test": "node --test"

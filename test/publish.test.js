@@ -20,6 +20,7 @@ test('npm pack ships exactly the intended top-level dirs (T13.2)', () => {
   }
   assert.ok(files.includes('package.json'));
   assert.ok(files.some((f) => /^README\.md$/i.test(f)));
+  assert.ok(files.includes('CHANGELOG.md'));
 });
 
 test('npm pack excludes dev/non-shipped artifacts', () => {
