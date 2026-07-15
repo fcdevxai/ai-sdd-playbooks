@@ -9,16 +9,32 @@ import { resolveTargets } from '../install/targets.js';
 import { installSkills, readPackageVersion } from '../install/skills.js';
 import { loadConfig } from '../config/config.js';
 
+// --runtime selects which agent dir(s) to install into. Keys map to target keys.
+const RUNTIME_TARGETS = {
+  claude: ['claude'],
+  copilot: ['agents'],
+  both: ['claude', 'agents'],
+};
+
 function parseInstallArgs(rest) {
   const addons = [];
+  let runtime = 'both';
   for (let i = 0; i < rest.length; i++) {
     if (rest[i] === '--addon' && rest[i + 1]) { addons.push(rest[i + 1]); i++; }
+    else if (rest[i] === '--runtime' && rest[i + 1]) { runtime = rest[i + 1]; i++; }
   }
-  return { addons };
+  return { addons, runtime };
 }
 
 export async function installCommand(parsed, io) {
-  const { addons: flagAddons } = parseInstallArgs(parsed.rest);
+  const { addons: flagAddons, runtime } = parseInstallArgs(parsed.rest);
+
+  const keys = RUNTIME_TARGETS[runtime];
+  if (!keys) {
+    io.err(`error: --runtime must be one of: claude, copilot, both (got '${runtime}')`);
+    return EXIT.USAGE;
+  }
+
   // Add-ons are opt-in: via --addon and/or `addons:` in the project's sdd.config.yaml.
   const { config } = loadConfig({ cwd: parsed.flags.cwd || process.cwd() });
   const configAddons = Object.entries(config.addons || {})
@@ -27,7 +43,8 @@ export async function installCommand(parsed, io) {
   const addons = [...new Set([...flagAddons, ...configAddons])];
 
   const version = readPackageVersion();
-  const targets = resolveTargets(process.env);
+  const allTargets = resolveTargets(process.env);
+  const targets = Object.fromEntries(keys.map((k) => [k, allTargets[k]]));
   const result = installSkills({ targets, version, addons });
 
   if (parsed.flags.json) {
