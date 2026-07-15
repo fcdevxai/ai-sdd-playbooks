@@ -1,0 +1,189 @@
+---
+schema: tasks
+schema_version: 1
+change_id: sdd-2.0
+title: "SDD 2.0 — Implementation plan"
+status: ready
+owner: felipe.campos
+created: 2026-07-14
+updated: 2026-07-14
+depends_on: design.md
+---
+
+# SDD 2.0 — Implementation plan
+
+**Spec**: `openspec/changes/sdd-2.0/proposal.md` · **Design**: `openspec/changes/sdd-2.0/design.md`
+
+> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–4 are complete**; later phases are not started. Legacy 1.x stays operational throughout.
+
+Each phase is **independently reviewable and independently mergeable**, leaves the repository green (legacy 1.x keeps working throughout), and depends only on earlier phases. Task ids are `T<phase>.<index>`; each names its success criterion and required tests.
+
+---
+
+## Phase 0 — Package & CLI skeleton
+*Goal: a runnable `sdd` binary with the full command surface stubbed.* — **AC-01**
+
+- [x] **T0.1** Add `bin/sdd.js` + `src/cli/dispatch.js`; wire `package.json` `bin`, `files`, `type: module`, `version: 2.0.0`.
+  - *Success*: `sdd --help` lists exactly `install init doctor status next validate sync migrate`. ✓ verified
+  - *Tests*: dispatch routing; unknown command → exit `3`. ✓ `test/dispatch.test.js`
+- [x] **T0.2** Implement global flags (`--json`, `--cwd`, `--config`, `--quiet`, `--yes`) and the exit-code map (design §1.4).
+  - *Tests*: flag-parsing table test. ✓ `parseArgs` table in `test/dispatch.test.js`
+- [x] **T0.3** Keep 1.x sources **at their current paths, frozen in place** — do **not** move `playbooks/`, `dist/claude-commands/`, `scripts/sync.js`, `scripts/sync-consumer.sh` (relocation deferred to 3.0). Add only `legacy/README.md` documenting the freeze + deprecation window; `npm run sync`/`check` keep their current paths.
+  - *Success*: submodule consumers still resolve `dist/claude-commands/` and `scripts/sync-consumer.sh` unchanged; `npm run check` still passes (AC-16). ✓ verified (no drift)
+  - *Tests*: CI `check` job green; path-stability assertion (legacy paths unchanged). ✓
+
+## Phase 1 — Schemas & validation engine
+*Goal: `sdd validate` enforces the artifact contract with corrected enums.* — **AC-09, AC-10**
+
+- [x] **T1.1** Author `schemas/*.json` per design §4, with corrected enums: `design ∈ {draft,approved,not_applicable,archived}` (no `ready`), `tasks ∈ {draft,ready,in_progress,passed,blocked}`, and `runtime-gate-report` adapter status including **`blocked`** + `reason_code`. ✓ 9 schemas authored (`ajv@^8`, draft 2020-12)
+  - *Tests*: schema-lint loads all schemas via ajv. ✓ `test/schema.test.js`
+- [x] **T1.2** Add the structured `proposal` blocks to `proposal.schema.json`: required `impact` (10 boolean indicators) and `security` (`risk` + `triggers` enum) per design §4.3. ✓ (`acceptance_criteria` kept optional — bodies may render ACs in prose per design §4.3)
+  - *Tests*: fixtures reject a proposal missing `impact`/`security`; accept a well-formed one. ✓
+- [x] **T1.3** Implement `src/schema/{load,validate}.js` (ajv) and `sdd validate` / `--ci`; **no** heading/phrase/emoji matching; **no** artifact mutation (C-12). ✓ schema validation + `--ci`/`--json` + change_id↔folder check. **Deferred to their dependencies:** legal-state, required-gate, applicable-adapter, blocking-finding, and full cross-artifact checks land with the engine (Phase 4) and adapters (Phase 8); config/lock CLI validation lands with config IO (Phase 2).
+  - *Success*: `--ci` exits `1` on any violation, `0` clean, `--json` output. ✓ verified
+  - *Tests*: exit-code matrix; assert no string-verdict grep and no artifact write. ✓ `test/validate.cli.test.js` (incl. mtime/content no-mutation assertion)
+- [x] **T1.4** Implement `sdd validate --precondition <skill>` evaluating a `requires:` block. ✓ pure `evaluatePreconditions` + `SKILL_PRECONDITIONS` (sdd-plan, sdd-apply)
+  - *Tests*: met/unmet precondition fixtures (incl. `sdd-apply` triad, design §3.6). ✓ `test/preconditions.test.js`
+
+## Phase 2 — Config & lock (compatibility range)
+*Goal: configuration + reproducibility by range, not false pinning.* — **AC-19**, **AC-04** (partial)
+
+- [x] **T2.1** Implement `src/config/config.js` (defaults → `sdd.config.yaml` → env) and `docmap.js`; include `methodology.compatible`, `capabilities`, `design.always`, `security`, `github` (with `require_pull_request`/`require_ci` pinned `const: true` — mandatory in 2.0, AC-21), `documents`, `addons`. ✓ (`js-yaml` for IO; `mergeConfig` pure) — also wired config/lock validation into `sdd validate` (closes the Phase 1 T1.3 deferral)
+  - *Tests*: merge precedence + docmap resolution; a config with `require_ci: false` or `require_pull_request: false` is **rejected** by the schema (AC-21). ✓ `test/config.test.js`
+- [x] **T2.2** Implement `src/config/lock.js` writing `methodology: { compatible, resolved }` — **not** a bare `methodology_version` (C-08). The lock never stores current GitHub delivery state (C-10). ✓ `buildLock` emits only allowed keys
+  - *Success*: lock round-trips and validates; `resolved` is informational, `compatible` is the contract. ✓ verified
+  - *Tests*: lock round-trip; assert no delivery/CI/PR field is persisted. ✓ `test/lock.test.js`
+
+## Phase 3 — Global install
+*Goal: methodology installs once, globally; no consumer files.* — **AC-02, AC-14**
+
+- [x] **T3.1** `src/install/targets.js` resolving `~/.claude/skills` and `~/.agents/skills` (env-overridable). ✓ `SDD_CLAUDE_SKILLS_DIR` / `SDD_AGENTS_SKILLS_DIR`
+- [x] **T3.2** `src/install/skills.js` + `sdd install`: copy core skills into both dirs, stamp version, **core only**. ✓ installs whatever `skills/`+opt-in `addons/` contain; stamps `.sdd-version`. (Core `skills/` is populated in Phase 5/6 — install already picks them up; today it reports "none authored yet".)
+  - *Tests*: install into temp dirs; both receive core skills; no cwd writes; no add-on leakage. ✓ `test/install.test.js` (fixture source tree covers core-in-both, add-on opt-in, no consumer writes)
+
+## Phase 4 — Deterministic lifecycle engine (two dimensions)
+*Goal: the CLI is the authority on lifecycle AND combines it with GitHub delivery.* — **AC-06, AC-07, AC-08** (C-01)
+
+- [x] **T4.1** Encode in `src/lifecycle/model.js`: the **lifecycle** state + transition tables (design §3.1/§3.3) and a **separate delivery** state table (§3.2). `sdd-enrich-us` is modeled as a pre-process with no lifecycle state (C-02). `failed`/`blocked` are exception views, not linear states. ✓ tables + next-maps are data-only
+- [x] **T4.2** Implement the pure engine `src/lifecycle/engine.js`: `(config, lock, artifactIndex, deliveryStatus) → {lifecycle, delivery, next, blockedReason}`; plus `impact.js` (design-required, C-03) and `preconditions.js`. ✓ pure (no fs/model/network); delivery is an input; `impact.js` authored, `artifacts.js` re-exports it
+  - *Success*: no fs/model/network calls inside the engine; delivery is an **input**. ✓
+  - *Tests*: fixtures for every lifecycle state/transition, the dimension-combination matrix (§3.4), exception views, and design/security skip rules. ✓ `test/engine.test.js`
+- [x] **T4.3** Implement `sdd status` (prints **both** dimensions) and `sdd next` (single action combining both). ✓ change resolution: explicit id → git branch → single change
+  - *Success*: `status` shows `lifecycle` + `delivery`; `next` returns `next skill`, `wait_for_github_ci`, `merge`, or `blocked: <reason>`. ✓ verified (dogfood: sdd-2.0 → planned → sdd-apply)
+  - *Tests*: e2e over fixture change folders + injected delivery states (incl. `unknown`). ✓ `test/lifecycle-cli.test.js`
+  - *Note*: the live delivery reader (local Git + GitHub) lands in **Phase 10**; until then `sdd status`/`next` report delivery `unknown`. The engine already accepts every delivery state (fully tested).
+- [x] **T4.4** Author `skills/sdd-next/SKILL.md` shelling `sdd next --json`; it does not re-derive state. ✓ (first authored core skill — `sdd install` now installs it)
+
+## Phase 5 — Skill canonicalization
+*Goal: `skills/<name>/SKILL.md` is the single source, consumed by both runtimes.* — decision 1, **AC-08**
+
+- [ ] **T5.1** Define the shared SKILL.md frontmatter contract (`name`, `description`, `lifecycle_stage`, `produces`, `requires`, `version`) + a `sdd doctor` lint.
+- [ ] **T5.2** Convert 1.x flows to `skills/<name>/SKILL.md`: `sdd-enrich-us` (pre-process), `sdd-new`, `sdd-apply`, `sdd-code-review`, `sdd-verify`, `sdd-archive` (parity with frozen legacy bodies); `requires:` matches the lifecycle.
+  - *Tests*: frontmatter lint + parity checklist vs legacy.
+- [ ] **T5.3** Deprecate `sdd-ff` **without a silent alias** (C-05): the 2.0 `sdd-ff` prints the deprecation notice (design §8.6), does **not** run `sdd-plan`, and recommends `sdd next`. Original behavior survives only in the frozen `legacy/` wrapper.
+  - *Tests*: invoking `sdd-ff` emits the notice and does not produce `tasks.md`.
+- [ ] **T5.4** Retain a transitional dual-emit build behind `sdd sync --legacy`.
+  - *Tests*: dual-emit produces byte-stable legacy files for unchanged skills.
+
+## Phase 6 — New lifecycle skills (design & plan)
+*Goal: the revised lifecycle's design/plan split exists.* — decision 7 (C-03)
+
+- [ ] **T6.1** Author `skills/sdd-new/SKILL.md` so it **proposes** the structured `impact` block for human confirmation (C-03).
+  - *Tests*: generated proposal contains a complete `impact` block.
+- [ ] **T6.2** Author `skills/sdd-design/SKILL.md` producing `design.md` (`status: approved` on sign-off). When `design_required == false`, **no file is created and nothing is written**: the engine computes `designed` directly from `design_required` (design §3.1/§4.4); `sdd status`/`sdd next` never write a `design.md`.
+  - *Tests*: engine fixtures for `design_required==true` (design.md `approved` needed) vs `design_required==false` (lifecycle `designed` with no file, no write); assert `sdd status`/`next` write nothing.
+- [ ] **T6.3** Author `skills/sdd-plan/SKILL.md`; precondition `proposal=approved ∧ (design_required==false ∨ design∈{approved,not_applicable})`; refuses otherwise naming the missing precondition.
+  - *Tests*: precondition fixtures — proposal `draft` → refusal; `design_required` with design `draft` → refusal; `design_required==false` with no `design.md` → allowed.
+
+## Phase 7 — Security core (classified from the proposal)
+*Goal: security is classified early and enforced late.* — **AC-12** (C-04)
+
+- [ ] **T7.1** Move risk classification **into the proposal/design authoring** (C-04): `sdd-new` proposes `security.risk`+`triggers`; `sdd-design` sets `threat_model_required`+`controls`. `http: true` alone does not imply `elevated`.
+  - *Tests*: an `http`-only, no-trigger change classifies below `elevated`.
+- [ ] **T7.2** Author `skills/sdd-security-gate/SKILL.md` producing `security-report.md`: validates coherence proposal↔design↔impl, checks controls+evidence, **may raise** risk, **never lowers** it automatically, structured findings; blocking finding → `status: blocked`.
+  - *Tests*: raise-not-lower behavior; blocking-finding forces blocked exception view; `low` → `not_applicable`.
+- [ ] **T7.3** Render the mandatory "does not replace a penetration test" disclaimer in report + CLI output.
+  - *Tests*: disclaimer present in report body and `--json`.
+- [ ] **T7.4** Implement this change's own declared security controls (design §6.3), each with a test: `SEC-001` explicit confirmation for global/destructive/remote writes; `SEC-002` path-traversal/symlink/out-of-root write protection; `SEC-003` safe argument escaping / no shell injection; `SEC-004` token/secret redaction in logs; `SEC-005` installed-skill integrity + ownership check; `SEC-006` repo/base-branch/PR validation before remote actions.
+  - *Tests*: one negative test per control (path-traversal attempt blocked; secret redacted in captured logs; remote action refused without a validated repo/branch).
+
+## Phase 8 — Runtime gate & adapters (incomplete adapters block)
+*Goal: one capability-driven gate; incomplete adapters block, never pass.* — **AC-11** (C-06)
+
+- [ ] **T8.1** Define adapter descriptors `src/adapters/{browser,http,cli,worker}.js` with support levels: `browser`/`http` **supported**, `cli`/`worker` **experimental**; each declares validates-list + evidence + pass criteria + `reason_code`s.
+- [ ] **T8.2** Author `skills/sdd-runtime-gate/SKILL.md`: capability `false` → `not_applicable`; capability `true` + unimplemented/dependency-absent/insufficient-evidence → **`blocked`** (with `reason_code`); never fabricate `passed`.
+  - *Tests*: capability matrix → expected adapter set + gate status; experimental `cli`/`worker` with capability `true` → `blocked` (never `passed`).
+- [ ] **T8.3** Full depth for `browser` (Playwright-MCP dependency → `blocked: DEPENDENCY_UNAVAILABLE`, no fabricated evidence) and `http`; `cli`/`worker` experimental descriptors that block when applicable.
+  - *Tests*: `browser` records `blocked` when the MCP dependency is unavailable.
+
+## Phase 9 — Project scaffolding (safe documents)
+*Goal: `init` connects a project without overwriting; adoption is explicit.* — **AC-03, AC-04, AC-05**
+
+- [ ] **T9.1** Author `templates/` scaffolds (`sdd.config.yaml`, `AGENTS.md`, `CLAUDE.md`, `copilot-instructions.md`, `docs/{architecture,verification,sdd-workflow}.md`, `openspec/system.md`, `github/workflows/sdd-validation.yml`).
+- [ ] **T9.2** Implement `src/util/fs-safe.js` (never-overwrite + per-file confirmation token + diff rendering).
+  - *Tests*: overwrite without token throws; diff renders expected hunks.
+- [ ] **T9.3** Implement `sdd init` with **tiered doc adoption** (C-09): automatic only for declared-path/exact-name/official-alias; plausible candidate → confirmation prompt; semantic analysis deferred to `sdd-bootstrap-project`. Never writes an ambiguous mapping without confirmation. Writes `sdd.lock` with `methodology.compatible`.
+  - *Success*: fresh repo gets the full project-local set + no core copies; re-run creates only missing files and edits nothing; ambiguous doc is not auto-adopted.
+  - *Tests*: fresh-repo, re-run-idempotent, exact-adoption, and confirmation-required-for-ambiguous scenarios.
+- [ ] **T9.4** Implement `sdd doctor` read-only + `--fix` (safe additive only): global-skill presence, **version-vs-`compatible`-range block** (C-08), config validity, missing docs, capability/adapter mismatches, illegal states, delivery reachability (`unknown` if GitHub unreachable).
+  - *Tests*: doctor-writes-nothing; **version-incompatibility blocks** (C-08); `--fix` additive-only.
+- [ ] **T9.5** Ship `sdd-validation.yml` using **only** `sdd validate --ci`; it must not mutate artifacts or complete states.
+  - *Tests*: workflow lints; contains no verdict/heading/emoji grep and no write step.
+
+## Phase 10 — GitHub delivery integration (new)
+*Goal: delivery (branch/commit/PR/checks/CI/merge) as a separate, GitHub-specific dimension.* — **AC-17, AC-18** (C-01, C-10, C-11)
+
+- [ ] **T10.1** Implement `src/github/{auth,repository,pull-request,checks}.js` (GitHub-specific, no generic forge layer). `repository.js` reads the local Git tree (`uncommitted`/`committed`); `pull-request.js`/`checks.js` map GitHub reality to the remaining delivery states of design §3.2.
+  - *Tests*: state mapping fixtures (local + GitHub sources).
+- [ ] **T10.2** Implement delivery resolution from **two sources**: `repository.js` reads the local Git tree for `uncommitted`/`committed` (offline); GitHub supplies `pr_open`/`ci_*`/`merged`. No auth/connectivity → GitHub-sourced state is `unknown` (`GITHUB_CONTEXT_UNAVAILABLE`); never assume CI/PR/merge; never persist current delivery in `sdd.lock` (C-10). `unknown` blocks only when remote info is required (`runtime_cleared`+), never local-only steps.
+  - *Tests*: `delivery.state == unknown` path; `uncommitted`/`committed` resolved offline; `planned + unknown` does **not** block `sdd-apply`; `runtime_cleared + unknown` blocks commit; no lock write of delivery; no assumed states.
+- [ ] **T10.3** Author `skills/sdd-commit/SKILL.md` per design §9.2 (C-11): validate preconditions → `sdd validate` → verify gates `passed`/`not_applicable` → detect base branch from `github.base_branch`/GitHub (**never** hardcode `main`/`master`) → commit → push → create/update PR (only if remote actions authorized) → return delivery state. Does not mark `ci_passed` on push; never auto-merges.
+  - *Tests*: base-branch-from-config (no hardcoded default); PR skipped when remote actions unauthorized; post-push state ≠ `ci_passed`.
+- [ ] **T10.4** Wire `sdd next` merge/CI recommendations (design §3.4): `wait_for_github_ci`, `merge`, `blocked: GITHUB_CI_FAILED`.
+  - *Tests*: combination-matrix fixtures for each delivery state.
+
+## Phase 11 — Migration & bootstrap
+*Goal: a 1.x consumer moves to 2.0 safely; AI doc refactor is human-approved.* — **AC-13, AC-15, AC-16**
+
+- [ ] **T11.1** Implement 1.x detection (submodule `.ai-sdd-playbooks`, `.claude/commands/`, `sync-consumer.sh`).
+- [ ] **T11.2** Implement `sdd migrate`: compute 2.0 target, render full diff, apply only on explicit confirmation (`--yes` still prints diff), leave legacy intact.
+  - *Tests*: dry-run diff; confirm-gated apply; legacy-preserved; a full legacy consumer still runs unchanged (AC-16).
+- [ ] **T11.3** Author `skills/sdd-bootstrap-project/SKILL.md`: inspect repo → propose doc mappings + improvements → present diff → write only on human approval; decline is a no-op.
+  - *Tests*: decline-path leaves repo unchanged.
+
+## Phase 12 — Add-on separation
+*Goal: optional add-ons never install implicitly.* — **AC-14** (decision 12)
+
+- [ ] **T12.1** Move Confluence flows to `addons/confluence/{document-code,write-in-confluence}/SKILL.md`.
+- [ ] **T12.2** Gate add-on install behind `sdd install --addon confluence` and/or `addons.confluence: true`.
+  - *Tests*: core install excludes add-ons; opt-in installs them.
+
+## Phase 13 — Legacy freeze, publish & docs
+*Goal: ship 2.0 as an npm package with a documented, reversible migration path.* — **AC-16** (decision 11)
+
+- [ ] **T13.1** Finalize `legacy/README.md`, `CHANGELOG.md`, README rewrite: global install, `sdd` command reference, two-dimension model, capability model, GitHub-only scope, deprecation window (dates), migration guide.
+- [ ] **T13.2** Publish tooling: `npm publish` dry-run in CI, `files` allowlist audit, `sdd --version` == package version.
+  - *Tests*: `npm pack` contains exactly the intended files; `npx sdd --help` smoke test from the tarball.
+- [ ] **T13.3** End-to-end acceptance sweep: run a full lifecycle (`enrich → … → archive`) on a fixture consumer for a `browser+http` project and an `http`-only project, plus a `worker`-capable project that must show `blocked`; drive delivery through `uncommitted → … → merged` and through the `unknown` path.
+  - *Success*: every AC (AC-01…AC-21) is exercised by ≥1 automated test; the design §11 traceability table has no gaps.
+
+---
+
+## Phase → acceptance-criteria coverage
+
+| Phase | ACs |
+|---|---|
+| 0 | AC-01 |
+| 1 | AC-09, AC-10 |
+| 2 | AC-19, AC-21, AC-04 (partial) |
+| 3 | AC-02, AC-14 |
+| 4 | AC-06, AC-07, AC-08 |
+| 5 | decision 1, AC-20 (sdd-ff) |
+| 6 | decision 7 (impact/design/plan) |
+| 7 | AC-12 (+ SEC-001…SEC-006) |
+| 8 | AC-11 |
+| 9 | AC-03, AC-04, AC-05 |
+| 10 | AC-17, AC-18, AC-21 |
+| 11 | AC-13, AC-15, AC-16 |
+| 12 | AC-14 |
+| 13 | full traceability (AC-01…AC-21) |
