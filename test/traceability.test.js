@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 // Each current product capability maps to at least one automated test that exists.
-// (Capability-keyed for 3.0 — no legacy/migrate/sdd-ff entries.)
+// (Capability-keyed for 3.0.)
 const COVERAGE = {
   'command-surface': 'test/dispatch.test.js',
   'global-install': 'test/install.test.js',

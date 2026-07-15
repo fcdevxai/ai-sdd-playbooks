@@ -16,7 +16,7 @@ depends_on: design.md
 
 > **Execution gate.** `proposal.md` and `design.md` are **approved** (2026-07-15).
 > Implementation proceeds one phase at a time, each stopping for human review.
-> **Phases 0–1 are complete**; later phases are not started.
+> **Phases 0–2 are complete**; later phases are not started.
 
 Each phase is independently reviewable and leaves the 2.0 functionality green.
 One phase per commit. Task ids are `T<phase>.<index>`.
@@ -37,17 +37,17 @@ One phase per commit. Task ids are `T<phase>.<index>`.
 ## Phase 2 — Delete legacy sources + the sdd-ff bridge
 *Goal: physically remove the 1.x pipeline and the obsolete bridge.* — **AC-02, AC-05, AC-07**
 
-- [ ] **T2.1** Delete: `playbooks/`, `dist/`, `scripts/sync.js`, `scripts/sync-consumer.sh` (+ any other 1.x-only script), `legacy/`. Remove `scripts/` if it ends up empty.
-- [ ] **T2.2** Delete pre-2.0 templates: `templates/command*.hbs`, `templates/docs/`, `templates/claude/`, `templates/github/`, `templates/openspec/`. **Keep `templates/project/`** (guard test).
-- [ ] **T2.3** Delete `skills/sdd-ff/` (the 1.x→2.0 deprecation bridge).
-- [ ] **T2.4** Remove `sync`/`check` npm scripts; delete `.github/workflows/generate.yml`; drop the legacy drift step from `.github/workflows/ci.yml`.
-  - *Tests*: `test/publish.test.js` still green (excludes deleted paths).
+- [x] **T2.1** Deleted `playbooks/`, `dist/`, `scripts/sync.js`, `scripts/sync-consumer.sh`, `scripts/fix-bodies.mjs`, `legacy/`. ✓ `scripts/` is now empty and gone.
+- [x] **T2.2** Deleted pre-2.0 templates: `command*.hbs`, `docs/`, `claude/`, `github/`, `openspec/`. ✓ `templates/` now holds only `project/`.
+- [x] **T2.3** Deleted `skills/sdd-ff/`. ✓ Skill count 14 → **13**.
+  - *Note*: deleting `sdd-ff/` broke `test/skill-contract.test.js`, so **the skill-contract part of T3.2 was pulled in here** (same coupling as traceability in Phase 1): dropped `sdd-ff` from the presence list (asserts 13), removed the `sdd-ff`-deprecated test, and cleaned the residual `sdd-ff` references from the neighbouring test + the traceability comment.
+- [x] **T2.4** Removed the `sync`/`check` npm scripts; deleted `.github/workflows/generate.yml`; dropped the "Legacy drift check (1.x)" step from `.github/workflows/ci.yml`. ✓ `test/publish.test.js` still green; `npm pack --dry-run` lists no legacy path.
 
 ## Phase 3 — Purge remaining references + docs + version
 *Goal: single doc source, no old references, presented as 3.0.* — **AC-02, AC-05, AC-06**
 
 - [ ] **T3.1** `skills/sdd-plan/SKILL.md`: remove the "replaces the deprecated `sdd-ff`" wording (description + body). `addons/confluence/*/SKILL.md`: remove the "Full 1.x reference: `playbooks/…`" lines.
-- [ ] **T3.2** `test/skill-contract.test.js`: drop `sdd-ff` from the presence list (13 skills) and the `sdd-ff`-deprecated test. Adjust `test/install.test.js` if it pins a skill count. (`test/traceability.test.js` was already realigned in Phase 1 / T1.1.)
+- [x] **T3.2** `test/skill-contract.test.js` was realigned in **Phase 2 / T2.3** (drop `sdd-ff`, assert 13, remove deprecated test). `test/install.test.js` pins no skill count (checked). `test/traceability.test.js` was realigned in Phase 1 / T1.1.
 - [ ] **T3.3** README: remove the *Legacy & deprecation* section and all migration/deprecation wording; command reference → 7 commands (no `sync --legacy`); present 3.0 as the baseline (single doc source). CHANGELOG: a clean `3.0.0` entry.
 - [ ] **T3.4** `package.json` `version` → `3.0.0` (scripts already trimmed in T2.4). `templates/project/sdd.config.yaml`: `methodology.compatible` → `">=3.0.0 <4.0.0"`.
 - [ ] **T3.5** Clean the two extra spots found in Phase 0: the `migrate` mention in `src/util/fs-safe.js` comments (→ `--fix`/bootstrap only), and `test/publish.test.js` exclusion assertions (drop the now-nonexistent `playbooks/`/`dist/`/`legacy/`/`scripts/`/`templates/{docs,claude}` paths; keep `node_modules/`/`test/`/`openspec/`).

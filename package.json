@@ -16,9 +16,7 @@
     "templates/project/"
   ],
   "scripts": {
-    "test": "node --test",
-    "sync": "node scripts/sync.js",
-    "check": "node scripts/sync.js --check"
+    "test": "node --test"
   },
   "dependencies": {
     "ajv": "^8.20.0",

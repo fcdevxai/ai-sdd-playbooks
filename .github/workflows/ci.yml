@@ -16,8 +16,6 @@ jobs:
       - run: npm ci
       - name: Unit tests
         run: npm test
-      - name: Legacy drift check (1.x)
-        run: npm run check
       - name: Package contents (publish dry-run)
         run: npm pack --dry-run
       - name: CLI smoke test
