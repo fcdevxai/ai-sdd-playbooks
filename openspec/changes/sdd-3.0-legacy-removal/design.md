@@ -2,7 +2,7 @@
 schema: design
 schema_version: 1
 change_id: sdd-3.0-legacy-removal
-title: "SDD 3.0 — Legacy removal design"
+title: "SDD 3.0 — Legacy & old-reference removal design"
 status: draft
 owner: felipe.campos
 created: 2026-07-15
@@ -14,100 +14,96 @@ security:
   controls: []
 ---
 
-# SDD 3.0 — Legacy removal design
+# SDD 3.0 — Legacy & old-reference removal design
 
-Technical contract for `proposal.md`. This is a **removal + contract change**, so
-the design is short: the command-surface change, the exact deletion list, the
-`sync` change, and versioning/compatibility. No new behavior is introduced.
+Technical contract for `proposal.md`. A removal + contract change with **no new
+behavior**: the command-surface change, the exact deletion list, the reference
+purge, and versioning. 3.0 is a clean baseline — no cross-version migration.
 
 ## 1. Command surface change (8 → 7)
 
-`migrate` is removed from the public surface. This **supersedes 2.0 AC-01**
-(which fixed the surface at 8). New surface, in order:
+`migrate` is removed from the public surface (supersedes 2.0 AC-01). New surface,
+in order: `install · init · doctor · status · next · validate · sync`.
 
-```
-install · init · doctor · status · next · validate · sync
-```
+- `src/cli/dispatch.js`: drop `migrate` from `COMMAND_NAMES`, the `HANDLERS.migrate`
+  wiring, and the `migrateCommand` import.
+- `sdd migrate` → unknown-command handling (`exit 3`). No deprecation notice
+  (clean baseline).
+- `test/dispatch.test.js`: assert the 7-command surface and `migrate` unknown.
 
-- `src/cli/dispatch.js`: remove `migrate` from `COMMAND_NAMES`, drop the
-  `HANDLERS.migrate` wiring and the `migrateCommand` import, and remove the
-  `--version`/help lines that mention migrate (help lists 7).
-- `sdd migrate` now falls through to unknown-command handling → `error: unknown
-  command 'migrate'` + exit `3` (EXIT.USAGE). No special deprecation notice (the
-  clean-break decision; unlike `sdd-ff`, which keeps a deprecation skill).
-- `test/dispatch.test.js`: assert the 7-command surface and that `migrate` is
-  unknown.
+## 2. `sync` — drop the legacy dual-emit
 
-## 2. `sync` change — drop the legacy dual-emit
+Remove the `--legacy` branch from `src/cli/sync.js` (and its `PACKAGE_ROOT` /
+`execFileSync` / `scripts/sync.js` dependency). `sync` keeps only reconcile
+(lock `resolved` ↔ installed version). Delete the `--legacy` byte-stable test in
+`test/sync.test.js`; keep the reconcile tests.
 
-`src/cli/sync.js` currently has two paths: reconcile (default) and `--legacy`
-(runs the frozen `scripts/sync.js` generator). Remove the `--legacy` branch and
-its `PACKAGE_ROOT`/`execFileSync`/`scripts/sync.js` dependency. `sync` keeps only
-the reconcile behavior (lock `resolved` ↔ installed global version). The
-`test/sync.test.js` `--legacy` byte-stable test is deleted; the reconcile tests
-stay.
-
-## 3. Exact deletion list
+## 3. Deletion list
 
 **Delete:**
 
 | Path | Why |
 |---|---|
 | `playbooks/` | 1.x canonical sources |
-| `dist/` (`dist/claude-commands/`) | 1.x generated commands |
-| `scripts/sync.js` | 1.x generator |
-| `scripts/sync-consumer.sh` | 1.x consumer installer |
-| `scripts/fix-bodies.mjs` (if present) | 1.x-only helper |
-| `legacy/` (`legacy/README.md`) | freeze-policy doc, no longer needed |
+| `dist/` | 1.x generated commands |
+| `scripts/sync.js`, `scripts/sync-consumer.sh`, `scripts/fix-bodies.mjs` (if present) | 1.x generator/installer/helpers |
+| `legacy/` | freeze-policy doc |
 | `templates/command.md.hbs`, `templates/command-en.md.hbs` | 1.x command templates |
 | `templates/docs/`, `templates/claude/`, `templates/github/`, `templates/openspec/` | pre-2.0 consumer templates |
 | `.github/workflows/generate.yml` | 1.x generate workflow |
-| `src/cli/migrate.js` | migrate command + `detectLegacy` |
-| `test/migrate.test.js` | migrate tests |
+| `src/cli/migrate.js`, `test/migrate.test.js` | migrate command + `detectLegacy` |
+| `skills/sdd-ff/` | 1.x→2.0 deprecation bridge (obsolete on a fresh baseline) |
 
-**Keep (2.0, untouched):** `bin/`, all of `src/` except `migrate.js`, `skills/`,
-`addons/`, `schemas/`, **`templates/project/`**, `test/` except `migrate.test.js`,
-`openspec/`.
+**Keep (untouched):** `bin/`, all `src/` except `migrate.js`, `skills/` except
+`sdd-ff/` (13 core skills remain), `addons/`, `schemas/`, **`templates/project/`**,
+`test/` except the deleted files, `openspec/` (incl. the historical
+`changes/sdd-2.0/`). If `scripts/` becomes empty, remove the empty dir.
 
-**Guard:** a test asserts `templates/project/` still exists and `sdd init` still
-scaffolds the full project set (so a wildcard delete of `templates/` can't slip
-through). If `scripts/` becomes empty, remove the empty dir too.
+**Guard:** a test asserts `templates/project/` survives and `sdd init` still
+scaffolds fully, so a wildcard `templates/` delete can't slip through.
 
-## 4. package.json, versioning & config template
+## 4. Reference purge (surviving files)
 
-- `version` → `3.0.0`.
-- Remove the `sync` and `check` npm scripts (they invoked `scripts/sync.js`).
-  `test` remains. `files` already lists only `templates/project/` under
-  templates — no change needed, but re-audit via `npm pack --dry-run`.
-- Config template `templates/project/sdd.config.yaml`:
-  `methodology.compatible` → `">=3.0.0 <4.0.0"`.
+After the deletions, remove every remaining mention of the old world:
 
-## 5. CI
+- `skills/sdd-plan/SKILL.md`: drop "Replaces the deprecated `sdd-ff`" from the
+  `description` and body — `sdd-plan` simply is the planner.
+- `addons/confluence/document-code/SKILL.md` and `write-in-confluence/SKILL.md`:
+  remove the "Full 1.x reference: `playbooks/…` (frozen)" lines.
+- `README.md`: remove the *Legacy & deprecation* section and any migration/
+  deprecation wording; present 3.0 as the baseline (single doc source). Command
+  reference → 7 commands, no `sync --legacy`.
+- `test/skill-contract.test.js`: drop `sdd-ff` from the presence list.
+- `test/traceability.test.js`: the 2.0 map references `AC-13 → migrate.test.js`
+  and an 8-command AC-01; both are superseded — realign to the 3.0 ACs.
 
-- `.github/workflows/ci.yml`: remove the "Legacy drift check (1.x)"
-  (`npm run check`) step. Keep tests + `npm pack --dry-run` + CLI smoke.
+Driven by the Phase 0 grep inventory; the Phase 4 grep sweep must come back empty
+(AC-02), exempting `openspec/changes/sdd-2.0/` (historical record).
+
+## 5. package.json, versioning & config
+
+- `version` → `3.0.0`; remove `sync` and `check` npm scripts (`test` stays).
+  `files` already lists only `templates/project/` — re-audit via `npm pack --dry-run`.
+- `templates/project/sdd.config.yaml`: `methodology.compatible` → `">=3.0.0 <4.0.0"`.
+- The `sdd.lock` compatibility-range machinery and `doctor`'s range check stay as
+  a **forward-looking** feature (3.0→4.0); there is no 1.x/2.x migration framing.
+
+## 6. CI
+
+- `.github/workflows/ci.yml`: remove the "Legacy drift check (1.x)" (`npm run check`)
+  step; keep tests + `npm pack --dry-run` + CLI smoke.
 - Delete `.github/workflows/generate.yml`.
-
-## 6. Compatibility & migration boundary (C-10/C-08 carried forward)
-
-- 2.x consumers pin `methodology.compatible: ">=2.0.0 <3.0.0"`, so a 3.0 global
-  install is **out of range** → `sdd doctor` blocks it (AC-08). No silent break.
-- There is **no** in-3.0 migration path (migrate removed). Consumers still on 1.x
-  must run `sdd migrate` on a **2.x** release first, then adopt 3.0. This is
-  stated in the README *Upgrading to 3.0* note and the CHANGELOG.
-- Keep the last 2.x release tagged/published so the migration path stays reachable.
 
 ## 7. Test impact
 
 - **Delete:** `test/migrate.test.js`; the `sync --legacy` case in `test/sync.test.js`.
 - **Update:** `test/dispatch.test.js` (7 commands, `migrate` unknown);
-  `test/traceability.test.js` — the 2.0 map references `AC-13 → test/migrate.test.js`
-  and `AC-01 → 8 commands`; both are superseded, so realign the 3.0 traceability
-  (drop the migrate AC, note the 7-command surface).
-- **Add:** a grep/guard test asserting no source/test/doc references any deleted
-  path (AC-02), and the `templates/project/`-survives guard (§3).
-- **Unchanged and must stay green:** engine, schemas, install (+`--runtime`),
-  init (+ capability hint), doctor, validate, security, adapters, delivery,
+  `test/skill-contract.test.js` (13 skills, no `sdd-ff`); `test/traceability.test.js`
+  (realign to 3.0 ACs); `test/install.test.js` if it asserts a skill count.
+- **Add:** a grep/guard test asserting no source/test/skill/shipped-doc reference
+  to any deleted path or old term (AC-02), plus the `templates/project/`-survives guard.
+- **Unchanged, must stay green:** engine, schemas, install (+`--runtime`), init
+  (+capability hint), doctor, validate, security, adapters, delivery,
   detect-capabilities, publish.
 
 ## 8. Traceability
@@ -115,10 +111,9 @@ through). If `scripts/` becomes empty, remove the empty dir too.
 | AC | Design section |
 |---|---|
 | AC-01 | §1 |
-| AC-02 | §3, §7 |
+| AC-02 | §3, §4, §7 |
 | AC-03 | §2 |
 | AC-04 | §3 (keep list), §7 |
-| AC-05 | §4 |
-| AC-06 | §6 |
-| AC-07 | §5 |
-| AC-08 | §6 |
+| AC-05 | §5 |
+| AC-06 | §4 (README) |
+| AC-07 | §6 |
