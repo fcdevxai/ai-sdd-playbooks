@@ -1,6 +1,6 @@
 ---
 name: sdd-plan
-description: "Granularize an approved proposal (and design, when required) into an executable, phase-based tasks.md with atomic tasks, each with a verifiable success criterion linked to an acceptance criterion. Activate when the user says 'sdd-plan', 'plan tasks', or when 'sdd next' routes here. Replaces the deprecated sdd-ff."
+description: "Granularize an approved proposal (and design, when required) into an executable, phase-based tasks.md with atomic tasks, each with a verifiable success criterion linked to an acceptance criterion. Activate when the user says 'sdd-plan', 'plan tasks', or when 'sdd next' routes here."
 lifecycle_stage: plan
 produces: [tasks.md]
 requires:
@@ -14,8 +14,7 @@ version: 2.0.0
 
 Read an approved `proposal.md` (and `design.md` when design is required) and
 generate an executable, phase-based `tasks.md`. Each task is atomic,
-independently verifiable, and linked to a specific acceptance criterion. This
-replaces the deprecated `sdd-ff` (do not use that).
+independently verifiable, and linked to a specific acceptance criterion.
 
 ## Preconditions (self-check)
 
@@ -27,8 +26,8 @@ missing precondition (e.g. "design.md is required and must be approved first").
 ## Context
 
 Read: `proposal.md` (acceptance criteria, constraints, error cases), `design.md`
-(if present), `openspec/specs/system.md`, `docs/architecture.md` /
-`docs/verification.md`, and existing implementation files in the affected modules.
+(if present), `openspec/specs/system.md`, `docs/doc_architecture.md` /
+`docs/doc_verification_guide.md`, and existing implementation files in the affected modules.
 
 ## Behavior
 
@@ -53,7 +52,7 @@ updated: <YYYY-MM-DD>
 - **Linked acceptance criterion**: AC-0N
 ...
 ## Phase N — Quality gates
-- format, lint/type-check, feature tests, regression (per docs/verification.md)
+- format, lint/type-check, feature tests, regression (per docs/doc_verification_guide.md)
 ```
 
 3. Report the total task count and tell the user to run `sdd next` (it will route

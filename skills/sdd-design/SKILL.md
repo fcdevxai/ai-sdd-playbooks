@@ -26,7 +26,7 @@ a `design.md` for a change that does not need one.
 ## Context
 
 Read fully: `proposal.md` (objective, impact, security, constraints),
-`openspec/specs/system.md`, the affected domain spec, and `docs/architecture.md`.
+`openspec/specs/system.md`, the affected domain spec, and `docs/doc_architecture.md`.
 
 ## Behavior
 

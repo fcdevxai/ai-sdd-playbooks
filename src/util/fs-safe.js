@@ -3,7 +3,7 @@
  *
  * Every destructive write funnels through here. Overwriting an existing file
  * requires an explicit per-file confirmation token; without it, the write is
- * refused. `sdd init` uses copyIfMissing (never overwrites); `migrate`/`--fix`
+ * refused. `sdd init` uses copyIfMissing (never overwrites); `--fix`/bootstrap
  * render a diff first and pass the token only after confirmation.
  */
 import fs from 'node:fs';
@@ -47,7 +47,7 @@ export function ensureDir(dir) {
   return { path: dir, action: existed ? 'skipped' : 'created' };
 }
 
-/** Minimal line-oriented diff for previews (migrate / --fix / bootstrap). */
+/** Minimal line-oriented diff for previews (--fix / bootstrap). */
 export function renderDiff(oldStr = '', newStr = '') {
   const o = String(oldStr).split('\n');
   const n = String(newStr).split('\n');

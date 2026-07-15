@@ -6,8 +6,8 @@
  * is tiered (C-09): existing file at the resolved path → adopt; a plausible but
  * ambiguous candidate → reported, never auto-adopted; otherwise → template.
  *
- * The planning/scaffolding is exposed as `projectActions(cwd, { write })` so
- * `sdd migrate` can preview (write: false) and apply (write: true) the same plan.
+ * The planning/scaffolding is exposed as `projectActions(cwd, { write })`: with
+ * `write: false` it is a pure preview (dry-run), with `write: true` it applies.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -24,18 +24,27 @@ const FIXED = [
   ['AGENTS.md', 'AGENTS.md'],
   ['CLAUDE.md', 'CLAUDE.md'],
   ['copilot-instructions.md', '.github/copilot-instructions.md'],
+  ['github/CODEOWNERS', '.github/CODEOWNERS'],
+  ['github/PULL_REQUEST_TEMPLATE.md', '.github/PULL_REQUEST_TEMPLATE.md'],
+  ['github/ISSUE_TEMPLATE/user-story.md', '.github/ISSUE_TEMPLATE/user-story.md'],
   ['github/workflows/sdd-validation.yml', '.github/workflows/sdd-validation.yml'],
+  ['github/workflows/archive-cleanup.yml', '.github/workflows/archive-cleanup.yml'],
 ];
 
 const LOGICAL = [
   ['openspec/system.md', 'system_spec'],
-  ['docs/architecture.md', 'architecture'],
-  ['docs/verification.md', 'verification'],
+  ['docs/agent_architecture.md', 'agent_architecture'],
+  ['docs/doc_architecture.md', 'architecture'],
+  ['docs/doc_verification_guide.md', 'verification'],
   ['docs/sdd-workflow.md', 'workflow'],
 ];
 
+// Candidate patterns are specific so agent_architecture.md and doc_architecture.md
+// are never adopted as each other (R-05): the agent pattern requires "agent";
+// the plain architecture pattern excludes any filename containing "agent".
 const CANDIDATE_PATTERNS = {
-  architecture: /arquitect|architect/i,
+  agent_architecture: /agent[_\- ]?(arquitect|architect)/i,
+  architecture: /^(?!.*agent)(?=.*(?:arquitect|architect))/i,
   verification: /verif/i,
   workflow: /workflow|flujo/i,
 };

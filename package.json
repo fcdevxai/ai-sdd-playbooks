@@ -1,6 +1,6 @@
 {
   "name": "ai-sdd-playbooks",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Spec-Driven Development methodology: global Agent Skills + the `sdd` CLI for Claude Code and GitHub Copilot.",
   "private": true,
   "type": "module",
@@ -13,12 +13,11 @@
     "skills/",
     "addons/",
     "schemas/",
-    "templates/project/"
+    "templates/project/",
+    "CHANGELOG.md"
   ],
   "scripts": {
-    "test": "node --test",
-    "sync": "node scripts/sync.js",
-    "check": "node scripts/sync.js --check"
+    "test": "node --test"
   },
   "dependencies": {
     "ajv": "^8.20.0",

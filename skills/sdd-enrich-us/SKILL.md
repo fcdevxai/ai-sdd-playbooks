@@ -18,7 +18,7 @@ Optimize for **clarity, completeness, and closed decisions**, not wording.
 
 ## Context
 
-Read `docs/architecture.md` (or the project's adopted architecture doc) before
+Read `docs/doc_architecture.md` (or the project's adopted architecture doc) before
 asking questions. If you cannot read it, stop and tell the user.
 
 ## Behavior

@@ -31,4 +31,3 @@ lifecycle, installed only on explicit opt-in. Requires the **Atlassian MCP**.
 - Always read current source before writing; do not document from memory.
 - Requires the Atlassian MCP; if it is unavailable, stop and tell the user.
 - This is an add-on: it must never be installed implicitly with the core.
-- Full 1.x reference: `playbooks/document-code/canonical.md` (frozen).

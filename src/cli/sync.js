@@ -1,18 +1,13 @@
 /**
  * `sdd sync` (design §1.2).
  *
- *   sdd sync            Reconcile sdd.lock's `resolved` with the installed global
- *                       methodology version (C-08 / R-01).
- *   sdd sync --legacy   Transitional dual-emit: regenerate the frozen 1.x command
- *                       files from the package's playbooks (T5.4). Byte-stable when
- *                       the sources are unchanged.
+ * Reconciles `sdd.lock`'s `resolved` with the installed global methodology
+ * version (C-08 / R-01).
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
 import { EXIT } from './exit.js';
 import { resolveTargets } from '../install/targets.js';
-import { PACKAGE_ROOT } from '../install/skills.js';
 import { readLock, writeLock, lockPathFor } from '../config/lock.js';
 
 function readStamp(dir) {
@@ -20,24 +15,7 @@ function readStamp(dir) {
   return fs.existsSync(p) ? fs.readFileSync(p, 'utf8').trim() : null;
 }
 
-function runLegacy(parsed, io) {
-  const gen = path.join(PACKAGE_ROOT, 'scripts', 'sync.js');
-  if (!fs.existsSync(gen)) {
-    io.err('legacy generator not found (scripts/sync.js)');
-    return EXIT.ENVIRONMENT;
-  }
-  try {
-    const out = execFileSync('node', [gen], { cwd: PACKAGE_ROOT }).toString().trim();
-    if (!parsed.flags.quiet && out) io.out(out);
-    io.out('sdd sync --legacy: legacy command files regenerated (dual-emit).');
-    return EXIT.OK;
-  } catch (e) {
-    io.err(String((e && e.stderr) || (e && e.message) || e));
-    return EXIT.VIOLATION;
-  }
-}
-
-function runReconcile(parsed, io) {
+export async function syncCommand(parsed, io) {
   const cwd = parsed.flags.cwd || process.cwd();
   const targets = resolveTargets(process.env);
   const installed = readStamp(targets.claude) || readStamp(targets.agents);
@@ -55,9 +33,4 @@ function runReconcile(parsed, io) {
   writeLock(lockFile, lock);
   io.out(`Reconciled: sdd.lock resolved → ${installed} (compatible: ${lock.methodology.compatible}).`);
   return EXIT.OK;
-}
-
-export async function syncCommand(parsed, io) {
-  if (parsed.rest.includes('--legacy')) return runLegacy(parsed, io);
-  return runReconcile(parsed, io);
 }

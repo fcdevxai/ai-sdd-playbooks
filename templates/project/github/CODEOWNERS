@@ -1,0 +1,16 @@
+# CODEOWNERS — files that require review before merge.
+# Syntax: https://docs.github.com/articles/about-code-owners
+#
+# TODO: replace @your-org/reviewers with your team's real reviewer handle(s).
+
+# Global system spec — global architecture changes
+openspec/specs/system.md   @your-org/reviewers
+
+# Permanent archived specs — guarded
+openspec/specs/            @your-org/reviewers
+
+# CI/CD — workflow changes require review
+.github/workflows/         @your-org/reviewers
+
+# CODEOWNERS itself
+.github/CODEOWNERS         @your-org/reviewers

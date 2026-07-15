@@ -34,8 +34,10 @@ test('the Confluence add-on skills lint clean (T12.1)', () => {
   assert.deepEqual(results.map((r) => r.name).sort(), ['document-code', 'write-in-confluence']);
 });
 
-test('the Phase 5 core skills are present (T5.2)', () => {
-  for (const name of ['sdd-enrich-us', 'sdd-new', 'sdd-design', 'sdd-plan', 'sdd-apply', 'sdd-code-review', 'sdd-security-gate', 'sdd-runtime-gate', 'sdd-commit', 'sdd-verify', 'sdd-archive', 'sdd-next', 'sdd-ff', 'sdd-bootstrap-project']) {
+test('the core skills are present (13 skills, 3.0)', () => {
+  const names = ['sdd-enrich-us', 'sdd-new', 'sdd-design', 'sdd-plan', 'sdd-apply', 'sdd-code-review', 'sdd-security-gate', 'sdd-runtime-gate', 'sdd-commit', 'sdd-verify', 'sdd-archive', 'sdd-next', 'sdd-bootstrap-project'];
+  assert.equal(names.length, 13);
+  for (const name of names) {
     assert.ok(fs.existsSync(path.join(SKILLS_DIR, name, 'SKILL.md')), `${name} exists`);
   }
 });
@@ -50,23 +52,10 @@ test('parity checklist: converted skills carry their key behavior (T5.2)', () =>
   assert.match(body('sdd-enrich-us'), /decision/i);
 });
 
-test('2.0 skills use approved (not pending) and sdd-plan (not sdd-ff)', () => {
+test('core skills use approved, not a pending status', () => {
   for (const name of ['sdd-apply', 'sdd-new']) {
     assert.doesNotMatch(body(name), /status:\s*pending/);
   }
-  // no core skill silently routes to sdd-ff
-  assert.doesNotMatch(body('sdd-apply'), /sdd-ff/);
-});
-
-test('sdd-ff is deprecated without a silent alias (C-05, T5.3)', () => {
-  const fm = readSkillFrontmatter(path.join(SKILLS_DIR, 'sdd-ff'));
-  assert.equal(fm.deprecated, true);
-  assert.deepEqual(fm.produces, []);
-  const b = body('sdd-ff');
-  assert.match(b, /deprecated in SDD 2\.0/i);
-  assert.match(b, /sdd next/);
-  assert.match(b, /Never execute `sdd-plan`/); // does not run the planner
-  assert.match(b, /Never produce `tasks\.md`/);  // does not generate tasks.md
 });
 
 test('sdd-bootstrap-project is diff-then-approve; declining is a no-op (T11.3)', () => {

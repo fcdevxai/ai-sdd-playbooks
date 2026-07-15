@@ -21,7 +21,7 @@ evidence in the current codebase and detect regressions. Produce a schema-valid
 ## Context
 
 Read: `proposal.md` (all acceptance criteria + error cases), `tasks.md`
-(Execution Report), and `docs/verification.md` (project verification commands).
+(Execution Report), and `docs/doc_verification_guide.md` (project verification commands).
 
 ## Behavior
 

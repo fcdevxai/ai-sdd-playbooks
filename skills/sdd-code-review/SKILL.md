@@ -22,8 +22,8 @@ whether the criteria themselves were correct (that is the human reviewer's job).
 ## Context
 
 Read: `proposal.md` (acceptance criteria + constraints), `tasks.md` (Execution
-Report, files changed), `openspec/specs/system.md`, `docs/architecture.md` /
-`docs/verification.md`, and every file listed as changed.
+Report, files changed), `openspec/specs/system.md`, `docs/doc_architecture.md` /
+`docs/doc_verification_guide.md`, and every file listed as changed.
 
 ## Behavior
 
@@ -34,7 +34,7 @@ Report, files changed), `openspec/specs/system.md`, `docs/architecture.md` /
 - **Scope**: no files changed outside `## Constraints and non-goals`; no
   out-of-spec features; contract changes intentional and documented.
 - **Conventions**: naming/structure per `system.md`; layer boundaries per
-  `docs/architecture.md`; required quality commands were executed.
+  `docs/doc_architecture.md`; required quality commands were executed.
 
 ### 2. Write `code-review-report.md`
 

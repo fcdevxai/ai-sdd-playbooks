@@ -18,9 +18,11 @@
 | Database | <db> |
 | Tests | <runner> |
 
-## Architecture
+## Architecture & agent guides
 
-See [docs/architecture.md](docs/architecture.md).
+- [docs/doc_architecture.md](docs/doc_architecture.md) — technical structure (layers, placement).
+- [docs/agent_architecture.md](docs/agent_architecture.md) — how agents operate here (boundaries, task workflows).
+- [docs/doc_verification_guide.md](docs/doc_verification_guide.md) — verification commands and test strategy.
 
 ## How work is done here (SDD)
 

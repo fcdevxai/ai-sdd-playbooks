@@ -40,11 +40,14 @@ decides.
    `cli`/`worker` are experimental adapters that block when enabled.
 
 3. **Propose document mappings** for the logical docs (`system_spec`,
-   `architecture`, `verification`, `workflow`) — e.g. map `docs/Arquitectura.md`
-   to `architecture` — instead of creating duplicates. Explain each mapping.
+   `agent_architecture`, `architecture`, `verification`, `workflow`) — e.g. map
+   `docs/Arquitectura.md` to `architecture`, or an existing agent guide to
+   `agent_architecture` — instead of creating duplicates. Keep `agent_architecture`
+   (how agents operate) distinct from `architecture` (technical structure); never
+   map one file to both. Explain each mapping.
 
 4. **Propose content improvements** (e.g. fill in `AGENTS.md`, tighten
-   `docs/architecture.md`) drawn from the real code.
+   `docs/doc_architecture.md`) drawn from the real code.
 
 5. **Present a diff** of every proposed change (config `capabilities:` and
    `documents:` edits, and any doc edits). Do not write yet.
