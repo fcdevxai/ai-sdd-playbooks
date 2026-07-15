@@ -1,0 +1,51 @@
+/**
+ * Shared SKILL.md frontmatter contract + lint (design §2.2, T5.1).
+ *
+ * One SKILL.md must load in both Claude Code and GitHub Copilot, so the
+ * frontmatter is a small, stable contract. `sdd doctor` (Phase 9) uses this lint;
+ * it lives here so it can be reused without importing a CLI command.
+ *
+ * Contract: name (kebab), description, version (required);
+ *           lifecycle_stage (string|null), produces (array), requires (object).
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import matter from 'gray-matter';
+
+export function lintSkillFrontmatter(fm) {
+  const errors = [];
+  if (!fm || typeof fm !== 'object') return { valid: false, errors: ['missing frontmatter'] };
+  if (typeof fm.name !== 'string' || !/^[a-z0-9][a-z0-9-]*$/.test(fm.name)) {
+    errors.push('`name` must be a kebab-case string');
+  }
+  if (typeof fm.description !== 'string' || !fm.description.trim()) errors.push('`description` is required');
+  if (typeof fm.version !== 'string') errors.push('`version` must be a string');
+  if ('lifecycle_stage' in fm && fm.lifecycle_stage !== null && typeof fm.lifecycle_stage !== 'string') {
+    errors.push('`lifecycle_stage` must be a string or null');
+  }
+  if ('produces' in fm && !Array.isArray(fm.produces)) errors.push('`produces` must be an array');
+  if ('requires' in fm && (typeof fm.requires !== 'object' || fm.requires === null || Array.isArray(fm.requires))) {
+    errors.push('`requires` must be an object');
+  }
+  return { valid: errors.length === 0, errors };
+}
+
+export function readSkillFrontmatter(skillDir) {
+  const p = path.join(skillDir, 'SKILL.md');
+  if (!fs.existsSync(p)) return null;
+  return matter(fs.readFileSync(p, 'utf8')).data;
+}
+
+export function lintSkillsDir(dir) {
+  const results = [];
+  if (!fs.existsSync(dir)) return results;
+  for (const name of fs.readdirSync(dir)) {
+    const skillDir = path.join(dir, name);
+    if (!fs.statSync(skillDir).isDirectory()) continue;
+    const fm = readSkillFrontmatter(skillDir);
+    if (fm === null) { results.push({ name, valid: false, errors: ['no SKILL.md'] }); continue; }
+    const r = lintSkillFrontmatter(fm);
+    results.push({ name, ...r });
+  }
+  return results;
+}

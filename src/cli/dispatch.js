@@ -17,6 +17,7 @@ import { EXIT } from './exit.js';
 import { validateCommand } from './validate.js';
 import { installCommand } from './install.js';
 import { statusCommand, nextCommand } from './status.js';
+import { syncCommand } from './sync.js';
 
 // Exit-code map (design §1.4) lives in ./exit.js to avoid a dispatch↔command cycle.
 export { EXIT };
@@ -120,6 +121,7 @@ HANDLERS.validate = validateCommand;
 HANDLERS.install = installCommand;
 HANDLERS.status = statusCommand;
 HANDLERS.next = nextCommand;
+HANDLERS.sync = syncCommand;
 
 /**
  * Run the CLI. `io` is injectable so tests can capture output.

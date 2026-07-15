@@ -14,7 +14,7 @@ depends_on: design.md
 
 **Spec**: `openspec/changes/sdd-2.0/proposal.md` · **Design**: `openspec/changes/sdd-2.0/design.md`
 
-> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–4 are complete**; later phases are not started. Legacy 1.x stays operational throughout.
+> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–5 are complete**; later phases are not started. Legacy 1.x stays operational throughout.
 
 Each phase is **independently reviewable and independently mergeable**, leaves the repository green (legacy 1.x keeps working throughout), and depends only on earlier phases. Task ids are `T<phase>.<index>`; each names its success criterion and required tests.
 
@@ -77,13 +77,13 @@ Each phase is **independently reviewable and independently mergeable**, leaves t
 ## Phase 5 — Skill canonicalization
 *Goal: `skills/<name>/SKILL.md` is the single source, consumed by both runtimes.* — decision 1, **AC-08**
 
-- [ ] **T5.1** Define the shared SKILL.md frontmatter contract (`name`, `description`, `lifecycle_stage`, `produces`, `requires`, `version`) + a `sdd doctor` lint.
-- [ ] **T5.2** Convert 1.x flows to `skills/<name>/SKILL.md`: `sdd-enrich-us` (pre-process), `sdd-new`, `sdd-apply`, `sdd-code-review`, `sdd-verify`, `sdd-archive` (parity with frozen legacy bodies); `requires:` matches the lifecycle.
-  - *Tests*: frontmatter lint + parity checklist vs legacy.
-- [ ] **T5.3** Deprecate `sdd-ff` **without a silent alias** (C-05): the 2.0 `sdd-ff` prints the deprecation notice (design §8.6), does **not** run `sdd-plan`, and recommends `sdd next`. Original behavior survives only in the frozen `legacy/` wrapper.
-  - *Tests*: invoking `sdd-ff` emits the notice and does not produce `tasks.md`.
-- [ ] **T5.4** Retain a transitional dual-emit build behind `sdd sync --legacy`.
-  - *Tests*: dual-emit produces byte-stable legacy files for unchanged skills.
+- [x] **T5.1** Define the shared SKILL.md frontmatter contract (`name`, `description`, `lifecycle_stage`, `produces`, `requires`, `version`) + a `sdd doctor` lint. ✓ `src/install/skill-contract.js` (`lintSkillFrontmatter`/`lintSkillsDir`; wired into `sdd doctor` in Phase 9)
+- [x] **T5.2** Convert 1.x flows to `skills/<name>/SKILL.md`: `sdd-enrich-us` (pre-process), `sdd-new`, `sdd-apply`, `sdd-code-review`, `sdd-verify`, `sdd-archive` (parity with frozen legacy bodies); `requires:` matches the lifecycle. ✓ (also `sdd-new` proposes the `impact`+`security` blocks → satisfies the sdd-new part of T6.1/T7.1 early; reports use normalized `status`, not verdict strings)
+  - *Tests*: frontmatter lint + parity checklist vs legacy. ✓ `test/skill-contract.test.js` (+ requires↔precondition-table no-drift check)
+- [x] **T5.3** Deprecate `sdd-ff` **without a silent alias** (C-05): the 2.0 `sdd-ff` prints the deprecation notice (design §8.6), does **not** run `sdd-plan`, and recommends `sdd next`. Original behavior survives only in the frozen `legacy/` wrapper. ✓ `skills/sdd-ff/SKILL.md` (`deprecated: true`, `produces: []`)
+  - *Tests*: invoking `sdd-ff` emits the notice and does not produce `tasks.md`. ✓ (content assertions)
+- [x] **T5.4** Retain a transitional dual-emit build behind `sdd sync --legacy`. ✓ `sdd sync` reconciles the lock; `--legacy` regenerates the frozen 1.x command files
+  - *Tests*: dual-emit produces byte-stable legacy files for unchanged skills. ✓ `test/sync.test.js`
 
 ## Phase 6 — New lifecycle skills (design & plan)
 *Goal: the revised lifecycle's design/plan split exists.* — decision 7 (C-03)
