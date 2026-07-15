@@ -28,7 +28,7 @@ test('every authored skill lints clean (T5.1)', () => {
 });
 
 test('the Phase 5 core skills are present (T5.2)', () => {
-  for (const name of ['sdd-enrich-us', 'sdd-new', 'sdd-design', 'sdd-plan', 'sdd-apply', 'sdd-code-review', 'sdd-security-gate', 'sdd-runtime-gate', 'sdd-commit', 'sdd-verify', 'sdd-archive', 'sdd-next', 'sdd-ff']) {
+  for (const name of ['sdd-enrich-us', 'sdd-new', 'sdd-design', 'sdd-plan', 'sdd-apply', 'sdd-code-review', 'sdd-security-gate', 'sdd-runtime-gate', 'sdd-commit', 'sdd-verify', 'sdd-archive', 'sdd-next', 'sdd-ff', 'sdd-bootstrap-project']) {
     assert.ok(fs.existsSync(path.join(SKILLS_DIR, name, 'SKILL.md')), `${name} exists`);
   }
 });
@@ -60,6 +60,14 @@ test('sdd-ff is deprecated without a silent alias (C-05, T5.3)', () => {
   assert.match(b, /sdd next/);
   assert.match(b, /Never execute `sdd-plan`/); // does not run the planner
   assert.match(b, /Never produce `tasks\.md`/);  // does not generate tasks.md
+});
+
+test('sdd-bootstrap-project is diff-then-approve; declining is a no-op (T11.3)', () => {
+  const b = body('sdd-bootstrap-project');
+  assert.match(b, /diff/i);
+  assert.match(b, /approv/i);
+  assert.match(b, /no-op|declin/i);
+  assert.match(b, /unchanged/i);
 });
 
 test('sdd-commit follows the GitHub model: no hardcoded branch, no auto-merge (C-11)', () => {

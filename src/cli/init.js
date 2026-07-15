@@ -5,6 +5,9 @@
  * methodology files are NOT copied here (they live globally). Document adoption
  * is tiered (C-09): existing file at the resolved path → adopt; a plausible but
  * ambiguous candidate → reported, never auto-adopted; otherwise → template.
+ *
+ * The planning/scaffolding is exposed as `projectActions(cwd, { write })` so
+ * `sdd migrate` can preview (write: false) and apply (write: true) the same plan.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,7 +18,7 @@ import { loadConfig } from '../config/config.js';
 import { resolveDocument } from '../config/docmap.js';
 import { lockPathFor, writeLock, buildLock } from '../config/lock.js';
 
-const TPL = path.join(PACKAGE_ROOT, 'templates', 'project');
+export const TPL = path.join(PACKAGE_ROOT, 'templates', 'project');
 
 const FIXED = [
   ['AGENTS.md', 'AGENTS.md'],
@@ -59,57 +62,73 @@ function today() {
   return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`;
 }
 
-export async function initCommand(parsed, io) {
-  const cwd = parsed.flags.cwd || process.cwd();
+/**
+ * Compute (and optionally apply) the project-local scaffolding actions.
+ * Returns { created, skipped, adopted, candidates }. With `write: false` it is a
+ * pure preview (no filesystem writes).
+ */
+export function projectActions(cwd, { write = false } = {}) {
   const created = [];
   const skipped = [];
   const adopted = [];
   const candidates = [];
 
-  const record = (r) => (r.action === 'created' ? created : skipped).push(path.relative(cwd, r.path) || r.path);
+  const plan = (destRel, apply) => {
+    const dest = path.join(cwd, destRel);
+    if (fs.existsSync(dest)) { skipped.push(destRel); return; }
+    if (write) apply(dest);
+    created.push(destRel);
+  };
 
-  // 1. config (create if missing, then load)
-  record(copyIfMissing(path.join(TPL, 'sdd.config.yaml'), path.join(cwd, 'sdd.config.yaml')));
+  // 1. config (create if missing, then load — dry mode reads defaults)
+  plan('sdd.config.yaml', (dest) => copyIfMissing(path.join(TPL, 'sdd.config.yaml'), dest));
   const { config } = loadConfig({ cwd });
 
   // 2. fixed-path scaffolds
   for (const [tpl, dest] of FIXED) {
-    record(copyIfMissing(path.join(TPL, tpl), path.join(cwd, dest)));
+    plan(dest, (abs) => copyIfMissing(path.join(TPL, tpl), abs));
   }
 
   // 3. logical documents — tiered adoption (C-09)
   for (const [tpl, name] of LOGICAL) {
     const resolved = resolveDocument(config, name);
-    const destAbs = path.join(cwd, resolved.path);
-    if (fs.existsSync(destAbs)) { adopted.push(`${name} → ${resolved.path}`); continue; }
+    if (fs.existsSync(path.join(cwd, resolved.path))) { adopted.push(`${name} → ${resolved.path}`); continue; }
     const cand = findCandidates(cwd, name, resolved.path);
     if (cand.length) { candidates.push(`${name}: ${cand.join(', ')}`); continue; }
-    record(copyIfMissing(path.join(TPL, tpl), destAbs));
+    plan(resolved.path, (abs) => copyIfMissing(path.join(TPL, tpl), abs));
   }
 
   // 4. openspec/changes
-  record(ensureDir(path.join(cwd, 'openspec', 'changes')));
+  plan('openspec/changes', (abs) => ensureDir(abs));
 
   // 5. sdd.lock
-  const lockFile = lockPathFor(cwd, null);
-  if (fs.existsSync(lockFile)) skipped.push('sdd.lock');
-  else {
-    writeLock(lockFile, buildLock({ compatible: config.methodology.compatible, installedAt: today() }));
-    created.push('sdd.lock');
-  }
+  plan('sdd.lock', () => writeLock(
+    lockPathFor(cwd, null),
+    buildLock({ compatible: config.methodology.compatible, installedAt: today() }),
+  ));
 
-  if (parsed.flags.json) {
-    io.out(JSON.stringify({ command: 'init', cwd, created, skipped, adopted, candidates }, null, 2));
-    return EXIT.OK;
-  }
+  return { created, skipped, adopted, candidates };
+}
 
-  io.out('sdd init');
+export function printProjectPlan(io, { created, skipped, adopted, candidates }) {
   for (const f of created) io.out(`  + ${f}`);
   for (const f of skipped) io.out(`  = ${f} (exists, unchanged)`);
   for (const a of adopted) io.out(`  ~ adopted ${a}`);
   for (const c of candidates) {
     io.out(`  ? possible ${c} — not adopted; set documents.<name> in sdd.config.yaml or run sdd-bootstrap-project`);
   }
+}
+
+export async function initCommand(parsed, io) {
+  const cwd = parsed.flags.cwd || process.cwd();
+  const result = projectActions(cwd, { write: true });
+
+  if (parsed.flags.json) {
+    io.out(JSON.stringify({ command: 'init', cwd, ...result }, null, 2));
+    return EXIT.OK;
+  }
+  io.out('sdd init');
+  printProjectPlan(io, result);
   io.out('\nNo core methodology files were copied — they live in ~/.claude/skills and ~/.agents/skills.');
   return EXIT.OK;
 }

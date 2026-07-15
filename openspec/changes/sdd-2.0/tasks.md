@@ -14,7 +14,7 @@ depends_on: design.md
 
 **Spec**: `openspec/changes/sdd-2.0/proposal.md` · **Design**: `openspec/changes/sdd-2.0/design.md`
 
-> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–10 are complete**; later phases are not started. Legacy 1.x stays operational throughout.
+> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–11 are complete**; later phases are not started. Legacy 1.x stays operational throughout.
 
 Each phase is **independently reviewable and independently mergeable**, leaves the repository green (legacy 1.x keeps working throughout), and depends only on earlier phases. Task ids are `T<phase>.<index>`; each names its success criterion and required tests.
 
@@ -145,11 +145,11 @@ Each phase is **independently reviewable and independently mergeable**, leaves t
 ## Phase 11 — Migration & bootstrap
 *Goal: a 1.x consumer moves to 2.0 safely; AI doc refactor is human-approved.* — **AC-13, AC-15, AC-16**
 
-- [ ] **T11.1** Implement 1.x detection (submodule `.ai-sdd-playbooks`, `.claude/commands/`, `sync-consumer.sh`).
-- [ ] **T11.2** Implement `sdd migrate`: compute 2.0 target, render full diff, apply only on explicit confirmation (`--yes` still prints diff), leave legacy intact.
-  - *Tests*: dry-run diff; confirm-gated apply; legacy-preserved; a full legacy consumer still runs unchanged (AC-16).
-- [ ] **T11.3** Author `skills/sdd-bootstrap-project/SKILL.md`: inspect repo → propose doc mappings + improvements → present diff → write only on human approval; decline is a no-op.
-  - *Tests*: decline-path leaves repo unchanged.
+- [x] **T11.1** Implement 1.x detection (submodule `.ai-sdd-playbooks`, `.claude/commands/`, `sync-consumer.sh`). ✓ `detectLegacy` in `src/cli/migrate.js`
+- [x] **T11.2** Implement `sdd migrate`: compute 2.0 target, render full diff, apply only on explicit confirmation (`--yes` still prints diff), leave legacy intact. ✓ shares `projectActions` with `sdd init` (preview vs write)
+  - *Tests*: dry-run diff; confirm-gated apply; legacy-preserved; non-legacy repo still scaffolds. ✓ `test/migrate.test.js`
+- [x] **T11.3** Author `skills/sdd-bootstrap-project/SKILL.md`: inspect repo → propose doc mappings + improvements → present diff → write only on human approval; decline is a no-op. ✓
+  - *Tests*: decline-path leaves repo unchanged (content assertions). ✓ `test/skill-contract.test.js`
 
 ## Phase 12 — Add-on separation
 *Goal: optional add-ons never install implicitly.* — **AC-14** (decision 12)

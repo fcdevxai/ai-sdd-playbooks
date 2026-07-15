@@ -20,6 +20,7 @@ import { statusCommand, nextCommand } from './status.js';
 import { syncCommand } from './sync.js';
 import { initCommand } from './init.js';
 import { doctorCommand } from './doctor.js';
+import { migrateCommand } from './migrate.js';
 
 // Exit-code map (design §1.4) lives in ./exit.js to avoid a dispatch↔command cycle.
 export { EXIT };
@@ -126,6 +127,7 @@ HANDLERS.next = nextCommand;
 HANDLERS.sync = syncCommand;
 HANDLERS.init = initCommand;
 HANDLERS.doctor = doctorCommand;
+HANDLERS.migrate = migrateCommand;
 
 /**
  * Run the CLI. `io` is injectable so tests can capture output.

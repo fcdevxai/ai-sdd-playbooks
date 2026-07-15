@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import os from 'node:os';
+import path from 'node:path';
 import { run, parseArgs, EXIT, COMMAND_NAMES } from '../src/cli/dispatch.js';
 
 function capture() {
@@ -47,21 +49,22 @@ test('unknown command exits 3 (usage error)', async () => {
   assert.match(err.join('\n'), /unknown command/);
 });
 
-test('not-yet-implemented commands route to their stub', async () => {
-  const stubbed = COMMAND_NAMES.filter((n) => !['validate', 'install', 'status', 'next', 'sync', 'init', 'doctor'].includes(n));
-  for (const name of stubbed) {
-    const { io, out } = capture();
-    const code = await run([name], io);
-    assert.equal(code, EXIT.OK, `${name} should route and exit 0`);
-    assert.match(out.join('\n'), new RegExp(`^sdd ${name}:`), `${name} handler should run`);
+test('every command is implemented — none falls through to the Phase 0 stub', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdd-cmd-'));
+  const g = fs.mkdtempSync(path.join(os.tmpdir(), 'sdd-g-'));
+  const saved = { c: process.env.SDD_CLAUDE_SKILLS_DIR, a: process.env.SDD_AGENTS_SKILLS_DIR };
+  process.env.SDD_CLAUDE_SKILLS_DIR = g;
+  process.env.SDD_AGENTS_SKILLS_DIR = g;
+  try {
+    for (const name of COMMAND_NAMES) {
+      const { io, out, err } = capture();
+      await run([name, '--cwd', dir], io);
+      assert.doesNotMatch(out.concat(err).join('\n'), /not implemented yet/, `${name} should be implemented`);
+    }
+  } finally {
+    if (saved.c === undefined) delete process.env.SDD_CLAUDE_SKILLS_DIR; else process.env.SDD_CLAUDE_SKILLS_DIR = saved.c;
+    if (saved.a === undefined) delete process.env.SDD_AGENTS_SKILLS_DIR; else process.env.SDD_AGENTS_SKILLS_DIR = saved.a;
   }
-});
-
-test('validate routes to its real handler (Phase 1)', async () => {
-  const { io } = capture();
-  // os.tmpdir() has no openspec/changes → "No SDD artifacts found", exit 0.
-  const code = await run(['validate', '--cwd', os.tmpdir()], io);
-  assert.equal(code, EXIT.OK);
 });
 
 test('parseArgs: boolean and value flags are captured', () => {
