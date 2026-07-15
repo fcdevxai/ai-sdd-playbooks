@@ -14,7 +14,7 @@ depends_on: design.md
 
 **Spec**: `openspec/changes/sdd-2.0/proposal.md` · **Design**: `openspec/changes/sdd-2.0/design.md`
 
-> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–5 are complete**; later phases are not started. Legacy 1.x stays operational throughout.
+> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–6 are complete**; later phases are not started. Legacy 1.x stays operational throughout.
 
 Each phase is **independently reviewable and independently mergeable**, leaves the repository green (legacy 1.x keeps working throughout), and depends only on earlier phases. Task ids are `T<phase>.<index>`; each names its success criterion and required tests.
 
@@ -88,12 +88,12 @@ Each phase is **independently reviewable and independently mergeable**, leaves t
 ## Phase 6 — New lifecycle skills (design & plan)
 *Goal: the revised lifecycle's design/plan split exists.* — decision 7 (C-03)
 
-- [ ] **T6.1** Author `skills/sdd-new/SKILL.md` so it **proposes** the structured `impact` block for human confirmation (C-03).
-  - *Tests*: generated proposal contains a complete `impact` block.
-- [ ] **T6.2** Author `skills/sdd-design/SKILL.md` producing `design.md` (`status: approved` on sign-off). When `design_required == false`, **no file is created and nothing is written**: the engine computes `designed` directly from `design_required` (design §3.1/§4.4); `sdd status`/`sdd next` never write a `design.md`.
-  - *Tests*: engine fixtures for `design_required==true` (design.md `approved` needed) vs `design_required==false` (lifecycle `designed` with no file, no write); assert `sdd status`/`next` write nothing.
-- [ ] **T6.3** Author `skills/sdd-plan/SKILL.md`; precondition `proposal=approved ∧ (design_required==false ∨ design∈{approved,not_applicable})`; refuses otherwise naming the missing precondition.
-  - *Tests*: precondition fixtures — proposal `draft` → refusal; `design_required` with design `draft` → refusal; `design_required==false` with no `design.md` → allowed.
+- [x] **T6.1** Author `skills/sdd-new/SKILL.md` so it **proposes** the structured `impact` block for human confirmation (C-03). ✓ authored in Phase 5; verified here (complete 10-indicator `impact` + `security` in the sdd-new template)
+  - *Tests*: generated proposal contains a complete `impact` block. ✓ `test/skill-contract.test.js`
+- [x] **T6.2** Author `skills/sdd-design/SKILL.md` producing `design.md` (written `draft`; a human sets `approved` — the skill never self-approves). When `design_required == false`, **no file is created and nothing is written**: the engine computes `designed` directly (§3.1/§4.4); `sdd status`/`sdd next` never write a `design.md`. Engine refinement: a `draft` design at `proposal_approved` yields `await_human` (approve design), not a re-run.
+  - *Tests*: engine fixtures for design required/draft (await_human) and design not required (designed, no file); CLI asserts `sdd next` writes no `design.md`. ✓ `test/engine.test.js`, `test/lifecycle-cli.test.js`
+- [x] **T6.3** Author `skills/sdd-plan/SKILL.md`; precondition `proposal=approved ∧ (design_required==false ∨ design∈{approved,not_applicable})`; refuses otherwise naming the missing precondition. ✓ `requires` matches the precondition table (no-drift test)
+  - *Tests*: precondition fixtures — proposal `draft` → refusal; `design_required` with design `draft` → refusal; `design_required==false` with no `design.md` → allowed. ✓ `test/preconditions.test.js`
 
 ## Phase 7 — Security core (classified from the proposal)
 *Goal: security is classified early and enforced late.* — **AC-12** (C-04)

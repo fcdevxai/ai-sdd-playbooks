@@ -61,6 +61,13 @@ test('design required + design approved → designed → sdd-plan', () => {
   assert.equal(r.next.skill, 'sdd-plan');
 });
 
+test('design required + design draft → await human sign-off, not a re-run (Phase 6)', () => {
+  const r = state({ proposal: 'approved', impact: IMPACT_SOME, design: 'draft' });
+  assert.equal(r.lifecycle.state, 'proposal_approved');
+  assert.equal(r.next.action, 'await_human');
+  assert.match(r.next.reason, /design/i);
+});
+
 test('tasks ready → planned → sdd-apply', () => {
   const r = state({ proposal: 'approved', impact: IMPACT_NONE, tasks: 'ready' });
   assert.equal(r.lifecycle.state, 'planned');

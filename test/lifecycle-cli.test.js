@@ -61,6 +61,19 @@ test('sdd next at runtime_cleared with unknown delivery → blocked (exit 2)', a
   assert.equal(parsed.next.reason, 'GITHUB_CONTEXT_UNAVAILABLE');
 });
 
+test('sdd next on a design-required approved proposal → sdd-design, writing no design.md (T6.2)', async () => {
+  const dir = makeRepo();
+  fs.writeFileSync(
+    path.join(dir, 'openspec', 'changes', 'demo', 'proposal.md'),
+    '---\nschema: proposal\nstatus: approved\nimpact:\n  architecture_boundary: true\n---\n',
+  );
+  const { io, out } = capture();
+  const code = await run(['next', '--cwd', dir], io);
+  assert.equal(code, EXIT.OK);
+  assert.match(out.join('\n'), /sdd-design/);
+  assert.equal(fs.existsSync(path.join(dir, 'openspec', 'changes', 'demo', 'design.md')), false);
+});
+
 test('sdd status with no change folders is a usage error', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdd-empty-'));
   const { io } = capture();

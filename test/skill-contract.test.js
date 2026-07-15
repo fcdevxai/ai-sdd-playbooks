@@ -28,7 +28,7 @@ test('every authored skill lints clean (T5.1)', () => {
 });
 
 test('the Phase 5 core skills are present (T5.2)', () => {
-  for (const name of ['sdd-enrich-us', 'sdd-new', 'sdd-apply', 'sdd-code-review', 'sdd-verify', 'sdd-archive', 'sdd-next', 'sdd-ff']) {
+  for (const name of ['sdd-enrich-us', 'sdd-new', 'sdd-design', 'sdd-plan', 'sdd-apply', 'sdd-code-review', 'sdd-verify', 'sdd-archive', 'sdd-next', 'sdd-ff']) {
     assert.ok(fs.existsSync(path.join(SKILLS_DIR, name, 'SKILL.md')), `${name} exists`);
   }
 });
@@ -62,7 +62,17 @@ test('sdd-ff is deprecated without a silent alias (C-05, T5.3)', () => {
   assert.match(b, /Never produce `tasks\.md`/);  // does not generate tasks.md
 });
 
-test('sdd-apply SKILL.md requires matches the precondition table (no drift)', () => {
-  const fm = readSkillFrontmatter(path.join(SKILLS_DIR, 'sdd-apply'));
-  assert.deepEqual(fm.requires, SKILL_PRECONDITIONS['sdd-apply']);
+test('sdd-apply / sdd-plan SKILL.md requires match the precondition table (no drift)', () => {
+  assert.deepEqual(readSkillFrontmatter(path.join(SKILLS_DIR, 'sdd-apply')).requires, SKILL_PRECONDITIONS['sdd-apply']);
+  assert.deepEqual(readSkillFrontmatter(path.join(SKILLS_DIR, 'sdd-plan')).requires, SKILL_PRECONDITIONS['sdd-plan']);
+});
+
+test('sdd-new proposes a complete impact block + security (T6.1/C-03/C-04)', () => {
+  const b = body('sdd-new');
+  for (const k of ['public_contract', 'data_model', 'architecture_boundary', 'external_integration',
+    'cross_repository', 'authentication', 'authorization', 'infrastructure', 'concurrency', 'migration']) {
+    assert.match(b, new RegExp(`\\b${k}\\b`), `impact indicator ${k}`);
+  }
+  assert.match(b, /security:/);
+  assert.match(b, /risk:/);
 });

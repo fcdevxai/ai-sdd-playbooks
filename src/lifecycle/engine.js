@@ -49,7 +49,7 @@ export function computeLifecycle(config, artifactIndex) {
     if (reached[stage]) state = stage;
     else break;
   }
-  return { state, design_required: designRequired, reached };
+  return { state, design_required: designRequired, reached, design_status: s('design.md') };
 }
 
 function findException(artifactIndex) {
@@ -67,6 +67,10 @@ function computeNext(lifecycle, deliveryState, exception) {
       skill: REMEDIATION_SKILL[exception.artifact] || null,
       reason: `${exception.artifact} is ${exception.status}`,
     };
+  }
+  // design written but awaiting human sign-off → don't re-run sdd-design (symmetric with proposal approval)
+  if (lifecycle.state === 'proposal_approved' && lifecycle.design_required && lifecycle.design_status === 'draft') {
+    return { action: 'await_human', reason: 'approve design.md (set status: approved)' };
   }
   if (lifecycle.state === 'runtime_cleared') {
     return DELIVERY_NEXT[deliveryState] || DELIVERY_NEXT.unknown;
