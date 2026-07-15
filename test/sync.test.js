@@ -3,11 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { run, EXIT } from '../src/cli/dispatch.js';
 import { buildLock, writeLock, readLock } from '../src/config/lock.js';
-
-const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 function tmp(p) { return fs.mkdtempSync(path.join(os.tmpdir(), p)); }
 function capture() {
@@ -40,13 +37,4 @@ test('sdd sync with no lock reports nothing to reconcile', async () => {
   const code = await run(['sync', '--cwd', cwd], io);
   assert.equal(code, EXIT.OK);
   assert.match(out.join('\n'), /nothing to reconcile/i);
-});
-
-test('sdd sync --legacy regenerates legacy files byte-stable when sources are unchanged (T5.4)', async () => {
-  const distFile = path.join(REPO_ROOT, 'dist', 'claude-commands', 'sdd-apply.md');
-  const before = fs.readFileSync(distFile, 'utf8');
-  const { io } = capture();
-  const code = await run(['sync', '--legacy', '--quiet'], io);
-  assert.equal(code, EXIT.OK);
-  assert.equal(fs.readFileSync(distFile, 'utf8'), before); // byte-stable
 });

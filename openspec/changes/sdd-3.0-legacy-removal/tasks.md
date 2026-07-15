@@ -16,7 +16,7 @@ depends_on: design.md
 
 > **Execution gate.** `proposal.md` and `design.md` are **approved** (2026-07-15).
 > Implementation proceeds one phase at a time, each stopping for human review.
-> **Phase 0 is complete**; later phases are not started.
+> **Phases 0–1 are complete**; later phases are not started.
 
 Each phase is independently reviewable and leaves the 2.0 functionality green.
 One phase per commit. Task ids are `T<phase>.<index>`.
@@ -30,9 +30,9 @@ One phase per commit. Task ids are `T<phase>.<index>`.
 ## Phase 1 — Remove the legacy CLI surface (8 → 7)
 *Goal: drop `migrate` and `sync --legacy`.* — **AC-01, AC-03**
 
-- [ ] **T1.1** Remove `sdd migrate`: delete `src/cli/migrate.js` + `test/migrate.test.js`; unwire from `dispatch.js` (`COMMAND_NAMES`, handler, import).
-  - *Tests*: `test/dispatch.test.js` → 7 commands, `migrate` unknown (exit 3).
-- [ ] **T1.2** Remove the `--legacy` dual-emit from `src/cli/sync.js` (keep reconcile); delete the `sync --legacy` test in `test/sync.test.js`.
+- [x] **T1.1** Remove `sdd migrate`: deleted `src/cli/migrate.js` + `test/migrate.test.js`; unwired from `dispatch.js` (`COMMAND_NAMES` 8→7, handler, import, summary). ✓
+  - *Tests*: `test/dispatch.test.js` → 7 commands + `migrate` unknown (exit 3). ✓ Also **realigned `test/traceability.test.js` here** (forced by the migrate.test deletion): converted to a capability→test map with no 2.0 AC numbers and no migrate/legacy/sdd-ff entries — this covers the traceability part of T3.2.
+- [x] **T1.2** Remove the `--legacy` dual-emit from `src/cli/sync.js` (keep reconcile); delete the `sync --legacy` test in `test/sync.test.js`. ✓ (dropped now-unused `execFileSync`/`PACKAGE_ROOT`/`fileURLToPath` imports)
 
 ## Phase 2 — Delete legacy sources + the sdd-ff bridge
 *Goal: physically remove the 1.x pipeline and the obsolete bridge.* — **AC-02, AC-05, AC-07**
@@ -47,7 +47,7 @@ One phase per commit. Task ids are `T<phase>.<index>`.
 *Goal: single doc source, no old references, presented as 3.0.* — **AC-02, AC-05, AC-06**
 
 - [ ] **T3.1** `skills/sdd-plan/SKILL.md`: remove the "replaces the deprecated `sdd-ff`" wording (description + body). `addons/confluence/*/SKILL.md`: remove the "Full 1.x reference: `playbooks/…`" lines.
-- [ ] **T3.2** `test/skill-contract.test.js`: drop `sdd-ff` from the presence list (13 skills). `test/traceability.test.js`: realign to the 3.0 ACs (no `AC-13 → migrate`, no 8-command AC-01). Adjust `test/install.test.js` if it pins a skill count.
+- [ ] **T3.2** `test/skill-contract.test.js`: drop `sdd-ff` from the presence list (13 skills) and the `sdd-ff`-deprecated test. Adjust `test/install.test.js` if it pins a skill count. (`test/traceability.test.js` was already realigned in Phase 1 / T1.1.)
 - [ ] **T3.3** README: remove the *Legacy & deprecation* section and all migration/deprecation wording; command reference → 7 commands (no `sync --legacy`); present 3.0 as the baseline (single doc source). CHANGELOG: a clean `3.0.0` entry.
 - [ ] **T3.4** `package.json` `version` → `3.0.0` (scripts already trimmed in T2.4). `templates/project/sdd.config.yaml`: `methodology.compatible` → `">=3.0.0 <4.0.0"`.
 - [ ] **T3.5** Clean the two extra spots found in Phase 0: the `migrate` mention in `src/util/fs-safe.js` comments (→ `--fix`/bootstrap only), and `test/publish.test.js` exclusion assertions (drop the now-nonexistent `playbooks/`/`dist/`/`legacy/`/`scripts/`/`templates/{docs,claude}` paths; keep `node_modules/`/`test/`/`openspec/`).

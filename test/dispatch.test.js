@@ -19,10 +19,17 @@ test('exit-code map matches design §1.4', () => {
   assert.deepEqual(EXIT, { OK: 0, VIOLATION: 1, BLOCKED: 2, USAGE: 3, ENVIRONMENT: 4 });
 });
 
-test('the command surface is exactly the eight SDD 2.0 commands (AC-01)', () => {
+test('the command surface is exactly the seven SDD 3.0 commands (AC-01)', () => {
   assert.deepEqual(COMMAND_NAMES, [
-    'install', 'init', 'doctor', 'status', 'next', 'validate', 'sync', 'migrate',
+    'install', 'init', 'doctor', 'status', 'next', 'validate', 'sync',
   ]);
+});
+
+test('migrate is no longer a command (removed in 3.0)', async () => {
+  const { io, err } = capture();
+  const code = await run(['migrate'], io);
+  assert.equal(code, EXIT.USAGE);
+  assert.match(err.join('\n'), /unknown command 'migrate'/);
 });
 
 test('--help lists every command and exits 0 (AC-01)', async () => {

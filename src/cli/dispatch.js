@@ -20,7 +20,6 @@ import { statusCommand, nextCommand } from './status.js';
 import { syncCommand } from './sync.js';
 import { initCommand } from './init.js';
 import { doctorCommand } from './doctor.js';
-import { migrateCommand } from './migrate.js';
 import { readPackageVersion } from '../install/skills.js';
 
 // Exit-code map (design §1.4) lives in ./exit.js to avoid a dispatch↔command cycle.
@@ -35,7 +34,6 @@ export const COMMAND_NAMES = [
   'next',
   'validate',
   'sync',
-  'migrate',
 ];
 
 const COMMAND_SUMMARIES = {
@@ -46,7 +44,6 @@ const COMMAND_SUMMARIES = {
   next: 'Print the single next valid action (combines both dimensions).',
   validate: 'Validate artifacts/config against schemas (--ci for pipelines).',
   sync: 'Reconcile installed global skills with the compatible range.',
-  migrate: 'Convert a 1.x consumer to 2.0 (diff-then-confirm).',
 };
 
 // Global flags. Value flags consume the following token.
@@ -132,7 +129,6 @@ HANDLERS.next = nextCommand;
 HANDLERS.sync = syncCommand;
 HANDLERS.init = initCommand;
 HANDLERS.doctor = doctorCommand;
-HANDLERS.migrate = migrateCommand;
 
 /**
  * Run the CLI. `io` is injectable so tests can capture output.
