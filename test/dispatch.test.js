@@ -35,6 +35,14 @@ test('--help lists every command and exits 0 (AC-01)', async () => {
   }
 });
 
+test('--version prints the package version (T13.2)', async () => {
+  const { io, out } = capture();
+  const code = await run(['--version'], io);
+  assert.equal(code, EXIT.OK);
+  const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url)));
+  assert.equal(out.join('\n').trim(), pkg.version);
+});
+
 test('no command prints help and exits 0', async () => {
   const { io, out } = capture();
   const code = await run([], io);

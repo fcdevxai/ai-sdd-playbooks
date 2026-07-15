@@ -13,7 +13,7 @@
     "skills/",
     "addons/",
     "schemas/",
-    "templates/"
+    "templates/project/"
   ],
   "scripts": {
     "test": "node --test",

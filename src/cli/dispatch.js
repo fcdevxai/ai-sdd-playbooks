@@ -21,6 +21,7 @@ import { syncCommand } from './sync.js';
 import { initCommand } from './init.js';
 import { doctorCommand } from './doctor.js';
 import { migrateCommand } from './migrate.js';
+import { readPackageVersion } from '../install/skills.js';
 
 // Exit-code map (design §1.4) lives in ./exit.js to avoid a dispatch↔command cycle.
 export { EXIT };
@@ -60,11 +61,14 @@ export function parseArgs(argv) {
   const flags = { json: false, quiet: false, yes: false, cwd: null, config: null };
   const remaining = [];
   let help = false;
+  let version = false;
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--help' || arg === '-h') {
       help = true;
+    } else if (arg === '--version' || arg === '-v') {
+      version = true;
     } else if (BOOLEAN_FLAGS.has(arg)) {
       flags[arg.slice(2)] = true;
     } else if (VALUE_FLAGS.has(arg)) {
@@ -87,7 +91,7 @@ export function parseArgs(argv) {
     return { error: `expected a command, got '${command}'` };
   }
 
-  return { command, rest, flags, help };
+  return { command, rest, flags, help, version };
 }
 
 export function helpText() {
@@ -106,6 +110,7 @@ export function helpText() {
     '  --quiet          Reduce output',
     '  --yes            Assume confirmation (diffs are still shown)',
     '  -h, --help       Show this help',
+    '  -v, --version    Print the methodology version',
   ].join('\n');
 }
 
@@ -141,6 +146,11 @@ export async function run(argv, io = { out: console.log, err: console.error }) {
     io.err('');
     io.err(helpText());
     return EXIT.USAGE;
+  }
+
+  if (parsed.version) {
+    io.out(readPackageVersion());
+    return EXIT.OK;
   }
 
   if (parsed.help || parsed.command === null) {

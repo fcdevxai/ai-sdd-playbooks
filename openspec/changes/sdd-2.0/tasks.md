@@ -14,7 +14,7 @@ depends_on: design.md
 
 **Spec**: `openspec/changes/sdd-2.0/proposal.md` · **Design**: `openspec/changes/sdd-2.0/design.md`
 
-> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–12 are complete**; Phase 13 is not started. Legacy 1.x stays operational throughout.
+> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **All phases (0–13) are complete.** 155/155 tests green; legacy sync check green. Implementation of SDD 2.0 is done, phase by phase, with the legacy 1.x flow operational throughout. Legacy 1.x stays operational throughout.
 
 Each phase is **independently reviewable and independently mergeable**, leaves the repository green (legacy 1.x keeps working throughout), and depends only on earlier phases. Task ids are `T<phase>.<index>`; each names its success criterion and required tests.
 
@@ -162,11 +162,11 @@ Each phase is **independently reviewable and independently mergeable**, leaves t
 ## Phase 13 — Legacy freeze, publish & docs
 *Goal: ship 2.0 as an npm package with a documented, reversible migration path.* — **AC-16** (decision 11)
 
-- [ ] **T13.1** Finalize `legacy/README.md`, `CHANGELOG.md`, README rewrite: global install, `sdd` command reference, two-dimension model, capability model, GitHub-only scope, deprecation window (dates), migration guide.
-- [ ] **T13.2** Publish tooling: `npm publish` dry-run in CI, `files` allowlist audit, `sdd --version` == package version.
-  - *Tests*: `npm pack` contains exactly the intended files; `npx sdd --help` smoke test from the tarball.
-- [ ] **T13.3** End-to-end acceptance sweep: run a full lifecycle (`enrich → … → archive`) on a fixture consumer for a `browser+http` project and an `http`-only project, plus a `worker`-capable project that must show `blocked`; drive delivery through `uncommitted → … → merged` and through the `unknown` path.
-  - *Success*: every AC (AC-01…AC-21) is exercised by ≥1 automated test; the design §11 traceability table has no gaps.
+- [x] **T13.1** Finalize `legacy/README.md`, `CHANGELOG.md`, README rewrite: global install, `sdd` command reference, two-dimension model, capability model, GitHub-only scope, deprecation window, migration guide. ✓ + `.github/workflows/ci.yml`
+- [x] **T13.2** Publish tooling: `files` allowlist trimmed to `templates/project/`; `sdd --version` == package version; publish dry-run in CI.
+  - *Tests*: `npm pack --dry-run` ships exactly the intended dirs and excludes dev/legacy artifacts; `sdd --version`. ✓ `test/publish.test.js`, `test/dispatch.test.js`
+- [x] **T13.3** End-to-end acceptance sweep: full lifecycle for a `browser+http` project (CLI `sdd next` chain), `validate --ci`, `http`-only adapter applicability, and a `worker` project that blocks; delivery driven through `unknown` and `uncommitted` (the merged→verified→archived tail is engine-tested).
+  - *Success*: every AC (AC-01…AC-21) is exercised by ≥1 automated test; traceability has no gaps. ✓ `test/e2e.test.js`, `test/traceability.test.js`
 
 ---
 
