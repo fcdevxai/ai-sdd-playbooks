@@ -3,7 +3,7 @@ schema: tasks
 schema_version: 1
 change_id: sdd-3.0-legacy-removal
 title: "SDD 3.0 — Legacy & old-reference removal plan"
-status: draft
+status: ready
 owner: felipe.campos
 created: 2026-07-15
 updated: 2026-07-15
@@ -14,9 +14,9 @@ depends_on: design.md
 
 **Spec**: `proposal.md` · **Design**: `design.md`
 
-> **Execution gate.** `proposal.md` is **approved**. Since `design_required` is
-> true, no phase starts until `design.md` → `approved` too (currently `draft`,
-> awaiting sign-off). Implementation does not begin yet.
+> **Execution gate.** `proposal.md` and `design.md` are **approved** (2026-07-15).
+> Implementation proceeds one phase at a time, each stopping for human review.
+> **Phase 0 is complete**; later phases are not started.
 
 Each phase is independently reviewable and leaves the 2.0 functionality green.
 One phase per commit. Task ids are `T<phase>.<index>`.
@@ -24,8 +24,8 @@ One phase per commit. Task ids are `T<phase>.<index>`.
 ## Phase 0 — Audit & guardrails
 *Goal: inventory every old reference before deleting anything.* — de-risks **AC-02, AC-04**
 
-- [ ] **T0.1** Grep the surviving tree (`src/`, `bin/`, `skills/`, `addons/`, `schemas/`, `templates/project/`, `test/`, `README.md`, `.github/`) for every old term: `playbooks`, `dist/claude`, `scripts/sync`, `legacy`, `sdd-ff`, `sync --legacy`, `detectLegacy`, `migrate`, `1.x`, "deprecat". Record the hit list — it drives Phases 3–4. (Exempt `openspec/changes/sdd-2.0/`.)
-- [ ] **T0.2** Confirm no core 2.0 module imports a legacy path; capture the baseline (test count, `npm pack --dry-run` files, `sdd --help` = 8 commands, skill count = 14).
+- [x] **T0.1** Grep the surviving tree for every old term. ✓ Hits confined to the expected files (migrate.js/test, sync.js/test `--legacy`, sdd-ff in skill-contract, traceability mappings, dispatch list). **Two extra cleanups surfaced (added to Phase 3):** the `migrate` mention in `src/util/fs-safe.js` comments, and the legacy-path assertions in `test/publish.test.js`.
+- [x] **T0.2** No core module imports a legacy path (✓ de-risks R-01). Baseline captured: **8** commands, **14** skills, **169** tests green.
 
 ## Phase 1 — Remove the legacy CLI surface (8 → 7)
 *Goal: drop `migrate` and `sync --legacy`.* — **AC-01, AC-03**
@@ -50,7 +50,8 @@ One phase per commit. Task ids are `T<phase>.<index>`.
 - [ ] **T3.2** `test/skill-contract.test.js`: drop `sdd-ff` from the presence list (13 skills). `test/traceability.test.js`: realign to the 3.0 ACs (no `AC-13 → migrate`, no 8-command AC-01). Adjust `test/install.test.js` if it pins a skill count.
 - [ ] **T3.3** README: remove the *Legacy & deprecation* section and all migration/deprecation wording; command reference → 7 commands (no `sync --legacy`); present 3.0 as the baseline (single doc source). CHANGELOG: a clean `3.0.0` entry.
 - [ ] **T3.4** `package.json` `version` → `3.0.0` (scripts already trimmed in T2.4). `templates/project/sdd.config.yaml`: `methodology.compatible` → `">=3.0.0 <4.0.0"`.
-- [ ] **T3.5** Add the guard/grep test: no source/test/skill/shipped-doc reference to any deleted path or old term (AC-02, exempting `openspec/changes/sdd-2.0/`); assert `templates/project/` survives.
+- [ ] **T3.5** Clean the two extra spots found in Phase 0: the `migrate` mention in `src/util/fs-safe.js` comments (→ `--fix`/bootstrap only), and `test/publish.test.js` exclusion assertions (drop the now-nonexistent `playbooks/`/`dist/`/`legacy/`/`scripts/`/`templates/{docs,claude}` paths; keep `node_modules/`/`test/`/`openspec/`).
+- [ ] **T3.6** Add the guard/grep test: no source/test/skill/shipped-doc reference to any deleted path or old term (AC-02, exempting `openspec/changes/sdd-2.0/`); assert `templates/project/` survives.
 
 ## Phase 4 — Verification sweep
 *Goal: 2.0 intact, legacy fully gone.* — **AC-01…AC-07**

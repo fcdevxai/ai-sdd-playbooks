@@ -3,7 +3,7 @@ schema: design
 schema_version: 1
 change_id: sdd-3.0-legacy-removal
 title: "SDD 3.0 — Legacy & old-reference removal design"
-status: draft
+status: approved
 owner: felipe.campos
 created: 2026-07-15
 updated: 2026-07-15
