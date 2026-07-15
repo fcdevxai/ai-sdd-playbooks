@@ -14,7 +14,7 @@ depends_on: design.md
 
 **Spec**: `openspec/changes/sdd-2.0/proposal.md` · **Design**: `openspec/changes/sdd-2.0/design.md`
 
-> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–6 are complete**; later phases are not started. Legacy 1.x stays operational throughout.
+> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–7 are complete**; later phases are not started. Legacy 1.x stays operational throughout.
 
 Each phase is **independently reviewable and independently mergeable**, leaves the repository green (legacy 1.x keeps working throughout), and depends only on earlier phases. Task ids are `T<phase>.<index>`; each names its success criterion and required tests.
 
@@ -98,12 +98,12 @@ Each phase is **independently reviewable and independently mergeable**, leaves t
 ## Phase 7 — Security core (classified from the proposal)
 *Goal: security is classified early and enforced late.* — **AC-12** (C-04)
 
-- [ ] **T7.1** Move risk classification **into the proposal/design authoring** (C-04): `sdd-new` proposes `security.risk`+`triggers`; `sdd-design` sets `threat_model_required`+`controls`. `http: true` alone does not imply `elevated`.
-  - *Tests*: an `http`-only, no-trigger change classifies below `elevated`.
-- [ ] **T7.2** Author `skills/sdd-security-gate/SKILL.md` producing `security-report.md`: validates coherence proposal↔design↔impl, checks controls+evidence, **may raise** risk, **never lowers** it automatically, structured findings; blocking finding → `status: blocked`.
-  - *Tests*: raise-not-lower behavior; blocking-finding forces blocked exception view; `low` → `not_applicable`.
-- [ ] **T7.3** Render the mandatory "does not replace a penetration test" disclaimer in report + CLI output.
-  - *Tests*: disclaimer present in report body and `--json`.
+- [x] **T7.1** Move risk classification **into the proposal/design authoring** (C-04): `sdd-new` proposes `security.risk`+`triggers`; `sdd-design` sets `threat_model_required`+`controls`. `http: true` alone does not imply `elevated`. ✓ `src/security/classify.js` (`classifyRisk` ignores capabilities for elevation)
+  - *Tests*: an `http`-only, no-trigger change classifies below `elevated`. ✓ `test/security.test.js`
+- [x] **T7.2** Author `skills/sdd-security-gate/SKILL.md` producing `security-report.md`: validates coherence proposal↔design↔impl, checks controls+evidence, **may raise** risk, **never lowers** it automatically, structured findings; blocking finding → `status: blocked`. ✓ + `reconcileRisk`/`gateStatusFromFindings` helpers
+  - *Tests*: raise-not-lower behavior; blocking-finding forces blocked exception view; `low` → `not_applicable`. ✓ (engine exception view already covers security-report `blocked` → remediate sdd-security-gate)
+- [x] **T7.3** Render the mandatory "does not replace a penetration test" disclaimer in report + CLI output. ✓ `SECURITY_DISCLAIMER` in the report template + surfaced by `sdd next` when it routes to `sdd-security-gate`
+  - *Tests*: disclaimer present in report body and `--json`. ✓ `test/skill-contract.test.js`, `test/lifecycle-cli.test.js`
 - [ ] **T7.4** Implement this change's own declared security controls (design §6.3), each with a test: `SEC-001` explicit confirmation for global/destructive/remote writes; `SEC-002` path-traversal/symlink/out-of-root write protection; `SEC-003` safe argument escaping / no shell injection; `SEC-004` token/secret redaction in logs; `SEC-005` installed-skill integrity + ownership check; `SEC-006` repo/base-branch/PR validation before remote actions.
   - *Tests*: one negative test per control (path-traversal attempt blocked; secret redacted in captured logs; remote action refused without a validated repo/branch).
 

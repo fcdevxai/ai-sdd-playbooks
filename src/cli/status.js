@@ -13,6 +13,7 @@ import { loadChange, findChangeDirs } from '../config/artifacts.js';
 import { loadConfig } from '../config/config.js';
 import { readLock, lockPathFor } from '../config/lock.js';
 import { computeState } from '../lifecycle/engine.js';
+import { SECURITY_DISCLAIMER } from '../security/classify.js';
 
 function currentBranch(cwd) {
   try {
@@ -89,10 +90,15 @@ export async function nextCommand(parsed, io) {
   if (prep.error) { io.err(`error: ${prep.error}`); return EXIT.USAGE; }
 
   const { change, result } = prep;
+  const securityNext = result.next.skill === 'sdd-security-gate';
+  const payload = { change: change.changeId, next: result.next, lifecycle: result.lifecycle, delivery: result.delivery };
+  if (securityNext) payload.security_disclaimer = SECURITY_DISCLAIMER;
+
   if (parsed.flags.json) {
-    io.out(JSON.stringify({ change: change.changeId, next: result.next, lifecycle: result.lifecycle, delivery: result.delivery }, null, 2));
+    io.out(JSON.stringify(payload, null, 2));
   } else {
     io.out(formatNext(result.next));
+    if (securityNext) io.out(`Note: ${SECURITY_DISCLAIMER}`);
   }
   return result.next.action === 'blocked' ? EXIT.BLOCKED : EXIT.OK;
 }

@@ -74,6 +74,19 @@ test('sdd next on a design-required approved proposal → sdd-design, writing no
   assert.equal(fs.existsSync(path.join(dir, 'openspec', 'changes', 'demo', 'design.md')), false);
 });
 
+test('sdd next at reviewed → sdd-security-gate carries the disclaimer (T7.3)', async () => {
+  const dir = makeRepo();
+  writeArtifact(dir, 'demo', 'proposal.md', 'approved'); // no impact → design not required
+  writeArtifact(dir, 'demo', 'tasks.md', 'passed');
+  writeArtifact(dir, 'demo', 'code-review-report.md', 'passed');
+  const { io, out } = capture();
+  const code = await run(['next', '--json', '--cwd', dir], io);
+  assert.equal(code, EXIT.OK);
+  const parsed = JSON.parse(out.join('\n'));
+  assert.equal(parsed.next.skill, 'sdd-security-gate');
+  assert.match(parsed.security_disclaimer, /penetration test/i);
+});
+
 test('sdd status with no change folders is a usage error', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdd-empty-'));
   const { io } = capture();
