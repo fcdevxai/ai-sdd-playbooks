@@ -12,12 +12,17 @@ only its own context and a lockfile pinning the compatible methodology range.
 ## Install (global, once)
 
 ```bash
-sdd install                 # copies core skills into ~/.claude/skills and ~/.agents/skills
-sdd install --addon confluence   # optional add-ons, opt-in only
+sdd install                      # install core skills into BOTH runtimes (default)
+sdd install --runtime claude     # only Claude Code    (~/.claude/skills)
+sdd install --runtime copilot    # only GitHub Copilot (~/.agents/skills)
+sdd install --runtime both       # both (explicit; same as the default)
+sdd install --addon confluence   # opt-in add-ons (combine with --runtime)
 ```
 
-Core skills install into both runtime directories. Add-ons are never installed
-implicitly.
+By default the core skills install into **both** runtime directories; use
+`--runtime` to target only one. Add-ons are never installed implicitly. The
+install locations can be redirected (CI, sandboxes) with the
+`SDD_CLAUDE_SKILLS_DIR` and `SDD_AGENTS_SKILLS_DIR` environment variables.
 
 ## Connect a project
 
@@ -32,6 +37,20 @@ sdd doctor       # read-only health check (--fix for safe additive fixes)
 `openspec/changes/`, and `.github/workflows/sdd-validation.yml`. Existing
 equivalent docs are **adopted by configuration**, never overwritten. Core
 methodology files are **not** copied into the project.
+
+### Setting capabilities: `init` is safe, `sdd-bootstrap-project` is smart
+
+`sdd init` is intentionally **non-interactive and deterministic**: it writes
+`sdd.config.yaml` with every `capability` set to **`false`** and never guesses.
+To configure them from the real project, run the **`sdd-bootstrap-project`**
+skill (in Claude Code or GitHub Copilot). It inspects the repo, **detects**
+capabilities from concrete signals — a frontend framework → `browser`, a server
+framework → `http`, a `package.json` `bin` → `cli`, a queue/broker → `worker` —
+and **proposes a diff you approve** (it never writes without approval).
+
+Until a capability is set, `sdd-runtime-gate` treats it as `not_applicable`, so
+setting them correctly is what turns on the right runtime checks (e.g. a web app
+needs `browser: true` for the Playwright-driven UI checks to run).
 
 ## Command reference
 
@@ -90,7 +109,9 @@ capabilities:
   worker: false    # experimental adapter
 ```
 
-Backend-only projects (`browser: false`) never invoke Playwright.
+Backend-only projects (`browser: false`) never invoke Playwright. Set these by
+running `sdd-bootstrap-project` (auto-detect + propose) or by editing the file
+directly.
 
 ## Validation & CI
 
