@@ -17,8 +17,8 @@ depends_on: design.md
 > **Execution gate.** `proposal.md` and `design.md` were approved (2026-07-15),
 > **amended and re-approved the same day** (scope expansion: doc-template alignment).
 > Implementation proceeds one phase at a time, each stopping for human review.
-> **Phases 0–2 are complete** (legacy removal, unaffected by the amendment);
-> Phases 3–6 are not started.
+> **Phases 0–3 are complete** (legacy removal + reference purge);
+> Phases 4–6 are not started.
 
 Each phase is independently reviewable and leaves the 2.0 functionality green.
 One phase per commit. Task ids are `T<phase>.<index>`.
@@ -48,10 +48,10 @@ One phase per commit. Task ids are `T<phase>.<index>`.
 ## Phase 3 — Purge remaining legacy references
 *Goal: no old references left in surviving files.* — **AC-02**
 
-- [ ] **T3.1** `skills/sdd-plan/SKILL.md`: remove the "replaces the deprecated `sdd-ff`" wording (description + body). `addons/confluence/*/SKILL.md`: remove the "Full 1.x reference: `playbooks/…`" lines.
+- [x] **T3.1** `skills/sdd-plan/SKILL.md`: removed the "replaces the deprecated `sdd-ff`" wording (description + body). `addons/confluence/*/SKILL.md`: removed the "Full 1.x reference: `playbooks/…`" lines. ✓
 - [x] **T3.2** `test/skill-contract.test.js` was realigned in **Phase 2 / T2.3** (drop `sdd-ff`, assert 13, remove deprecated test). `test/install.test.js` pins no skill count (checked). `test/traceability.test.js` was realigned in Phase 1 / T1.1.
-- [ ] **T3.3** Clean the two extra spots found in Phase 0: the `migrate` mention in `src/util/fs-safe.js` comments (→ `--fix`/bootstrap only), and `test/publish.test.js` exclusion assertions (drop the now-nonexistent `playbooks/`/`dist/`/`legacy/`/`scripts/`/`templates/{docs,claude}` paths; keep `node_modules/`/`test/`/`openspec/`). Also the stale `sdd migrate` mention in `src/cli/init.js`'s header comment.
-- [ ] **T3.4** Add the guard/grep test: no source/test/skill/shipped-doc reference to any deleted path or old term (AC-02, exempting `openspec/changes/sdd-2.0/`); assert `templates/project/` survives.
+- [x] **T3.3** Cleaned the `migrate` mentions in `src/util/fs-safe.js` comments (→ `--fix`/bootstrap) and `src/cli/init.js`'s header comment (→ dry-run/apply). `test/publish.test.js` exclusion assertions now keep only `node_modules/`/`test/`/`openspec/`. ✓
+- [x] **T3.4** Added `test/no-legacy-refs.test.js`: scans `src/ bin/ skills/ addons/ templates/project/ test/` for removed 1.x paths/old terms (empty), and asserts `templates/project/` survives. ✓ Shipped-doc coverage (README/CHANGELOG) is **extended in Phase 5** once those are clean.
 
 ## Phase 4 — Template & doc-model alignment (amendment)
 *Goal: consumer docs match the house convention out of the box.* — **AC-08, AC-09** · design §9

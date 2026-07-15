@@ -30,4 +30,3 @@ requires the **Atlassian MCP**.
 - Write for non-technical internal teams, not for IT.
 - Requires the Atlassian MCP; if unavailable, stop and tell the user.
 - This is an add-on: it must never be installed implicitly with the core.
-- Full 1.x reference: `playbooks/write-in-confluence/canonical.md` (frozen).

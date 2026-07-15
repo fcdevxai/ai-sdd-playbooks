@@ -6,8 +6,8 @@
  * is tiered (C-09): existing file at the resolved path → adopt; a plausible but
  * ambiguous candidate → reported, never auto-adopted; otherwise → template.
  *
- * The planning/scaffolding is exposed as `projectActions(cwd, { write })` so
- * `sdd migrate` can preview (write: false) and apply (write: true) the same plan.
+ * The planning/scaffolding is exposed as `projectActions(cwd, { write })`: with
+ * `write: false` it is a pure preview (dry-run), with `write: true` it applies.
  */
 import fs from 'node:fs';
 import path from 'node:path';

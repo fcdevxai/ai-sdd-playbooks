@@ -22,9 +22,9 @@ test('npm pack ships exactly the intended top-level dirs (T13.2)', () => {
   assert.ok(files.some((f) => /^README\.md$/i.test(f)));
 });
 
-test('npm pack excludes dev/legacy/consumer artifacts (T13.2)', () => {
+test('npm pack excludes dev/non-shipped artifacts', () => {
   const files = packedFiles();
-  for (const p of ['node_modules/', 'test/', 'playbooks/', 'dist/', 'legacy/', 'scripts/', 'openspec/', 'templates/docs/', 'templates/claude/']) {
+  for (const p of ['node_modules/', 'test/', 'openspec/']) {
     assert.ok(!files.some((f) => f.startsWith(p)), `package must not include ${p}`);
   }
 });

@@ -1,6 +1,6 @@
 ---
 name: sdd-plan
-description: "Granularize an approved proposal (and design, when required) into an executable, phase-based tasks.md with atomic tasks, each with a verifiable success criterion linked to an acceptance criterion. Activate when the user says 'sdd-plan', 'plan tasks', or when 'sdd next' routes here. Replaces the deprecated sdd-ff."
+description: "Granularize an approved proposal (and design, when required) into an executable, phase-based tasks.md with atomic tasks, each with a verifiable success criterion linked to an acceptance criterion. Activate when the user says 'sdd-plan', 'plan tasks', or when 'sdd next' routes here."
 lifecycle_stage: plan
 produces: [tasks.md]
 requires:
@@ -14,8 +14,7 @@ version: 2.0.0
 
 Read an approved `proposal.md` (and `design.md` when design is required) and
 generate an executable, phase-based `tasks.md`. Each task is atomic,
-independently verifiable, and linked to a specific acceptance criterion. This
-replaces the deprecated `sdd-ff` (do not use that).
+independently verifiable, and linked to a specific acceptance criterion.
 
 ## Preconditions (self-check)
 
