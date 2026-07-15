@@ -1,44 +1,47 @@
 # Changelog
 
-## 2.0.0 — Global methodology, npm CLI, deterministic lifecycle
+## 3.0.0 — Spec-Driven Development baseline
 
-Ground-up redesign specified in [`openspec/changes/sdd-2.0/`](openspec/changes/sdd-2.0/).
+SDD 3.0 is the clean baseline: a globally-installed set of Agent Skills plus a
+deterministic `sdd` CLI, shared by Claude Code and GitHub Copilot. Every project
+starts here.
 
-### Added
-- **`sdd` CLI** with `install`, `init`, `doctor`, `status`, `next`, `validate`,
-  `sync`, `migrate` (+ `--version`).
+### Methodology & CLI
+- **`sdd` CLI** with seven commands: `install`, `init`, `doctor`, `status`,
+  `next`, `validate`, `sync` (+ `--version`).
 - **Global install** of core skills into `~/.claude/skills` and `~/.agents/skills`;
   consumer projects keep only their own context + `sdd.lock`.
-- **Canonical Agent Skills** at `skills/<name>/SKILL.md`, consumable by Claude
-  Code and GitHub Copilot via one shared frontmatter contract.
 - **Deterministic two-dimension lifecycle engine** (methodological `lifecycle` +
-  GitHub `delivery`); `sdd status` / `sdd next` / the `sdd-next` skill.
+  GitHub `delivery`); `sdd status` / `sdd next` / the `sdd-next` skill decide the
+  state and the next step — not the language model.
+- **Compatibility-by-range** methodology pinning in `sdd.lock`
+  (`>=3.0.0 <4.0.0`), enforced by `sdd doctor`.
+
+### Skills & artifacts
+- **Canonical Agent Skills** at `skills/<name>/SKILL.md`, consumable by Claude
+  Code and GitHub Copilot through one shared frontmatter contract.
 - **Structured artifacts**: frontmatter metadata, normalized statuses, JSON
   Schemas, and `sdd validate --ci` (no verdict-string matching, no mutation).
 - **Security as a core stage**: risk classified in the proposal, refined in the
-  design, enforced by `sdd-security-gate` (blocking findings; non-replacement
-  disclaimer).
-- **`sdd-runtime-gate`** replacing the separate UX and E2E gates, driven by
-  project `capabilities` (`browser`/`http` supported, `cli`/`worker`
-  experimental → block when applicable).
-- **New lifecycle skills**: `sdd-design`, `sdd-plan` (replaces `sdd-ff`).
-- **`sdd migrate`** (diff-then-confirm) and the **`sdd-bootstrap-project`** skill
-  (AI-assisted, human-approved onboarding).
-- **Compatibility-by-range** methodology pinning (`sdd.lock`), enforced by
-  `sdd doctor`.
-- **Add-on separation**: Confluence flows under `addons/`, installed only on
-  explicit opt-in.
+  design, enforced by `sdd-security-gate` (blocking findings; it does not replace
+  a penetration test).
+- **`sdd-runtime-gate`** unifies UX and E2E checks, driven by project
+  `capabilities` (`browser`/`http` supported; `cli`/`worker` experimental and
+  block when applicable).
+- **`sdd-bootstrap-project`** skill for AI-assisted, human-approved onboarding of
+  an existing repo.
 
-### Changed
+### Consumer docs
+- A four-doc consumer set scaffolded by `sdd init`: `agent_architecture.md` (how
+  agents operate), `doc_architecture.md` (technical structure),
+  `doc_verification_guide.md` (verification commands), `sdd-workflow.md` (the SDD
+  lifecycle). Existing equivalents are adopted by configuration, never overwritten.
+
+### Conventions
 - Machine-readable fields (statuses, impact, security, capabilities) are stable
   in English; human-readable bodies may use the project language.
-- GitHub is the only supported remote provider.
+- **GitHub** is the only supported remote provider;
+  `github.require_pull_request` and `github.require_ci` are mandatory.
 
-### Deprecated
-- `sdd-ff` — prints a deprecation notice; use `sdd-design` + `sdd-plan`.
-- The 1.x pipeline (`playbooks/`, `dist/claude-commands/`, `scripts/`) is frozen
-  in place; physical removal is deferred to 3.0.
-
-### Compatibility
-- The 1.x submodule flow keeps working unchanged during the deprecation window.
-- `sdd sync --legacy` regenerates the frozen 1.x command files.
+### Add-ons
+- Confluence flows live under `addons/` and install only on explicit opt-in.

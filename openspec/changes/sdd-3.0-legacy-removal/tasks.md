@@ -17,8 +17,8 @@ depends_on: design.md
 > **Execution gate.** `proposal.md` and `design.md` were approved (2026-07-15),
 > **amended and re-approved the same day** (scope expansion: doc-template alignment).
 > Implementation proceeds one phase at a time, each stopping for human review.
-> **Phases 0–4 are complete** (legacy removal + reference purge + doc alignment);
-> Phases 5–6 are not started.
+> **Phases 0–5 are complete** (legacy removal + purge + doc alignment + version/docs);
+> Phase 6 (verification sweep) is not started.
 
 Each phase is independently reviewable and leaves the 2.0 functionality green.
 One phase per commit. Task ids are `T<phase>.<index>`.
@@ -64,9 +64,9 @@ One phase per commit. Task ids are `T<phase>.<index>`.
 ## Phase 5 — Version, README & CHANGELOG
 *Goal: single doc source, presented as 3.0.* — **AC-05, AC-06**
 
-- [ ] **T5.1** `package.json` `version` → `3.0.0` (scripts already trimmed in T2.4).
-- [ ] **T5.2** README: remove the *Legacy & deprecation* section and all migration/deprecation wording; command reference → 7 commands (no `sync --legacy`); document the aligned **four-doc** consumer set; present 3.0 as the baseline (single doc source).
-- [ ] **T5.3** CHANGELOG: a clean `3.0.0` entry.
+- [x] **T5.1** `package.json` `version` → `3.0.0`. ✓ `sdd --version` = `3.0.0`.
+- [x] **T5.2** README: removed the *Legacy & deprecation* section, the 2.0/frozen intro blockquote, the `migrate` row and `sync --legacy`; command reference → 7 commands; init section documents the **four-doc** consumer set; `npm run check` dropped from Development. ✓
+- [x] **T5.3** CHANGELOG: replaced with a single clean `3.0.0` baseline entry (no Deprecated/Compatibility sections, no migration narrative). ✓ Also **extended `test/no-legacy-refs.test.js`** to scan `README.md`/`CHANGELOG.md` (now clean) — closes the shipped-doc gap noted in T3.4.
 
 ## Phase 6 — Verification sweep
 *Goal: 2.0 intact, legacy fully gone, docs aligned.* — **AC-01…AC-09**

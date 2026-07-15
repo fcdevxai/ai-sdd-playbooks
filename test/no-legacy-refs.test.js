@@ -7,10 +7,11 @@ import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const SELF = 'no-legacy-refs.test.js';
 
-// Surfaces that must carry NO legacy reference after 3.0 (AC-02). Shipped docs
-// (README/CHANGELOG) are cleaned in Phase 5 and folded in there; the historical
-// openspec/changes/sdd-2.0/ record and this change's own artifacts are exempt.
+// Surfaces that must carry NO legacy reference after 3.0 (AC-02): source, tests,
+// skills, shipped templates, and the shipped docs (README/CHANGELOG). The
+// historical openspec/changes/ records and this change's own artifacts are exempt.
 const SCAN_DIRS = ['src', 'bin', 'skills', 'addons', 'templates/project', 'test'];
+const SCAN_FILES = ['README.md', 'CHANGELOG.md'];
 const EXTS = new Set(['.js', '.mjs', '.md', '.json', '.yaml', '.yml']);
 
 // Removed 1.x paths and old terms that must not reappear.
@@ -28,14 +29,13 @@ function walk(dir) {
   return out;
 }
 
-test('no source/skill/addon/template/test file references a removed 1.x path or old term (AC-02)', () => {
+test('no source/skill/addon/template/test/shipped-doc file references a removed 1.x path or old term (AC-02)', () => {
+  const files = [...SCAN_DIRS.flatMap(walk), ...SCAN_FILES.filter((f) => fs.existsSync(path.join(ROOT, f)))];
   const offenders = [];
-  for (const dir of SCAN_DIRS) {
-    for (const rel of walk(dir)) {
-      const text = fs.readFileSync(path.join(ROOT, rel), 'utf8');
-      for (const pat of FORBIDDEN) {
-        if (pat.test(text)) offenders.push(`${rel} :: ${pat}`);
-      }
+  for (const rel of files) {
+    const text = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    for (const pat of FORBIDDEN) {
+      if (pat.test(text)) offenders.push(`${rel} :: ${pat}`);
     }
   }
   assert.deepEqual(offenders, [], `legacy references remain:\n${offenders.join('\n')}`);

@@ -5,10 +5,6 @@ set of Agent Skills plus a deterministic **`sdd` CLI**, shared by **Claude Code*
 and **GitHub Copilot**. The methodology lives in one place; each project keeps
 only its own context and a lockfile pinning the compatible methodology range.
 
-> **2.0** is a ground-up redesign. The 1.x submodule/copy pipeline still works
-> and is **frozen in place** (see [Legacy & deprecation](#legacy--deprecation)).
-> The change is specified in [`openspec/changes/sdd-2.0/`](openspec/changes/sdd-2.0/).
-
 ## Install (global, once)
 
 ```bash
@@ -32,11 +28,12 @@ sdd doctor       # read-only health check (--fix for safe additive fixes)
 ```
 
 `sdd init` creates only what's missing: `sdd.config.yaml`, `sdd.lock`,
-`AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`,
-`docs/{architecture,verification,sdd-workflow}.md`, `openspec/specs/system.md`,
-`openspec/changes/`, and `.github/workflows/sdd-validation.yml`. Existing
-equivalent docs are **adopted by configuration**, never overwritten. Core
-methodology files are **not** copied into the project.
+`AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, the consumer doc set
+`docs/{agent_architecture,doc_architecture,doc_verification_guide,sdd-workflow}.md`,
+`openspec/specs/system.md`, `openspec/changes/`, and
+`.github/workflows/sdd-validation.yml`. Existing equivalent docs are **adopted by
+configuration**, never overwritten. Core methodology files are **not** copied
+into the project.
 
 ### Setting capabilities: `init` is safe, `sdd-bootstrap-project` is smart
 
@@ -65,8 +62,7 @@ needs `browser: true` for the Playwright-driven UI checks to run).
 | `sdd status` | Print both dimensions: lifecycle + GitHub delivery |
 | `sdd next` | The single next valid action (combines both dimensions) |
 | `sdd validate` | Validate artifacts/config against the JSON Schemas (`--ci` for pipelines) |
-| `sdd sync` | Reconcile `sdd.lock` with the installed version (`--legacy` = 1.x dual-emit) |
-| `sdd migrate` | Convert a 1.x consumer to 2.0 (diff-then-confirm) |
+| `sdd sync` | Reconcile `sdd.lock` with the installed methodology version |
 
 Global flags: `--json`, `--cwd`, `--config`, `--quiet`, `--yes`, `--version`.
 
@@ -95,8 +91,8 @@ is the authority on state and next step.**
 - **Security is core.** Risk is classified in the proposal, refined in the
   design, and enforced by `sdd-security-gate` (blocking findings block; it does
   **not** replace a penetration test).
-- **One runtime gate.** `sdd-runtime-gate` replaces the old UX + E2E gates. It
-  selects adapters from project `capabilities` (`browser`, `http`, `cli`,
+- **One runtime gate.** `sdd-runtime-gate` unifies UX and E2E checks into a
+  single gate. It selects adapters from project `capabilities` (`browser`, `http`, `cli`,
   `worker`). A `false` capability is `not_applicable`; an unimplemented or
   dependency-missing adapter **blocks** — it never fabricates `passed`.
 
@@ -126,28 +122,19 @@ matching, and never mutating artifacts. The shipped
 
 ## GitHub only
 
-2.0 supports **GitHub** exclusively as the remote provider (branches, PRs,
+SDD supports **GitHub** exclusively as the remote provider (branches, PRs,
 Actions, checks, merge). GitLab/Bitbucket and generic forge abstractions are out
 of scope. `github.require_pull_request` and `github.require_ci` are mandatory.
-
-## Legacy & deprecation
-
-The 1.x pipeline (`playbooks/`, `dist/claude-commands/`, `scripts/sync.js`,
-`scripts/sync-consumer.sh`) is **frozen at its current paths** and keeps working
-for un-migrated submodule consumers. See [`legacy/README.md`](legacy/README.md).
-`sdd migrate` moves a consumer to 2.0 without deleting anything. The **physical
-removal** of 1.x is deferred to **3.0** (announced deprecation window).
 
 ## Development (this repo)
 
 ```bash
 npm ci
 npm test          # node --test
-npm run check     # legacy 1.x drift check
 ```
 
-The repo dogfoods itself: `sdd status` / `sdd next` run against
-`openspec/changes/sdd-2.0/`.
+The repo dogfoods itself: `sdd status` / `sdd next` run against the active change
+under `openspec/changes/`.
 
 > **Publishing** (human-owned): choose the npm name/scope, remove `private` from
 > `package.json`, then `npm publish`. `npm pack --dry-run` shows the exact
