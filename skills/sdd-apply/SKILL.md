@@ -29,8 +29,10 @@ name the missing precondition.
 ## Context
 
 Read fully before writing code: `proposal.md`, `tasks.md`, `design.md` (if
-present), `openspec/specs/system.md`, the affected domain spec, and the project's
-`docs/architecture.md` / `docs/verification.md`.
+present), `openspec/specs/system.md`, the affected domain spec, the project's
+`docs/doc_architecture.md` / `docs/doc_verification_guide.md`, and
+`docs/agent_architecture.md` for how agents operate in this repo (boundaries,
+task workflows).
 
 ## Behavior
 
@@ -39,7 +41,7 @@ present), `openspec/specs/system.md`, the affected domain spec, and the project'
    pass it → verify no file outside `## Constraints and non-goals` was touched →
    run the task-level verification command → mark the task `[x]`.
 3. Closure: run the project quality gates (format, lint/type-check, feature tests,
-   regression if risk warrants) from `docs/verification.md`.
+   regression if risk warrants) from `docs/doc_verification_guide.md`.
 4. Append an **Execution Report** to `tasks.md` (verified ACs → test/evidence,
    commands run, result). When every task passes and gates are green, set
    `tasks.md` `status: passed`. If blocked, set `status: blocked` and record why.

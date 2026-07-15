@@ -4,7 +4,7 @@ project:
   language: en          # human-readable document language (bodies)
 methodology:
   scope: user           # global install
-  compatible: ">=2.0.0 <3.0.0"
+  compatible: ">=3.0.0 <4.0.0"
 capabilities:           # set the ones your project actually has (drives sdd-runtime-gate)
   browser: false        # a web UI
   http: false           # an HTTP/REST surface
@@ -21,8 +21,9 @@ github:
   require_ci: true
 documents:                 # adopt existing docs by pointing these at their real paths
   system_spec: openspec/specs/system.md
-  architecture: docs/architecture.md
-  verification: docs/verification.md
+  agent_architecture: docs/agent_architecture.md
+  architecture: docs/doc_architecture.md
+  verification: docs/doc_verification_guide.md
   workflow: docs/sdd-workflow.md
 addons:
   confluence: false        # add-ons never install implicitly

@@ -29,13 +29,18 @@ const FIXED = [
 
 const LOGICAL = [
   ['openspec/system.md', 'system_spec'],
-  ['docs/architecture.md', 'architecture'],
-  ['docs/verification.md', 'verification'],
+  ['docs/agent_architecture.md', 'agent_architecture'],
+  ['docs/doc_architecture.md', 'architecture'],
+  ['docs/doc_verification_guide.md', 'verification'],
   ['docs/sdd-workflow.md', 'workflow'],
 ];
 
+// Candidate patterns are specific so agent_architecture.md and doc_architecture.md
+// are never adopted as each other (R-05): the agent pattern requires "agent";
+// the plain architecture pattern excludes any filename containing "agent".
 const CANDIDATE_PATTERNS = {
-  architecture: /arquitect|architect/i,
+  agent_architecture: /agent[_\- ]?(arquitect|architect)/i,
+  architecture: /^(?!.*agent)(?=.*(?:arquitect|architect))/i,
   verification: /verif/i,
   workflow: /workflow|flujo/i,
 };

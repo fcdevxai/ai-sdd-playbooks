@@ -51,7 +51,7 @@ test('doctor is read-only by default — writes nothing (AC-05)', async () => {
 
 test('a freshly initialized repo with a compatible global install is healthy (exit 0)', async () => {
   const dir = await initRepo();
-  const code = await withGlobalVersion('2.0.0', () => run(['doctor', '--cwd', dir], capture().io));
+  const code = await withGlobalVersion('3.0.0', () => run(['doctor', '--cwd', dir], capture().io));
   assert.equal(code, EXIT.OK);
 });
 
@@ -72,8 +72,8 @@ test('doctor reports "no global methodology installed" when none is present', as
 });
 
 test('doctor blocks when the installed version is outside the compatible range (C-08)', async () => {
-  const dir = await initRepo(); // lock compatible ">=2.0.0 <3.0.0"
-  await withGlobalVersion('3.0.0', async () => {
+  const dir = await initRepo(); // lock compatible ">=3.0.0 <4.0.0"
+  await withGlobalVersion('4.0.0', async () => {
     const { io, err } = capture();
     const code = await run(['doctor', '--cwd', dir], io);
     assert.equal(code, EXIT.ENVIRONMENT);

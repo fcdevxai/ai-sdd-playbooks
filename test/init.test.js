@@ -21,7 +21,8 @@ test('init on a fresh repo creates the full project-local set and no core copies
   for (const f of [
     'sdd.config.yaml', 'sdd.lock', 'AGENTS.md', 'CLAUDE.md',
     '.github/copilot-instructions.md', '.github/workflows/sdd-validation.yml',
-    'docs/architecture.md', 'docs/verification.md', 'docs/sdd-workflow.md',
+    'docs/agent_architecture.md', 'docs/doc_architecture.md',
+    'docs/doc_verification_guide.md', 'docs/sdd-workflow.md',
     'openspec/specs/system.md', 'openspec/changes',
   ]) {
     assert.ok(has(dir, f), `expected ${f}`);
@@ -65,12 +66,25 @@ test('init is idempotent: re-run creates nothing new and edits no content (AC-03
 test('init adopts an existing doc at the official path without overwriting (AC-04)', async () => {
   const dir = tmp();
   fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
-  fs.writeFileSync(path.join(dir, 'docs', 'architecture.md'), 'CUSTOM ARCH\n');
+  fs.writeFileSync(path.join(dir, 'docs', 'doc_architecture.md'), 'CUSTOM ARCH\n');
   const { io, out } = capture();
   await run(['init', '--json', '--cwd', dir], io);
   const res = JSON.parse(out.join('\n'));
   assert.ok(res.adopted.some((a) => a.startsWith('architecture')));
-  assert.equal(fs.readFileSync(path.join(dir, 'docs', 'architecture.md'), 'utf8'), 'CUSTOM ARCH\n');
+  assert.equal(fs.readFileSync(path.join(dir, 'docs', 'doc_architecture.md'), 'utf8'), 'CUSTOM ARCH\n');
+});
+
+test('init maps agent_architecture without cross-adopting it as architecture (R-05)', async () => {
+  const dir = tmp();
+  fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
+  // a non-default-named agent-architecture doc: must be an agent_architecture
+  // candidate, never an architecture candidate.
+  fs.writeFileSync(path.join(dir, 'docs', 'agent_architecture_notes.md'), 'AGENT\n');
+  const { io, out } = capture();
+  await run(['init', '--json', '--cwd', dir], io);
+  const res = JSON.parse(out.join('\n'));
+  assert.ok(res.candidates.some((c) => c.startsWith('agent_architecture:') && c.includes('agent_architecture_notes.md')));
+  assert.ok(!res.candidates.some((c) => c.startsWith('architecture:') && c.includes('agent_architecture_notes.md')));
 });
 
 test('init does NOT auto-adopt an ambiguous candidate (C-09)', async () => {
@@ -81,7 +95,7 @@ test('init does NOT auto-adopt an ambiguous candidate (C-09)', async () => {
   await run(['init', '--json', '--cwd', dir], io);
   const res = JSON.parse(out.join('\n'));
   assert.ok(res.candidates.some((c) => c.includes('arquitectura.md')));
-  assert.equal(has(dir, 'docs/architecture.md'), false); // no duplicate created
+  assert.equal(has(dir, 'docs/doc_architecture.md'), false); // no duplicate created at the default path
   assert.equal(fs.readFileSync(path.join(dir, 'docs', 'arquitectura.md'), 'utf8'), 'MINE\n');
 });
 

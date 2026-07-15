@@ -13,15 +13,16 @@ import { validateNamed } from '../schema/validate.js';
 
 export const DEFAULT_DOCUMENTS = {
   system_spec: 'openspec/specs/system.md',
-  architecture: 'docs/architecture.md',
-  verification: 'docs/verification.md',
+  agent_architecture: 'docs/agent_architecture.md',
+  architecture: 'docs/doc_architecture.md',
+  verification: 'docs/doc_verification_guide.md',
   workflow: 'docs/sdd-workflow.md',
 };
 
 export const DEFAULT_CONFIG = {
   version: 2,
   project: { language: 'en' },
-  methodology: { scope: 'user', compatible: '>=2.0.0 <3.0.0' },
+  methodology: { scope: 'user', compatible: '>=3.0.0 <4.0.0' },
   capabilities: { browser: false, http: false, cli: false, worker: false },
   design: { always: false },
   security: { default_risk: 'standard', threat_model: 'auto' },

@@ -17,8 +17,8 @@ depends_on: design.md
 > **Execution gate.** `proposal.md` and `design.md` were approved (2026-07-15),
 > **amended and re-approved the same day** (scope expansion: doc-template alignment).
 > Implementation proceeds one phase at a time, each stopping for human review.
-> **Phases 0–3 are complete** (legacy removal + reference purge);
-> Phases 4–6 are not started.
+> **Phases 0–4 are complete** (legacy removal + reference purge + doc alignment);
+> Phases 5–6 are not started.
 
 Each phase is independently reviewable and leaves the 2.0 functionality green.
 One phase per commit. Task ids are `T<phase>.<index>`.
@@ -56,10 +56,10 @@ One phase per commit. Task ids are `T<phase>.<index>`.
 ## Phase 4 — Template & doc-model alignment (amendment)
 *Goal: consumer docs match the house convention out of the box.* — **AC-08, AC-09** · design §9
 
-- [ ] **T4.1** Rename templates (git-mv, keep history): `templates/project/docs/architecture.md` → `doc_architecture.md`, `verification.md` → `doc_verification_guide.md`. Add `templates/project/docs/agent_architecture.md` (generic stack-agnostic skeleton; lift structure from the git-history 1.x `templates/docs/agent_architecture.md`, modernized to reference the global SDD skills + `sdd` CLI).
-- [ ] **T4.2** CLI wiring: `src/config/config.js` `DEFAULT_DOCUMENTS` (two paths + new `agent_architecture`); `src/cli/init.js` `LOGICAL` (+ entry) and `CANDIDATE_PATTERNS` (specific, no `agent`↔`doc` cross-adopt, R-05); `templates/project/sdd.config.yaml` `documents:` block **and** `methodology.compatible` → `">=3.0.0 <4.0.0"` (from §5).
-- [ ] **T4.3** Skills: repoint `docs/architecture.md`/`docs/verification.md` → renamed paths in `sdd-enrich-us`, `sdd-design`, `sdd-plan`, `sdd-apply`, `sdd-code-review`, `sdd-verify`; teach `sdd-bootstrap-project` the 4th doc; reference `docs/agent_architecture.md` from `sdd-apply` + `sdd-bootstrap-project` (confirmed set).
-- [ ] **T4.4** Tests: `test/config.test.js` + `test/init.test.js` (new default paths, 4th doc, no cross-adoption); `test/e2e.test.js` (four docs scaffold). Suite green.
+- [x] **T4.1** Renamed (git-mv, history kept): `architecture.md` → `doc_architecture.md`, `verification.md` → `doc_verification_guide.md`. Added `templates/project/docs/agent_architecture.md` (generic skeleton lifted from the git-history 1.x template, modernized to the global SDD skills + `sdd next`). ✓
+- [x] **T4.2** CLI wiring: `config.js` `DEFAULT_DOCUMENTS` (two paths + `agent_architecture`) **and** `DEFAULT_CONFIG.methodology.compatible` → `">=3.0.0 <4.0.0"` (consistency with §5's 3.0→4.0 framing); `init.js` `LOGICAL` (+ entry) and `CANDIDATE_PATTERNS` (specific — `architecture` excludes `agent`, R-05); `templates/project/sdd.config.yaml` `documents:` block + `compatible` → 3.0. ✓
+- [x] **T4.3** Skills: repointed `docs/architecture.md`/`docs/verification.md` → renamed paths across `sdd-enrich-us`, `sdd-design`, `sdd-plan`, `sdd-apply`, `sdd-code-review`, `sdd-verify`; `sdd-bootstrap-project` now maps the 4th doc (distinct from `architecture`); `sdd-apply` + `sdd-bootstrap-project` reference `docs/agent_architecture.md`. ✓
+- [x] **T4.4** Tests: `test/config.test.js` (new default paths, `resolveAllDocuments` = 5); `test/init.test.js` (4 docs scaffold + a new R-05 cross-adoption test); `test/doctor.test.js` range fixtures → 3.0 (coupled to the template `compatible` bump). Suite **167/167**; a real `sdd init` scaffolds the four docs. ✓
 
 ## Phase 5 — Version, README & CHANGELOG
 *Goal: single doc source, presented as 3.0.* — **AC-05, AC-06**

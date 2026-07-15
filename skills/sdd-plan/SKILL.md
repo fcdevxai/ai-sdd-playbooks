@@ -26,8 +26,8 @@ missing precondition (e.g. "design.md is required and must be approved first").
 ## Context
 
 Read: `proposal.md` (acceptance criteria, constraints, error cases), `design.md`
-(if present), `openspec/specs/system.md`, `docs/architecture.md` /
-`docs/verification.md`, and existing implementation files in the affected modules.
+(if present), `openspec/specs/system.md`, `docs/doc_architecture.md` /
+`docs/doc_verification_guide.md`, and existing implementation files in the affected modules.
 
 ## Behavior
 
@@ -52,7 +52,7 @@ updated: <YYYY-MM-DD>
 - **Linked acceptance criterion**: AC-0N
 ...
 ## Phase N — Quality gates
-- format, lint/type-check, feature tests, regression (per docs/verification.md)
+- format, lint/type-check, feature tests, regression (per docs/doc_verification_guide.md)
 ```
 
 3. Report the total task count and tell the user to run `sdd next` (it will route

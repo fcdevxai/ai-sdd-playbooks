@@ -68,8 +68,12 @@ test('writeConfig round-trips through readConfigFile', () => {
 
 test('docmap: resolves defaults and marks config adoption (C-09)', () => {
   const arch = resolveDocument(DEFAULT_CONFIG, 'architecture');
-  assert.equal(arch.path, 'docs/architecture.md');
+  assert.equal(arch.path, 'docs/doc_architecture.md');
   assert.equal(arch.adopted, false);
+
+  // the 4th consumer doc (3.0 alignment)
+  assert.equal(resolveDocument(DEFAULT_CONFIG, 'agent_architecture').path, 'docs/agent_architecture.md');
+  assert.equal(resolveDocument(DEFAULT_CONFIG, 'verification').path, 'docs/doc_verification_guide.md');
 
   const adopted = resolveDocument(
     { documents: { architecture: 'docs/Arquitectura-Tecnica.md' } },
@@ -78,5 +82,5 @@ test('docmap: resolves defaults and marks config adoption (C-09)', () => {
   assert.equal(adopted.path, 'docs/Arquitectura-Tecnica.md');
   assert.equal(adopted.adopted, true);
 
-  assert.equal(resolveAllDocuments(DEFAULT_CONFIG).length, 4);
+  assert.equal(resolveAllDocuments(DEFAULT_CONFIG).length, 5);
 });
