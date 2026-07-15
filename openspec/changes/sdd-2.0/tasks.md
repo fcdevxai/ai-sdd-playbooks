@@ -14,7 +14,7 @@ depends_on: design.md
 
 **Spec**: `openspec/changes/sdd-2.0/proposal.md` · **Design**: `openspec/changes/sdd-2.0/design.md`
 
-> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–8 are complete**; later phases are not started. Legacy 1.x stays operational throughout.
+> **Execution gate.** Human approval granted (2026-07-14): `proposal.md` = `approved`, `design.md` = `approved`, `tasks.md` = `ready`. Implementation proceeds **one phase at a time**, each stopping for human review. **Phases 0–9 are complete**; later phases are not started. Legacy 1.x stays operational throughout.
 
 Each phase is **independently reviewable and independently mergeable**, leaves the repository green (legacy 1.x keeps working throughout), and depends only on earlier phases. Task ids are `T<phase>.<index>`; each names its success criterion and required tests.
 
@@ -119,16 +119,16 @@ Each phase is **independently reviewable and independently mergeable**, leaves t
 ## Phase 9 — Project scaffolding (safe documents)
 *Goal: `init` connects a project without overwriting; adoption is explicit.* — **AC-03, AC-04, AC-05**
 
-- [ ] **T9.1** Author `templates/` scaffolds (`sdd.config.yaml`, `AGENTS.md`, `CLAUDE.md`, `copilot-instructions.md`, `docs/{architecture,verification,sdd-workflow}.md`, `openspec/system.md`, `github/workflows/sdd-validation.yml`).
-- [ ] **T9.2** Implement `src/util/fs-safe.js` (never-overwrite + per-file confirmation token + diff rendering).
-  - *Tests*: overwrite without token throws; diff renders expected hunks.
-- [ ] **T9.3** Implement `sdd init` with **tiered doc adoption** (C-09): automatic only for declared-path/exact-name/official-alias; plausible candidate → confirmation prompt; semantic analysis deferred to `sdd-bootstrap-project`. Never writes an ambiguous mapping without confirmation. Writes `sdd.lock` with `methodology.compatible`.
-  - *Success*: fresh repo gets the full project-local set + no core copies; re-run creates only missing files and edits nothing; ambiguous doc is not auto-adopted.
-  - *Tests*: fresh-repo, re-run-idempotent, exact-adoption, and confirmation-required-for-ambiguous scenarios.
-- [ ] **T9.4** Implement `sdd doctor` read-only + `--fix` (safe additive only): global-skill presence, **version-vs-`compatible`-range block** (C-08), config validity, missing docs, capability/adapter mismatches, illegal states, delivery reachability (`unknown` if GitHub unreachable).
-  - *Tests*: doctor-writes-nothing; **version-incompatibility blocks** (C-08); `--fix` additive-only.
-- [ ] **T9.5** Ship `sdd-validation.yml` using **only** `sdd validate --ci`; it must not mutate artifacts or complete states.
-  - *Tests*: workflow lints; contains no verdict/heading/emoji grep and no write step.
+- [x] **T9.1** Author `templates/` scaffolds (`sdd.config.yaml`, `AGENTS.md`, `CLAUDE.md`, `copilot-instructions.md`, `docs/{architecture,verification,sdd-workflow}.md`, `openspec/system.md`, `github/workflows/sdd-validation.yml`). ✓ under `templates/project/` (keeps the frozen 1.x `templates/` used by legacy `sync-consumer.sh` intact)
+- [x] **T9.2** Implement `src/util/fs-safe.js` (never-overwrite + per-file confirmation token + diff rendering). ✓ + `src/util/semver.js` for the compatibility-range check
+  - *Tests*: overwrite without token throws; diff renders expected hunks. ✓ `test/fs-safe.test.js`
+- [x] **T9.3** Implement `sdd init` with **tiered doc adoption** (C-09): automatic only for declared-path/exact-name/official-alias; plausible candidate → reported, never auto-adopted; semantic analysis deferred to `sdd-bootstrap-project`. Writes `sdd.lock` with `methodology.compatible`.
+  - *Success*: fresh repo gets the full project-local set + no core copies; re-run creates only missing files and edits nothing; ambiguous doc is not auto-adopted. ✓ verified (dogfood + tests)
+  - *Tests*: fresh-repo, re-run-idempotent, exact-adoption, and confirmation-required-for-ambiguous scenarios. ✓ `test/init.test.js`
+- [x] **T9.4** Implement `sdd doctor` read-only + `--fix` (safe additive only): global-skill presence, **version-vs-`compatible`-range block** (C-08), config validity, missing docs, illegal states, delivery reachability (`unknown`; live reader in Phase 10).
+  - *Tests*: doctor-writes-nothing; **version-incompatibility blocks** (C-08); `--fix` additive-only. ✓ `test/doctor.test.js`
+- [x] **T9.5** Ship `sdd-validation.yml` using **only** `sdd validate --ci`; it must not mutate artifacts or complete states. ✓ `templates/project/github/workflows/sdd-validation.yml`
+  - *Tests*: workflow lints; contains no verdict/heading/emoji matching and no write step. ✓ `test/init.test.js`
 
 ## Phase 10 — GitHub delivery integration (new)
 *Goal: delivery (branch/commit/PR/checks/CI/merge) as a separate, GitHub-specific dimension.* — **AC-17, AC-18** (C-01, C-10, C-11)

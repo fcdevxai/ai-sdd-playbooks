@@ -48,7 +48,7 @@ test('unknown command exits 3 (usage error)', async () => {
 });
 
 test('not-yet-implemented commands route to their stub', async () => {
-  const stubbed = COMMAND_NAMES.filter((n) => !['validate', 'install', 'status', 'next', 'sync'].includes(n));
+  const stubbed = COMMAND_NAMES.filter((n) => !['validate', 'install', 'status', 'next', 'sync', 'init', 'doctor'].includes(n));
   for (const name of stubbed) {
     const { io, out } = capture();
     const code = await run([name], io);
