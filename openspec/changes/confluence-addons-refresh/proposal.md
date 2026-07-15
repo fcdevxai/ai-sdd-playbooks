@@ -3,7 +3,7 @@ schema: proposal
 schema_version: 1
 change_id: confluence-addons-refresh
 title: "Confluence add-ons refresh + new code-audit-comment"
-status: draft
+status: approved
 owner: felipe.campos
 created: 2026-07-15
 updated: 2026-07-15
