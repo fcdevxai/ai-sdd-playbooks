@@ -47,7 +47,7 @@ Options 1–4 are **single-resource** (one page per run) → go to Step 2. Optio
 
 ### Step 2 — single resource (actions 1–4)
 
-1. **Identify the component** the user points to (a class/route/file). Locate a bare name via CodeGraph or `find`/`grep`.
+1. **Identify the component** the user points to (a class/route/file). Locate a bare name via a code-graph index (e.g. CodeGraph) or `find`/`grep`.
 2. **Read the real source** and pick the matching page template (Entity / Controller / Service / Repository / View — see **Page templates**). Never document from memory.
 3. **Resolve the location:**
    - **New page** → list spaces with `searchConfluenceUsingCql` (`type = "space"`, **not** `getConfluenceSpaces` — it misses spaces), `AskUserQuestion` the space, then a top parent page; create there.
@@ -77,7 +77,7 @@ URLs; pass 2 inject the hyperlinks. Never link to a page that does not exist yet
 
 **Full-cycle flow:**
 
-1. **Configure the layer chain (generic).** Auto-detect first: if `.codegraph/` exists use CodeGraph (preferred, cheaper), else grep/find. Detect layers **by role, not folder** (a business-logic collaborator may live in `Helper/`, `DependencyInjection/Manager/`, … and still be a "service"). Detect DI: constructor type-hint, container-by-string-id (`$this->get('x')` — map id→class via the services config), or helpers (`$this->getXxx()`). Present the detected chain and confirm (`AskUserQuestion`); save as `LAYER_CHAIN` (each layer own/shared, optional). Absent layers are omitted.
+1. **Configure the layer chain (generic).** Auto-detect first: if the project has a code-graph index (e.g. CodeGraph's `.codegraph/`) use it (preferred, cheaper); else grep/find. Detect layers **by role, not folder** (a business-logic collaborator may live in `Helper/`, `DependencyInjection/Manager/`, … and still be a "service"). Detect DI: constructor type-hint, container-by-string-id (`$this->get('x')` — map id→class via the services config), or helpers (`$this->getXxx()`). Present the detected chain and confirm (`AskUserQuestion`); save as `LAYER_CHAIN` (each layer own/shared, optional). Absent layers are omitted.
 2. **Trace the full chain**, capturing **all real edges** (controllers often hit repos/entities directly, skipping services — document as-is). Trace **by method body**, not constructor. Build the node graph (own vs shared), apply a depth/width limit, and **dedup** (a component referenced N times is one node). Show the graph and confirm before touching Confluence.
 3. **Destination (own nodes)** via `searchConfluenceUsingCql` (space → target parent; **not** `getConfluenceSpaces`). Save as `TARGET_PARENT_ID`.
 4. **Shared-node homes** — for each shared type (Service/Repository/Entity) resolve its home once via MCP (`AskUserQuestion` space → home parent, e.g. a "Data Model" page for entities). Never assume a fixed home. Discover each concrete node: `searchConfluenceUsingCql: title = "<Type> · <Name>" AND ancestor = "HOME_PARENT_ID[type]" AND status = "current"` → exists: record its URL, link only; missing: ask to create it in its home.

@@ -18,8 +18,13 @@ classified **Reuse / Deprecate / Improve / Pending-confirmation** and published 
 **inline comments anchored to the relevant section** — never modifying the original
 content or the source.
 
+- **Tool-agnostic code analysis.** Use whatever code-graph / index MCP the project
+  has (CodeGraph or an equivalent). If none is available, `grep`/`find` and reading
+  the files directly work everywhere — a code-graph index is an optimization, never
+  a requirement.
 - **Guiding principle — never assume.** Every finding must be backed by real code
-  read this run (via CodeGraph/grep/git log), never by memory or what the code
+  read this run (via a code-graph index if available, `grep`, and `git log`), never
+  by memory or what the code
   "probably" does. A design question the code cannot answer (is this pattern
   intentional? how many production rows depend on this legacy path? what is the real
   scope of the rewrite?) is **not inferred** — it is recorded as an open question
@@ -53,8 +58,8 @@ code**.
 
 ### Step 1 — read the page and locate the real code
 1. `getConfluencePage` (`contentFormat: markdown`) with the `pageId`.
-2. Identify the documented file. If the title follows `Type · Name` (the `document-code` convention), resolve the path via CodeGraph (`codegraph_node <Name>` or `find`); otherwise ask the user.
-3. Read the **complete, real** code (`codegraph_node <file>`, no arbitrary limit — read a long file in chunks until fully covered). Never audit from memory: every claim in a comment traces to a concrete line read this run.
+2. Identify the documented file. If the title follows `Type · Name` (the `document-code` convention), resolve the path with a code-graph index if available (e.g. CodeGraph's `codegraph_node <Name>`) or `find`/`grep`; otherwise ask the user.
+3. Read the **complete, real** code — via a code-graph index if available (e.g. `codegraph_node <file>`) or by reading the file directly, with no arbitrary limit (read a long file in chunks until fully covered). Never audit from memory: every claim in a comment traces to a concrete line read this run.
 
 ### Step 2 — agree the lens and scope
 `AskUserQuestion`:
@@ -63,13 +68,13 @@ code**.
 
 ### Step 3 — investigate each chosen dimension (with evidence, in parallel where it helps)
 Use parallel `Explore` agents (one per independent dimension) to avoid losing context or assuming. Per dimension, gather concrete evidence:
-- **Usage / dead code**: for each relevant public method, find real callers (grep + CodeGraph) across ALL modules, not just the obvious one; report those with 0 callers explicitly. If methods seem to duplicate a purpose, compare 2–3 real call sites of each.
+- **Usage / dead code**: for each relevant public method, find real callers (`grep`, plus a code-graph index if available) across ALL modules, not just the obvious one; report those with 0 callers explicitly. If methods seem to duplicate a purpose, compare 2–3 real call sites of each.
 - **Normalization / columns**: count own + trait/mixin columns + FKs; flag repeated fixed columns for the same concept when the domain already solves it elsewhere with an association table.
 - **Relationships**: look for redundancy with another mechanism, business invariants validated only in app code (no DB constraint/index), and lookup columns (slugs/tags/external codes) without declared uniqueness.
 - **SRP / layers**: group methods by "reason to change"; 3+ distinct groups in one class is an SRP finding; cross it with the Step 2 lens.
 - **Config patterns (JSON bags/flags)**: grep raw SQL (`JSON_EXTRACT`, `->>`, …) depending on the config column across the whole repo; count keys filtered in `WHERE` (expensive) vs only projected (cheap); check whether the codebase already has a better precedent.
 - **Migrations/deprecations in progress**: for each `@TODO`/`deprecated`/replacement mechanism, check whether a real migration command exists, whether UI still generates old-format data, and who else reads the legacy path.
-- **Churn/coupling** (supporting evidence): `git log --oneline --follow -- <file>` for commit count, CodeGraph for dependent-file count.
+- **Churn/coupling** (supporting evidence): `git log --oneline --follow -- <file>` for commit count, and a code-graph index for the dependent-file count if your indexer supports it.
 
 Any question that depends on business intent, product decision, or real production data is recorded as **Pending-confirmation** — not resolved by inference.
 

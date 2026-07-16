@@ -61,6 +61,15 @@ not `/document-code`). The `description` triggers on the spoken name.
 stay explicit *inside* the body where the Confluence result must be Spanish (e.g.
 `operational-guide` → "write the guide in Spanish, voseo").
 
+**Tool-agnostic code analysis (added in Phase 4).** The code-reading add-ons
+(`document-code`, `code-audit-comment`) reference a code-graph/index MCP **by
+capability, not brand**: "use a code-graph index if the project has one (e.g.
+CodeGraph); otherwise `grep`/`find` and read files directly." A code-graph index
+is an optimization, never a requirement — a dev on a different indexer (or none)
+still works via the universal `grep`/`find`/read fallback. Reinforces the
+"generic, not hardcoded" principle. `operational-guide` reads no code, so it is
+unaffected.
+
 ## 2. `document-code` — content map (AS-IS documenter)
 
 **Action model (owner's proven flow — do NOT collapse into "full cycle / single /

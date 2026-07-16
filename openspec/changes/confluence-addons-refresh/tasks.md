@@ -39,13 +39,14 @@ Each add-on keeps the 3.0 SKILL.md contract (§1): English frontmatter + body,
 - [x] **T3.2** Narrowed `test/no-legacy-refs.test.js`: dropped `/deprecat/i` from `FORBIDDEN` (kept `/sdd-ff/`, `/\b1.x\b/`, path patterns) + a comment on why. ✓
 - [x] **T3.3** `test/skill-contract.test.js` names assertion → `['code-audit-comment', 'document-code', 'operational-guide']`. Full suite **167/167** (all three landed together). ✓
 
-## Phase 4 — Verification sweep
-*Goal: three add-ons, installable, lint-clean, guard intact.* — **AC-01…AC-06**
+## Phase 4 — Tool-agnostic pass + verification sweep
+*Goal: three add-ons, installable, lint-clean, guard intact, brand-neutral.* — **AC-01…AC-06** · design §1
 
-- [ ] **T4.1** Full `node --test` green; the three add-ons lint clean at `version: 3.0.0`.
-- [ ] **T4.2** `sdd install --addon confluence` (into a redirected global dir) installs **three** add-on skills; a core `sdd install` (no `--addon`) installs **none** of them.
-- [ ] **T4.3** Grep the three bodies: no `/command`/`@skill` invocation wording, no `sdd-ff`/`1.x`/removed-path terms; the `no-legacy-refs` guard is green with the new "Deprecate" vocabulary present.
-- [ ] **T4.4** `npm pack --dry-run` ships `addons/confluence/{code-audit-comment,document-code,operational-guide}/SKILL.md`.
+- [x] **T4.0** Tool-agnostic code analysis: reworded `document-code` + `code-audit-comment` to reference a code-graph index **by capability, not brand** ("e.g. CodeGraph; else `grep`/`find`/read") with a universal fallback at every code-read/trace step. `operational-guide` reads no code (untouched). ✓
+- [x] **T4.1** Full `node --test` **167/167**; the three add-ons lint clean at `version: 3.0.0`. ✓
+- [x] **T4.2** `sdd install --addon confluence` installs **three** (`code-audit-comment`, `document-code`, `operational-guide`); core `sdd install` (no `--addon`) installs **none** (`addons: []`). ✓
+- [x] **T4.3** Grep of the three bodies: no `/command`/`@skill` wording, no `sdd-ff`/`1.x`/removed-path terms; the `no-legacy-refs` guard is green with the legitimate "Deprecate" vocabulary present. ✓
+- [x] **T4.4** `npm pack --dry-run` ships `addons/confluence/{code-audit-comment,document-code,operational-guide}/SKILL.md`. ✓
 
 ---
 
