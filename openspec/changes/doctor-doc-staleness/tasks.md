@@ -20,9 +20,9 @@ depends_on: design.md
 ## Phase 1 — Marker + staleness check + warnings tier
 *Goal: doctor detects a stale workflow doc, advisory only.* — **AC-01, AC-02, AC-04, AC-05** · design §1–§3
 
-- [ ] **T1.1** Add the version marker as the first line of `templates/project/docs/sdd-workflow.md`: `<!-- sdd-methodology: 3.0 -->`.
-- [ ] **T1.2** `src/cli/doctor.js`: add exported pure helper `workflowStaleness({ cwd, config, installed })` → warning string | null (design §2): null when no methodology installed or the doc is absent; warn when the doc has no marker or a major older than the installed `.sdd-version`; resolved doc path in the message; points to `sdd-bootstrap-project`.
-- [ ] **T1.3** Wire a `warnings` tier into `doctorCommand`: collect the staleness warning; `healthy` stays `problems.length === 0` (warnings never change the exit code); add `warnings` to the `--json` payload; print each as `⚠ <text>` in text mode.
+- [x] **T1.1** Added the marker as the first line of `templates/project/docs/sdd-workflow.md`: `<!-- sdd-methodology: 3.0 -->`. ✓
+- [x] **T1.2** `src/cli/doctor.js`: added exported pure helper `workflowStaleness({ cwd, config, installed })` — null when no methodology installed or doc absent; warns on missing marker or older major (compared to the installed `.sdd-version` major); resolved path in the message; points to `sdd-bootstrap-project`. ✓
+- [x] **T1.3** Wired the `warnings` tier: `healthy` stays `problems.length === 0` (advisory), `warnings` added to `--json`, printed as `⚠` in text. ✓ Manual check: stale doc → `⚠` + `✓ healthy` + exit 0; `--json` carries `warnings`. Suite 167/167 (no regression).
 
 ## Phase 2 — Tests + verification sweep
 *Goal: behavior proven, exit-code contract protected, suite green.* — **AC-01…AC-05** · design §5
