@@ -33,7 +33,7 @@ with the rich operational content moved into the body.
 
 ```yaml
 ---
-name: <kebab-name>            # code-audit-comment | document-code | write-in-confluence
+name: <kebab-name>            # code-audit-comment | document-code | operational-guide
 description: "<what it does>. ADD-ON: requires the Atlassian MCP. Activate when the user says '<name>' or asks to <intent> in Confluence."
 lifecycle_stage: null
 produces: []
@@ -59,7 +59,7 @@ not `/document-code`). The `description` triggers on the spoken name.
 
 **Language (AC-01):** frontmatter + body in **English**. Output-language rules
 stay explicit *inside* the body where the Confluence result must be Spanish (e.g.
-`write-in-confluence` → "write the guide in Spanish, voseo").
+`operational-guide` → "write the guide in Spanish, voseo").
 
 ## 2. `document-code` — content map (AS-IS documenter)
 
@@ -90,7 +90,7 @@ Preserve, from the source spec, at least:
 - The per-node-type page templates (Entity/Controller/Service/Repository/View) and the **impact/usage** appendix.
 - The **AS-IS rule**: record facts/anomalies, **never** prescribe refactors.
 
-## 3. `write-in-confluence` — content map (operational guide)
+## 3. `operational-guide` — content map (operational guide)
 
 Preserve: the operational-guide audience (Operations/Support, **not** IT); the
 **two-questions-in-one-message** intake (flow + screenshots); the
@@ -123,7 +123,7 @@ sentence — acceptable, since the concrete legacy artifacts remain covered.
 ## 6. Test impact
 
 - **`test/skill-contract.test.js`**: the add-on names assertion becomes
-  `['code-audit-comment', 'document-code', 'write-in-confluence']`; all three must
+  `['code-audit-comment', 'document-code', 'operational-guide']`; all three must
   lint clean at `version: 3.0.0`.
 - **`test/no-legacy-refs.test.js`**: drop `/deprecat/i` (§5); the refreshed +
   new bodies must otherwise be legacy-clean (they are — they reference

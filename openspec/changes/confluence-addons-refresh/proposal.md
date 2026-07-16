@@ -30,7 +30,7 @@ security:
 ## Objective
 
 Bring the Confluence add-ons up to the owner's **battle-tested** command specs.
-The two existing add-on skills (`document-code`, `write-in-confluence`) shipped in
+The two existing add-on skills (`document-code`, `operational-guide`) shipped in
 2.0/3.0 as **thin summaries** that lost most of their real operational detail;
 refresh them from the evolved specs, and add a **third** add-on,
 `code-audit-comment`. Along the way, **narrow the `no-legacy-refs` guard** so the
@@ -38,7 +38,7 @@ legitimate word "deprecate" (an audit-finding category) no longer false-positive
 
 ## Background
 
-The 3.0 baseline ships `addons/confluence/{document-code,write-in-confluence}/SKILL.md`
+The 3.0 baseline ships `addons/confluence/{document-code,operational-guide}/SKILL.md`
 as ~30-line summaries. The owner's real command specs are far richer — they encode
 gotchas earned in practice (two-pass link injection, discover-or-create-then-link
 for shared nodes, the `textSelection` plain-text rule, CQL specifics, the
@@ -50,7 +50,7 @@ comments. All three stay **opt-in** add-ons (never installed with the core).
 
 **Refresh — the two existing add-ons**
 
-- Rewrite `document-code` and `write-in-confluence` `SKILL.md` **bodies** from the evolved specs, preserving the operational depth (node graph, two-pass linking, discover-or-create-then-link, batch mode; the operational-guide structure + screenshot-placeholder flow). Keep them within the 3.0 SKILL.md contract.
+- Rewrite `document-code` and `operational-guide` `SKILL.md` **bodies** from the evolved specs, preserving the operational depth (node graph, two-pass linking, discover-or-create-then-link, batch mode; the operational-guide structure + screenshot-placeholder flow). Keep them within the 3.0 SKILL.md contract.
 - Normalize invocation to **conversational activation** (no `/command` or `@skill` slash style — 3.0 skills are Agent Skills, not slash commands).
 
 **Add — the third add-on**
@@ -63,7 +63,7 @@ comments. All three stay **opt-in** add-ons (never installed with the core).
 
 **Conventions**
 
-- **Language:** `name`/`description` (the activation contract) and the skill **bodies** in **English**, consistent with the rest of the methodology. The add-ons still **produce** Spanish Confluence content where their own rules say so (e.g. `write-in-confluence` output uses Spanish voseo) — only the skill files are English.
+- **Language:** `name`/`description` (the activation contract) and the skill **bodies** in **English**, consistent with the rest of the methodology. The add-ons still **produce** Spanish Confluence content where their own rules say so (e.g. `operational-guide` output uses Spanish voseo) — only the skill files are English.
 - Machine-readable frontmatter stays English; `version: 3.0.0`; `addon: confluence`.
 
 **Out of scope (non-goals)**
@@ -74,8 +74,8 @@ comments. All three stay **opt-in** add-ons (never installed with the core).
 
 ## Acceptance criteria
 
-- **AC-01** `addons/confluence/` has **three** skills — `code-audit-comment`, `document-code`, `write-in-confluence` — each lints clean (skill-contract: kebab `name`, non-empty `description`, `version: 3.0.0`, `addon: confluence`), English frontmatter + body.
-- **AC-02** The refreshed `document-code` / `write-in-confluence` bodies carry the evolved operational detail (e.g. two-pass link injection, discover-or-create-then-link, the `textSelection` plain-text rule, the screenshot-placeholder flow) — not the old thin summaries.
+- **AC-01** `addons/confluence/` has **three** skills — `code-audit-comment`, `document-code`, `operational-guide` — each lints clean (skill-contract: kebab `name`, non-empty `description`, `version: 3.0.0`, `addon: confluence`), English frontmatter + body.
+- **AC-02** The refreshed `document-code` / `operational-guide` bodies carry the evolved operational detail (e.g. two-pass link injection, discover-or-create-then-link, the `textSelection` plain-text rule, the screenshot-placeholder flow) — not the old thin summaries.
 - **AC-03** `code-audit-comment` audits an existing Confluence page against real code, classifies findings **Reuse/Deprecate/Improve/Pending**, posts **inline** comments only after **explicit per-content** human confirmation, never edits the page or source, and blocks cleanly when the Atlassian MCP is unavailable or the code file can't be resolved.
 - **AC-04** All three activate **conversationally** (no `/command` or `@skill` wording) and remain **opt-in** — a core `sdd install` (no `--addon`) installs none of them.
 - **AC-05** `test/no-legacy-refs.test.js` no longer false-positives on legitimate "deprecate" vocabulary, still catches `sdd-ff`/`1.x`/removed paths, and the full suite is green.
@@ -97,4 +97,4 @@ map from the source specs, the guard change, and the test impact.
 ## Open technical decisions
 
 - **Body language = English** (owner-confirmed). The add-ons' Confluence output stays Spanish where their rules specify.
-- **Source of truth = the owner's shared command specs** (`code-audit-comment`, `document-code`, `write-in-confluence`); authored as clean UTF-8 (the shared copies arrived with encoding mojibake).
+- **Source of truth = the owner's shared command specs** (`code-audit-comment`, `document-code`, `operational-guide`); authored as clean UTF-8 (the shared copies arrived with encoding mojibake).
