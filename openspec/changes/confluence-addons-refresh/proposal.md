@@ -3,10 +3,10 @@ schema: proposal
 schema_version: 1
 change_id: confluence-addons-refresh
 title: "Confluence add-ons refresh + new code-audit-comment"
-status: approved
+status: archived   # merged via PR #4 (2026-07-16); pragmatic close, see tasks.md Execution report
 owner: felipe.campos
 created: 2026-07-15
-updated: 2026-07-15
+updated: 2026-07-16
 delivery:
   provider: github
 impact:
