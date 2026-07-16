@@ -3,7 +3,7 @@ schema: proposal
 schema_version: 1
 change_id: doctor-doc-staleness
 title: "sdd doctor — warn when the project workflow doc predates the methodology"
-status: draft
+status: approved
 owner: felipe.campos
 created: 2026-07-16
 updated: 2026-07-16
