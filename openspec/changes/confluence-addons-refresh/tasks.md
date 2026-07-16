@@ -23,8 +23,8 @@ Each add-on keeps the 3.0 SKILL.md contract (§1): English frontmatter + body,
 ## Phase 1 — Refresh `document-code`
 *Goal: restore the AS-IS multi-page documenter's real depth.* — **AC-01, AC-02, AC-04**
 
-- [ ] **T1.1** Rewrite `addons/confluence/document-code/SKILL.md` body from the source spec, preserving: the own-vs-shared node graph + discover-or-create-then-link, **two-pass** link injection, the generic `LAYER_CHAIN` (detect by role; DI resolution), the three modes (full cycle / single component / batch), destination-vs-home via CQL (not `getConfluenceSpaces`), the per-type page templates, the impact appendix, and the **AS-IS rule** (facts, never prescriptions). Bump `version` → `3.0.0`. Conversational activation (no `/document-code`).
-- [ ] **T1.2** `test/skill-contract.test.js` still green (name/description/version lint; the add-on set is unchanged this phase). Full `node --test` green.
+- [x] **T1.1** Rewrote `addons/confluence/document-code/SKILL.md` on the owner's **proven action model** (`AskUserQuestion` → **new page / update page / new subpage / update subpage / batch**): actions 1–4 are single-resource; the multi-page machinery (node graph, discover-or-create-then-link, `LAYER_CHAIN`, **two-pass** linking) lives **only in batch** (a controller's full cycle or all entities). Added `getConfluencePage` → `version + 1` on every update branch (completeness fix). Preserved per-type templates, impact appendix, AS-IS rule, CQL (not `getConfluenceSpaces`). `version` → `3.0.0`; conversational activation. ✓ *(Corrects an earlier draft that wrongly used a "full cycle / single / batch" selector — design §2 updated to match.)*
+- [x] **T1.2** Full `node --test` green (167/167); `document-code` lints clean at `3.0.0`; no forbidden term. ✓
 
 ## Phase 2 — Refresh `write-in-confluence`
 *Goal: restore the operational-guide writer's real depth.* — **AC-01, AC-02, AC-04**

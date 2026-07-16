@@ -63,12 +63,29 @@ stay explicit *inside* the body where the Confluence result must be Spanish (e.g
 
 ## 2. `document-code` — content map (AS-IS documenter)
 
+**Action model (owner's proven flow — do NOT collapse into "full cycle / single /
+batch").** Step 1 is `AskUserQuestion` with exactly five actions:
+
+1. **New page** — create ONE component page.
+2. **Update page** — update ONE existing component page.
+3. **New subpage** — create ONE component page nested under a parent page the user picks.
+4. **Update subpage** — update ONE existing nested component page.
+5. **Batch (multi-page)** — document several linked pages in one run: a controller's full cycle (routes→controller→services→repositories→views) **or** all entities.
+
+Actions 1–4 are **single-resource** (one page/run); the multi-page machinery lives
+**only in batch**.
+
+**Update branches read the version first (completeness fix the owner asked for):**
+every *update* (page/subpage, and any existing node inside batch) does
+`getConfluencePage` to read the current `version.number`, then `updateConfluencePage`
+with `version + 1`.
+
 Preserve, from the source spec, at least:
 
-- **Conceptual model**: doc graph of **own** nodes (controller hub + its views, under the chosen target parent) vs **shared** nodes (service/repository/entity, in their own MCP-discovered home) — **discover-or-create-then-link, never duplicate**.
-- **Two-pass orchestration**: pass 1 resolve/create all pages + collect URLs; pass 2 inject cross-links (`{{link:<node>}}` placeholders). *(This is the AC-02 anchor.)*
-- **Generic layer chain** (`LAYER_CHAIN`): auto-detect + confirm; layers may be absent/renamed; detect by **role, not folder**; resolve DI (constructor / string-id container / helpers).
-- Three modes: full cycle / single component / all entities (batch).
+- **Single-resource (1–4)**: identify the component from source → read real code → pick its type template → resolve location (space/top-parent for a page; an existing parent page for a subpage) → create, or read-version-then-update.
+- **Batch conceptual model**: doc graph of **own** nodes (controller hub + its views, under the chosen target parent) vs **shared** nodes (service/repository/entity, in their own MCP-discovered home) — **discover-or-create-then-link, never duplicate**.
+- **Batch two-pass orchestration**: pass 1 resolve/create all pages + collect URLs; pass 2 inject cross-links (`{{link:<node>}}` placeholders). *(AC-02 anchor.)*
+- **Generic layer chain** (`LAYER_CHAIN`, batch): auto-detect + confirm; layers may be absent/renamed; detect by **role, not folder**; resolve DI (constructor / string-id container / helpers).
 - Destination pick (own nodes) vs home discovery (shared nodes) via `searchConfluenceUsingCql` — **not** `getConfluenceSpaces`.
 - The per-node-type page templates (Entity/Controller/Service/Repository/View) and the **impact/usage** appendix.
 - The **AS-IS rule**: record facts/anomalies, **never** prescribe refactors.
