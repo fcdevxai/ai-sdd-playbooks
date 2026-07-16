@@ -97,7 +97,7 @@ test('sdd install (real package): core excludes Confluence add-ons (AC-14)', asy
     const res = JSON.parse(out.join('\n'));
     assert.deepEqual(res.addons, []);
     assert.equal(fs.existsSync(path.join(claude, 'document-code')), false);
-    assert.equal(fs.existsSync(path.join(claude, 'write-in-confluence')), false);
+    assert.equal(fs.existsSync(path.join(claude, 'operational-guide')), false);
     assert.ok(res.core.includes('sdd-plan')); // core still installed
   } finally {
     if (saved.c === undefined) delete process.env.SDD_CLAUDE_SKILLS_DIR; else process.env.SDD_CLAUDE_SKILLS_DIR = saved.c;
@@ -115,9 +115,9 @@ test('sdd install --addon confluence installs the add-on (AC-14)', async () => {
     await run(['install', '--addon', 'confluence', '--json', '--cwd', cwd], { out: (m) => out.push(String(m)), err: () => {} });
     const res = JSON.parse(out.join('\n'));
     assert.ok(res.addons.includes('confluence/document-code'));
-    assert.ok(res.addons.includes('confluence/write-in-confluence'));
+    assert.ok(res.addons.includes('confluence/operational-guide'));
     assert.ok(fs.existsSync(path.join(claude, 'document-code', 'SKILL.md')));
-    assert.ok(fs.existsSync(path.join(agents, 'write-in-confluence', 'SKILL.md')));
+    assert.ok(fs.existsSync(path.join(agents, 'operational-guide', 'SKILL.md')));
   } finally {
     if (saved.c === undefined) delete process.env.SDD_CLAUDE_SKILLS_DIR; else process.env.SDD_CLAUDE_SKILLS_DIR = saved.c;
     if (saved.a === undefined) delete process.env.SDD_AGENTS_SKILLS_DIR; else process.env.SDD_AGENTS_SKILLS_DIR = saved.a;
