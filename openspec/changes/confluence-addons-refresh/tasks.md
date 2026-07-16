@@ -35,9 +35,9 @@ Each add-on keeps the 3.0 SKILL.md contract (§1): English frontmatter + body,
 ## Phase 3 — Add `code-audit-comment` + narrow the guard
 *Goal: the new auditor lands, and the guard stops false-positiving.* — **AC-03, AC-05, AC-06**
 
-- [ ] **T3.1** New `addons/confluence/code-audit-comment/SKILL.md` (§4): purpose + the two guiding principles (never assume / confirm exact content per-comment), the step flow, the **Reuse/Deprecate/Improve/Pending** classification, the `textSelection` **plain-text** gotcha, blocking criteria (MCP down / unresolved code file), report format, and "what it does NOT replace". `version: 3.0.0`, `addon: confluence`, conversational activation.
-- [ ] **T3.2** Narrow `test/no-legacy-refs.test.js`: drop `/deprecat/i` from `FORBIDDEN` (keep `/sdd-ff/`, `/\b1.x\b/`, path patterns). Add a one-line comment on why.
-- [ ] **T3.3** `test/skill-contract.test.js`: the add-on names assertion → `['code-audit-comment', 'document-code', 'operational-guide']`. Full suite green (all three land together so the count/lint/guard stay consistent).
+- [x] **T3.1** Added `addons/confluence/code-audit-comment/SKILL.md`: purpose + the two guiding principles (never assume / confirm exact content per-comment), the Step 0–7 flow, the **Reuse/Deprecate/Improve/Pending** classification, the `textSelection` **plain-text** gotcha, blocking criteria (MCP down / unresolved code file), report format, and "what it does NOT replace". `version: 3.0.0`, `addon: confluence`, conversational activation. ✓
+- [x] **T3.2** Narrowed `test/no-legacy-refs.test.js`: dropped `/deprecat/i` from `FORBIDDEN` (kept `/sdd-ff/`, `/\b1.x\b/`, path patterns) + a comment on why. ✓
+- [x] **T3.3** `test/skill-contract.test.js` names assertion → `['code-audit-comment', 'document-code', 'operational-guide']`. Full suite **167/167** (all three landed together). ✓
 
 ## Phase 4 — Verification sweep
 *Goal: three add-ons, installable, lint-clean, guard intact.* — **AC-01…AC-06**

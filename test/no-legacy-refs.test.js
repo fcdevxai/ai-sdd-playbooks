@@ -16,8 +16,11 @@ const EXTS = new Set(['.js', '.mjs', '.md', '.json', '.yaml', '.yml']);
 
 // Removed 1.x paths and old terms that must not reappear, plus the pre-rename
 // consumer doc paths superseded by the 3.0 alignment (AC-08).
+// Note: the generic word "deprecate" is NOT banned — it is legitimate vocabulary
+// (e.g. the code-audit-comment add-on's "Deprecate" finding category). The 1.x
+// deprecation *narrative* is already caught by /sdd-ff/ + /1.x/ + the path patterns.
 const FORBIDDEN = [
-  /playbooks\//, /dist\/claude/, /scripts\/sync/, /--legacy/, /sdd-ff/, /\b1\.x\b/, /deprecat/i,
+  /playbooks\//, /dist\/claude/, /scripts\/sync/, /--legacy/, /sdd-ff/, /\b1\.x\b/,
   /docs\/architecture\.md/, /docs\/verification\.md/,
 ];
 

@@ -31,7 +31,7 @@ test('the Confluence add-on skills lint clean (T12.1)', () => {
   const dir = fileURLToPath(new URL('../addons/confluence', import.meta.url));
   const results = lintSkillsDir(dir);
   assert.deepEqual(results.filter((r) => !r.valid), []);
-  assert.deepEqual(results.map((r) => r.name).sort(), ['document-code', 'operational-guide']);
+  assert.deepEqual(results.map((r) => r.name).sort(), ['code-audit-comment', 'document-code', 'operational-guide']);
 });
 
 test('the core skills are present (13 skills, 3.0)', () => {
