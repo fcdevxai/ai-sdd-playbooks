@@ -27,8 +27,8 @@ depends_on: design.md
 ## Phase 2 — Tests + verification sweep
 *Goal: behavior proven, exit-code contract protected, suite green.* — **AC-01…AC-05** · design §5
 
-- [ ] **T2.1** `test/doctor.test.js`: (a) stale doc (no marker / `2.0` marker) + installed `3.x` → `warnings` has the message, `healthy === true`, exit `EXIT.OK`; (b) current `3.0` marker → no staleness warning; (c) `--json` has a `warnings` array with `problems`/`fixes`/`notes` still present.
-- [ ] **T2.2** Confirm no regression: the existing `initRepo()`-based doctor tests stay green (the scaffolded `sdd-workflow.md` now carries the marker → no false warning). Full `node --test` green; `no-legacy-refs` green.
+- [x] **T2.1** `test/doctor.test.js`: added (a) stale-doc (marker stripped) + installed `3.0.0` → `warnings` has the message + points to `sdd-bootstrap-project`, `healthy === true`, exit `EXIT.OK`; (b) current `3.0` marker → no staleness warning (`--json` `warnings` array present); (c) two pure `workflowStaleness()` unit tests (null: no-install/missing/current/newer; warns: older-major/missing-marker). ✓
+- [x] **T2.2** No regression: existing `initRepo()`-based doctor tests green (scaffolded doc now has the marker). Full `node --test` **171/171**; `no-legacy-refs` green; the marker ships in `templates/project/docs/sdd-workflow.md`. ✓
 
 ---
 
