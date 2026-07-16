@@ -3,10 +3,10 @@ schema: tasks
 schema_version: 1
 change_id: sdd-3.0-legacy-removal
 title: "SDD 3.0 — Legacy & old-reference removal plan"
-status: ready
+status: passed
 owner: felipe.campos
 created: 2026-07-15
-updated: 2026-07-15
+updated: 2026-07-16
 depends_on: design.md
 ---
 
@@ -98,3 +98,24 @@ One phase per commit. Task ids are `T<phase>.<index>`.
 | 5 | AC-05, AC-06 |
 | 6 | AC-01…AC-09 (sweep) |
 | 7 | AC-10 |
+
+---
+
+## Execution report (2026-07-16)
+
+All 8 phases (0–7, including the 2 approved scope amendments) landed as
+individual commits on `feat/sdd-3.0-legacy-removal`, each reviewed by the human
+owner before the next phase started. **Verification was direct, not a simulated
+`sdd-apply`/`sdd-code-review`/`sdd-security-gate`/`sdd-runtime-gate` run** — no
+`code-review-report.md`/`security-report.md`/`runtime-gate-report.md` were
+produced, by explicit owner decision (pragmatic close, 2026-07-16), rather than
+backfilling artifacts for gates that did not actually execute.
+
+Real evidence instead:
+- `node --test`: **167/167 passing** at every phase boundary.
+- `sdd --help` = 7 commands; `sdd --version` = `3.0.0`; 13 core skills; `npm pack
+  --dry-run` audited clean (no legacy path).
+- PR [#3](https://github.com/fcdevxai/ai-sdd-playbooks/pull/3) — CI green
+  (tests, `npm pack --dry-run`, CLI smoke) — merged into `master`.
+
+All acceptance criteria (AC-01…AC-10) verified per-phase as documented above.

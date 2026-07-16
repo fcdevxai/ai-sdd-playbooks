@@ -3,10 +3,10 @@ schema: tasks
 schema_version: 1
 change_id: confluence-addons-refresh
 title: "Confluence add-ons refresh — tasks"
-status: ready
+status: passed
 owner: felipe.campos
 created: 2026-07-15
-updated: 2026-07-15
+updated: 2026-07-16
 depends_on: design.md
 ---
 
@@ -58,3 +58,26 @@ Each add-on keeps the 3.0 SKILL.md contract (§1): English frontmatter + body,
 | 2 | AC-01, AC-02, AC-04 |
 | 3 | AC-03, AC-05, AC-06 |
 | 4 | AC-01…AC-06 (sweep) |
+
+---
+
+## Execution report (2026-07-16)
+
+All 4 phases landed as individual commits on `feat/confluence-addons-refresh`,
+each reviewed by the human owner before the next phase started (including a
+mid-flight correction to Phase 1's `document-code` action model, per owner
+feedback, and a rename of `write-in-confluence` → `operational-guide`, also per
+owner request). **Verification was direct, not a simulated
+`sdd-apply`/`sdd-code-review`/`sdd-security-gate`/`sdd-runtime-gate` run** — no
+`code-review-report.md`/`security-report.md`/`runtime-gate-report.md` were
+produced, by explicit owner decision (pragmatic close, 2026-07-16).
+
+Real evidence instead:
+- `node --test`: **167/167 passing** at every phase boundary.
+- The three add-ons lint clean at `version: 3.0.0`; `sdd install --addon
+  confluence` installs all three, core install installs none; `npm pack
+  --dry-run` ships all three `SKILL.md`.
+- PR [#4](https://github.com/fcdevxai/ai-sdd-playbooks/pull/4) — CI green —
+  merged into `master`.
+
+All acceptance criteria (AC-01…AC-06) verified per-phase as documented above.

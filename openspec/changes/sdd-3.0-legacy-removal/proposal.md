@@ -3,10 +3,10 @@ schema: proposal
 schema_version: 1
 change_id: sdd-3.0-legacy-removal
 title: "SDD 3.0 — Legacy removal + consumer template alignment (docs + GitHub)"
-status: approved   # re-approved 2026-07-15 after amendment #2 (GitHub templates)
+status: archived   # merged via PR #3 (2026-07-16); pragmatic close, see tasks.md Execution report
 owner: felipe.campos
 created: 2026-07-15
-updated: 2026-07-15
+updated: 2026-07-16
 delivery:
   provider: github
 impact:
