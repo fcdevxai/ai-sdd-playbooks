@@ -1,24 +1,34 @@
 # sdd — Spec-Driven Development
 
 SDD is a Spec-Driven Development methodology delivered as a **globally-installed**
-set of Agent Skills plus a deterministic **`sdd` CLI**, shared by **Claude Code**
-and **GitHub Copilot**. The methodology lives in one place; each project keeps
-only its own context and a lockfile pinning the compatible methodology range.
+set of Agent Skills plus a deterministic **`sdd` CLI**, shared by **Claude
+Code**, **GitHub Copilot**, and **Codex**. The methodology lives in one place;
+each project keeps only its own context and a lockfile pinning the compatible
+methodology range.
 
 ## Install (global, once)
 
 ```bash
-sdd install                      # install core skills into BOTH runtimes (default)
-sdd install --runtime claude     # only Claude Code    (~/.claude/skills)
-sdd install --runtime copilot    # only GitHub Copilot (~/.agents/skills)
-sdd install --runtime both       # both (explicit; same as the default)
+sdd install                      # install core skills into all targets (default)
+sdd install --runtime claude     # only Claude Code                 (~/.claude/skills)
+sdd install --runtime copilot    # only GitHub Copilot              (~/.agents/skills)
+sdd install --runtime codex      # only Codex                       (~/.agents/skills)
+sdd install --runtime all        # Claude + shared agents target    (default)
+sdd install --runtime both       # backward-compatible alias of all
 sdd install --addon confluence   # opt-in add-ons (combine with --runtime)
 ```
 
-By default the core skills install into **both** runtime directories; use
-`--runtime` to target only one. Add-ons are never installed implicitly. The
-install locations can be redirected (CI, sandboxes) with the
-`SDD_CLAUDE_SKILLS_DIR` and `SDD_AGENTS_SKILLS_DIR` environment variables.
+By default the core skills install into **both physical targets**. Claude Code
+uses `~/.claude/skills`; GitHub Copilot and Codex share `~/.agents/skills`.
+`--runtime copilot` and `--runtime codex` therefore write the same target by
+design. Add-ons are never installed implicitly. The install locations can be
+redirected (CI, sandboxes) with the `SDD_CLAUDE_SKILLS_DIR` and
+`SDD_AGENTS_SKILLS_DIR` environment variables.
+
+Distribution remains CLI-first and deterministic while the package is validated
+locally: `npm pack --dry-run` shows the exact publish contents, and a local
+tarball install exercises the same `sdd install` flow that the eventual npm
+package will use.
 
 ## Connect a project
 
@@ -40,9 +50,9 @@ into the project.
 `sdd init` is intentionally **non-interactive and deterministic**: it writes
 `sdd.config.yaml` with every `capability` set to **`false`** and never guesses.
 To configure them from the real project, run the **`sdd-bootstrap-project`**
-skill — an Agent Skill, triggered conversationally inside the repo in Claude Code
-or GitHub Copilot (say "sdd-bootstrap-project" or "onboard this repo into SDD"),
-not via the `sdd` CLI. It inspects the repo, **detects** capabilities from
+skill — an Agent Skill, triggered conversationally inside the repo in Claude
+Code, GitHub Copilot, or Codex (say "sdd-bootstrap-project" or "onboard this repo
+into SDD"), not via the `sdd` CLI. It inspects the repo, **detects** capabilities from
 concrete signals — a frontend framework → `browser`, a server framework →
 `http`, a `package.json` `bin` → `cli`, a queue/broker → `worker` — and
 **proposes a diff you approve** (it never writes without approval). `sdd init`
@@ -145,7 +155,8 @@ npm test          # node --test
 ```
 
 The repo dogfoods itself: `sdd status` / `sdd next` run against the active change
-under `openspec/changes/`.
+under `openspec/changes/`. `sdd doctor` verifies the installed target has the
+core skills, not only a version stamp.
 
 > **Publishing** (human-owned): choose the npm name/scope, remove `private` from
 > `package.json`, then `npm publish`. `npm pack --dry-run` shows the exact

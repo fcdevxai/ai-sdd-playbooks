@@ -10,8 +10,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { EXIT } from './exit.js';
-import { PACKAGE_ROOT } from '../install/skills.js';
+import { listSkills, PACKAGE_ROOT } from '../install/skills.js';
 import { resolveTargets } from '../install/targets.js';
+import { lintSkillsDir } from '../install/skill-contract.js';
 import { loadConfig, validateConfig } from '../config/config.js';
 import { resolveAllDocuments, resolveDocument } from '../config/docmap.js';
 import { readLock, lockPathFor } from '../config/lock.js';
@@ -23,6 +24,32 @@ import { ensureDir, copyIfMissing } from '../util/fs-safe.js';
 function readStamp(dir) {
   const p = path.join(dir, '.sdd-version');
   return fs.existsSync(p) ? fs.readFileSync(p, 'utf8').trim() : null;
+}
+
+const TARGET_LABELS = {
+  claude: 'Claude Code',
+  agents: 'GitHub Copilot + Codex',
+};
+
+function installedTargetDiagnostics(targetKey, targetDir, expectedCoreSkills) {
+  const stamp = readStamp(targetDir);
+  if (!stamp) return { target: targetKey, dir: targetDir, installed: null, problems: [] };
+
+  const problems = [];
+  const installedNames = new Set(listSkills(targetDir).map((s) => s.name));
+  for (const name of expectedCoreSkills) {
+    if (!installedNames.has(name)) {
+      problems.push(`${TARGET_LABELS[targetKey] || targetKey} install is missing core skill ${name} (${targetDir})`);
+    }
+  }
+
+  for (const lint of lintSkillsDir(targetDir)) {
+    if (expectedCoreSkills.includes(lint.name) && !lint.valid) {
+      problems.push(`${TARGET_LABELS[targetKey] || targetKey} install has invalid skill ${lint.name}: ${lint.errors.join('; ')}`);
+    }
+  }
+
+  return { target: targetKey, dir: targetDir, installed: stamp, problems };
 }
 
 const METHODOLOGY_MARKER = /<!--\s*sdd-methodology:\s*([\d.]+)\s*-->/;
@@ -65,9 +92,14 @@ export async function doctorCommand(parsed, io) {
 
   // global install + compatibility range (C-08)
   const targets = resolveTargets(process.env);
-  const installed = readStamp(targets.claude) || readStamp(targets.agents);
+  const expectedCoreSkills = listSkills(path.join(PACKAGE_ROOT, 'skills')).map((s) => s.name).sort();
+  const targetDiagnostics = Object.entries(targets).map(([target, dir]) =>
+    installedTargetDiagnostics(target, dir, expectedCoreSkills),
+  );
+  const installed = targetDiagnostics.find((t) => t.installed)?.installed || null;
   const lock = readLock(lockPathFor(cwd, null));
   if (!installed) problems.push('no global methodology installed (run `sdd install`)');
+  for (const d of targetDiagnostics) problems.push(...d.problems);
   const range = lock && lock.methodology && lock.methodology.compatible;
   if (installed && range && !satisfies(installed, range)) {
     problems.push(`installed methodology ${installed} is outside the project range "${range}" (run \`sdd install\` / \`sdd sync\`)`);
@@ -119,7 +151,7 @@ export async function doctorCommand(parsed, io) {
   // `warnings` are advisory: they never affect `healthy` or the exit code.
   const healthy = problems.length === 0;
   if (parsed.flags.json) {
-    io.out(JSON.stringify({ command: 'doctor', healthy, problems, warnings, fixes, notes }, null, 2));
+    io.out(JSON.stringify({ command: 'doctor', healthy, problems, warnings, fixes, notes, targets: targetDiagnostics }, null, 2));
   } else {
     io.out('sdd doctor');
     for (const f of fixes) io.out(`  fixed: ${f}`);

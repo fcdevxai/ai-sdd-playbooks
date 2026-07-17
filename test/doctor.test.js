@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { run, EXIT } from '../src/cli/dispatch.js';
 import { workflowStaleness } from '../src/cli/doctor.js';
+import { installSkills } from '../src/install/skills.js';
 
 function tmp() { return fs.mkdtempSync(path.join(os.tmpdir(), 'sdd-doctor-')); }
 function capture() {
@@ -15,12 +16,32 @@ function capture() {
 // Run `fn` with a stamped global methodology dir so doctor sees an install.
 async function withGlobalVersion(version, fn) {
   const global = tmp();
-  fs.writeFileSync(path.join(global, '.sdd-version'), `${version}\n`);
-  const saved = process.env.SDD_CLAUDE_SKILLS_DIR;
+  const empty = tmp();
+  installSkills({ targets: { claude: global }, version });
+  const saved = { c: process.env.SDD_CLAUDE_SKILLS_DIR, a: process.env.SDD_AGENTS_SKILLS_DIR };
   process.env.SDD_CLAUDE_SKILLS_DIR = global;
+  process.env.SDD_AGENTS_SKILLS_DIR = empty;
   try { return await fn(); } finally {
-    if (saved === undefined) delete process.env.SDD_CLAUDE_SKILLS_DIR;
-    else process.env.SDD_CLAUDE_SKILLS_DIR = saved;
+    if (saved.c === undefined) delete process.env.SDD_CLAUDE_SKILLS_DIR;
+    else process.env.SDD_CLAUDE_SKILLS_DIR = saved.c;
+    if (saved.a === undefined) delete process.env.SDD_AGENTS_SKILLS_DIR;
+    else process.env.SDD_AGENTS_SKILLS_DIR = saved.a;
+  }
+}
+
+async function withBrokenGlobalVersion(version, mutate, fn) {
+  const global = tmp();
+  const empty = tmp();
+  installSkills({ targets: { agents: global }, version });
+  mutate(global);
+  const saved = { c: process.env.SDD_CLAUDE_SKILLS_DIR, a: process.env.SDD_AGENTS_SKILLS_DIR };
+  process.env.SDD_CLAUDE_SKILLS_DIR = empty;
+  process.env.SDD_AGENTS_SKILLS_DIR = global;
+  try { return await fn(global); } finally {
+    if (saved.c === undefined) delete process.env.SDD_CLAUDE_SKILLS_DIR;
+    else process.env.SDD_CLAUDE_SKILLS_DIR = saved.c;
+    if (saved.a === undefined) delete process.env.SDD_AGENTS_SKILLS_DIR;
+    else process.env.SDD_AGENTS_SKILLS_DIR = saved.a;
   }
 }
 
@@ -58,18 +79,37 @@ test('a freshly initialized repo with a compatible global install is healthy (ex
 
 test('doctor reports "no global methodology installed" when none is present', async () => {
   const dir = await initRepo();
-  const saved = process.env.SDD_CLAUDE_SKILLS_DIR;
-  const empty = tmp(); // no .sdd-version here
-  process.env.SDD_CLAUDE_SKILLS_DIR = empty;
+  const saved = { c: process.env.SDD_CLAUDE_SKILLS_DIR, a: process.env.SDD_AGENTS_SKILLS_DIR };
+  const emptyClaude = tmp(); // no .sdd-version here
+  const emptyAgents = tmp();
+  process.env.SDD_CLAUDE_SKILLS_DIR = emptyClaude;
+  process.env.SDD_AGENTS_SKILLS_DIR = emptyAgents;
   try {
     const { io, err } = capture();
     const code = await run(['doctor', '--cwd', dir], io);
     assert.equal(code, EXIT.ENVIRONMENT);
     assert.match(err.join('\n'), /no global methodology installed/);
   } finally {
-    if (saved === undefined) delete process.env.SDD_CLAUDE_SKILLS_DIR;
-    else process.env.SDD_CLAUDE_SKILLS_DIR = saved;
+    if (saved.c === undefined) delete process.env.SDD_CLAUDE_SKILLS_DIR;
+    else process.env.SDD_CLAUDE_SKILLS_DIR = saved.c;
+    if (saved.a === undefined) delete process.env.SDD_AGENTS_SKILLS_DIR;
+    else process.env.SDD_AGENTS_SKILLS_DIR = saved.a;
   }
+});
+
+test('doctor reports a stamped but incomplete shared agents install', async () => {
+  const dir = await initRepo();
+  await withBrokenGlobalVersion('3.0.0', (global) => {
+    fs.rmSync(path.join(global, 'sdd-plan'), { recursive: true, force: true });
+  }, async () => {
+    const { io, out } = capture();
+    const code = await run(['doctor', '--json', '--cwd', dir], io);
+    const json = JSON.parse(out.join('\n'));
+    assert.equal(code, EXIT.ENVIRONMENT);
+    assert.equal(json.healthy, false);
+    assert.ok(json.problems.some((p) => /GitHub Copilot \+ Codex install is missing core skill sdd-plan/.test(p)));
+    assert.ok(json.targets.some((t) => t.target === 'agents' && t.installed === '3.0.0'));
+  });
 });
 
 test('doctor blocks when the installed version is outside the compatible range (C-08)', async () => {

@@ -42,6 +42,15 @@ test('the core skills are present (13 skills, 3.0)', () => {
   }
 });
 
+test('the 13 core skills satisfy the Codex filesystem-skill minimum contract', () => {
+  for (const result of lintSkillsDir(SKILLS_DIR)) {
+    const fm = readSkillFrontmatter(path.join(SKILLS_DIR, result.name));
+    assert.equal(typeof fm.name, 'string', `${result.name} has a name`);
+    assert.equal(typeof fm.description, 'string', `${result.name} has a description`);
+    assert.ok(fm.description.length > 40, `${result.name} has a useful discovery description`);
+  }
+});
+
 test('parity checklist: converted skills carry their key behavior (T5.2)', () => {
   assert.match(body('sdd-apply'), /TDD/);
   assert.match(body('sdd-apply'), /Never modify files outside/i);

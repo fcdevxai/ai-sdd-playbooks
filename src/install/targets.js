@@ -1,8 +1,8 @@
 /**
  * Global install targets (design §2.1).
  *
- *   Claude Code   → ~/.claude/skills
- *   GitHub Copilot → ~/.agents/skills
+ *   Claude Code             → ~/.claude/skills
+ *   GitHub Copilot + Codex  → ~/.agents/skills
  *
  * Both are overridable via SDD_CLAUDE_SKILLS_DIR / SDD_AGENTS_SKILLS_DIR
  * (used by CI and tests so nothing touches the real home directory).

@@ -1,9 +1,11 @@
 /**
  * Global skill installation (design §2.1, decision 2).
  *
- * Installs the methodology ONCE, globally, into both runtime dirs. Core only by
- * default; add-ons require explicit opt-in (`--addon <name>`, AC-14). Writes
- * only under the given target dirs — never any consumer-repo files (AC-02).
+ * Installs the methodology ONCE, globally, into the selected runtime targets.
+ * Claude has its own target; GitHub Copilot and Codex share ~/.agents/skills.
+ * Core only by default; add-ons require explicit opt-in (`--addon <name>`,
+ * AC-14). Writes only under the given target dirs — never any consumer-repo
+ * files (AC-02).
  *
  * Sources (in the published package):
  *   skills/<name>/SKILL.md                 → core

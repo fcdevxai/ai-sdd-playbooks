@@ -3,13 +3,14 @@
 ## 3.0.0 — Spec-Driven Development baseline
 
 SDD 3.0 is the clean baseline: a globally-installed set of Agent Skills plus a
-deterministic `sdd` CLI, shared by Claude Code and GitHub Copilot. Every project
-starts here.
+deterministic `sdd` CLI, shared by Claude Code, GitHub Copilot, and Codex. Every
+project starts here.
 
 ### Methodology & CLI
 - **`sdd` CLI** with seven commands: `install`, `init`, `doctor`, `status`,
   `next`, `validate`, `sync` (+ `--version`).
-- **Global install** of core skills into `~/.claude/skills` and `~/.agents/skills`;
+- **Global install** of core skills into `~/.claude/skills` and
+  `~/.agents/skills`; GitHub Copilot and Codex share the `agents` target, and
   consumer projects keep only their own context + `sdd.lock`.
 - **Deterministic two-dimension lifecycle engine** (methodological `lifecycle` +
   GitHub `delivery`); `sdd status` / `sdd next` / the `sdd-next` skill decide the
@@ -19,7 +20,7 @@ starts here.
 
 ### Skills & artifacts
 - **Canonical Agent Skills** at `skills/<name>/SKILL.md`, consumable by Claude
-  Code and GitHub Copilot through one shared frontmatter contract.
+  Code, GitHub Copilot, and Codex through one shared frontmatter contract.
 - **Structured artifacts**: frontmatter metadata, normalized statuses, JSON
   Schemas, and `sdd validate --ci` (no verdict-string matching, no mutation).
 - **Security as a core stage**: risk classified in the proposal, refined in the

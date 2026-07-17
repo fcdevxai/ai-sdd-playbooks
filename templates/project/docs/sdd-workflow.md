@@ -1,8 +1,9 @@
 <!-- sdd-methodology: 3.0 -->
 # SDD workflow
 
-The methodology is global; this project keeps only its own context. Let the CLI
-drive: run `sdd next` at any time to get the single next valid step.
+The methodology is global; this project keeps only its own context. Claude Code
+uses `~/.claude/skills`; GitHub Copilot and Codex share `~/.agents/skills`. Let
+the CLI drive: run `sdd next` at any time to get the single next valid step.
 
 ## Lifecycle
 
