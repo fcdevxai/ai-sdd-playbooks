@@ -128,6 +128,17 @@ test('sdd-new proposes runtime_relevant_capabilities from signals, never a silen
   assert.match(b, /never guessed/i);
 });
 
+test('sdd-new keeps impact, security triggers, and runtime capabilities separate', () => {
+  const b = body('sdd-new');
+  assert.match(b, /Keep the three proposal taxonomies separate/);
+  assert.match(b, /impact\.public_contract: true/);
+  assert.match(b, /security\.triggers/);
+  assert.match(b, /runtime_relevant_capabilities/);
+  assert.match(b, /Never place capability names \(`http`, `browser`, `cli`, `worker`\)/);
+  assert.match(b, /impact keys\s*\(`public_contract`, `data_model`/);
+  assert.match(b, /sdd validate` fail/);
+});
+
 test('sdd-security-gate states the non-replacement disclaimer and blocking rule (T7.2/T7.3)', () => {
   const b = body('sdd-security-gate');
   assert.match(b, /does not replace a penetration test/i);
