@@ -21,14 +21,26 @@ export const REASON_CODES = {
   ADAPTER_NOT_IMPLEMENTED: 'ADAPTER_NOT_IMPLEMENTED',
   DEPENDENCY_UNAVAILABLE: 'DEPENDENCY_UNAVAILABLE',
   INSUFFICIENT_EVIDENCE: 'INSUFFICIENT_EVIDENCE',
+  NOT_RELEVANT_TO_CHANGE: 'NOT_RELEVANT_TO_CHANGE',
 };
 
-/** Deterministic starting plan from capabilities. Supported→pending, experimental→blocked. */
-export function planRuntimeAdapters(capabilities = {}) {
+/**
+ * Deterministic starting plan from capabilities. Supported→pending, experimental→blocked.
+ *
+ * `relevantCapabilities` narrows this to a specific change (proposal.md's
+ * `runtime_relevant_capabilities`, design §2): `null` (default — every existing
+ * caller) preserves today's behavior byte-for-byte. A provided array excludes a
+ * project-enabled capability not listed, before the experimental/supported
+ * branch — so an excluded experimental capability is `not_applicable`, not
+ * `blocked`, while an included one keeps its normal outcome unchanged.
+ */
+export function planRuntimeAdapters(capabilities = {}, relevantCapabilities = null) {
   const plan = {};
   for (const [key, desc] of Object.entries(ADAPTERS)) {
     if (!capabilities[desc.capability]) {
       plan[key] = { status: 'not_applicable' };
+    } else if (relevantCapabilities && !relevantCapabilities.includes(desc.capability)) {
+      plan[key] = { status: 'not_applicable', reason_code: REASON_CODES.NOT_RELEVANT_TO_CHANGE };
     } else if (desc.support === 'experimental') {
       plan[key] = { status: 'blocked', reason_code: REASON_CODES.ADAPTER_NOT_IMPLEMENTED };
     } else {

@@ -20,10 +20,10 @@ depends_on: design.md
 ## Phase 1 — Schema + `planRuntimeAdapters` + reason code
 *Goal: the pure logic change lands, fully backward compatible, proven in isolation.* — **AC-01, AC-02, AC-03, AC-04, AC-07** · design §1, §2, §8
 
-- [ ] **T1.1** `schemas/proposal.schema.json`: add optional `runtime_relevant_capabilities` (array, `enum: [browser, http, cli, worker]`). No `required` change.
-- [ ] **T1.2** `src/adapters/index.js`: add `REASON_CODES.NOT_RELEVANT_TO_CHANGE`; change `planRuntimeAdapters(capabilities, relevantCapabilities = null)` per design §2 (excluded-but-enabled capability checked **before** the experimental/supported branch).
-- [ ] **T1.3** Tests: no-second-arg fixtures unchanged (byte-identical regression guard); `relevantCapabilities` excludes an experimental capability (`worker`) → `not_applicable`/`NOT_RELEVANT_TO_CHANGE`; excludes a supported one (`http`) → `not_applicable`, not `pending`; includes `worker` → unchanged `blocked`/`ADAPTER_NOT_IMPLEMENTED`. A proposal with the new field (valid enum) validates; an invalid entry (e.g. `queue`) fails schema validation.
-- [ ] **T1.4** Full `node --test` green.
+- [x] **T1.1** `schemas/proposal.schema.json`: added optional `runtime_relevant_capabilities` (array, `enum: [browser, http, cli, worker]`). No `required` change. ✓
+- [x] **T1.2** `src/adapters/index.js`: added `REASON_CODES.NOT_RELEVANT_TO_CHANGE`; `planRuntimeAdapters(capabilities, relevantCapabilities = null)` per design §2 (excluded-but-enabled capability checked before the experimental/supported branch). ✓
+- [x] **T1.3** Tests added: `test/adapters.test.js` — no-second-arg byte-identical (both `null` and `undefined`); excludes experimental (`worker`) → `not_applicable`/`NOT_RELEVANT_TO_CHANGE` while an *included* experimental (`cli`) keeps `blocked`/`ADAPTER_NOT_IMPLEMENTED`; excludes supported (`http`) → `not_applicable`, not `pending`; a `false` capability is unaffected by exclusion (no reason_code); and an end-to-end demo that a `worker:true` project excluding it can reach gate `passed` once evidence is gathered. `test/schema.test.js` — valid capability accepted, unknown one (`queue`) rejected, and omitting the field entirely still validates. ✓
+- [x] **T1.4** Full `node --test` green: **179/179** (+7 new tests). ✓
 
 ## Phase 2 — `sdd-new` proposes it, `sdd-runtime-gate` honors it
 *Goal: the two skills that author/consume the field are updated.* — **AC-05** · design §3, §4

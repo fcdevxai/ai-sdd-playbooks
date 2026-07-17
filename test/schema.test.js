@@ -58,6 +58,17 @@ test('proposal: change_id with spaces is rejected', () => {
   assert.equal(validateArtifactFrontmatter(validProposal({ change_id: 'not valid' })).valid, false);
 });
 
+test('proposal: valid runtime_relevant_capabilities is accepted; an unknown capability is rejected', () => {
+  assert.equal(validateArtifactFrontmatter(validProposal({ runtime_relevant_capabilities: ['http', 'worker'] })).valid, true);
+  assert.equal(validateArtifactFrontmatter(validProposal({ runtime_relevant_capabilities: ['queue'] })).valid, false);
+});
+
+test('proposal: omitting runtime_relevant_capabilities is still valid (backward compat)', () => {
+  const fm = validProposal();
+  assert.ok(!('runtime_relevant_capabilities' in fm));
+  assert.equal(validateArtifactFrontmatter(fm).valid, true);
+});
+
 test('design: status "ready" is illegal, "approved" is legal (C-07)', () => {
   const base = {
     schema: 'design', schema_version: 1, change_id: 'demo',
