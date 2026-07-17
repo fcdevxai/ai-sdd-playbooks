@@ -82,6 +82,17 @@ export function workflowStaleness({ cwd, config, installed }) {
   return null;
 }
 
+function runtimeReadinessNotes(config) {
+  const notes = [];
+  if (config && config.capabilities && config.capabilities.browser === true) {
+    notes.push('runtime readiness: browser capability is enabled; `sdd-runtime-gate` requires Playwright MCP in the active agent runtime (Claude Code, Codex, or GitHub Copilot)');
+  }
+  if (config && config.addons && config.addons.confluence === true) {
+    notes.push('runtime readiness: Confluence add-on is enabled; `document-code`, `operational-guide`, and `code-audit-comment` require Atlassian MCP in the active agent runtime');
+  }
+  return notes;
+}
+
 export async function doctorCommand(parsed, io) {
   const cwd = parsed.flags.cwd || process.cwd();
   const fix = parsed.rest.includes('--fix');
@@ -122,6 +133,7 @@ export async function doctorCommand(parsed, io) {
   // workflow doc staleness vs the installed methodology (advisory — never fails)
   const stale = workflowStaleness({ cwd, config, installed });
   if (stale) warnings.push(stale);
+  notes.push(...runtimeReadinessNotes(config));
 
   // openspec structure (additive-fixable)
   const changesDir = path.join(cwd, 'openspec', 'changes');

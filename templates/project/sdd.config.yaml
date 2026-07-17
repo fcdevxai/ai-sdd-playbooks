@@ -6,7 +6,7 @@ methodology:
   scope: user           # global install
   compatible: ">=3.0.0 <4.0.0"
 capabilities:           # set the ones your project actually has (drives sdd-runtime-gate)
-  browser: false        # a web UI
+  browser: false        # a web UI; requires Playwright MCP in the active runtime
   http: false           # an HTTP/REST surface
   cli: false            # a command-line surface (experimental adapter)
   worker: false         # background workers/queues (experimental adapter)
@@ -26,4 +26,4 @@ documents:                 # adopt existing docs by pointing these at their real
   verification: docs/doc_verification_guide.md
   workflow: docs/sdd-workflow.md
 addons:
-  confluence: false        # add-ons never install implicitly
+  confluence: false        # requires Atlassian MCP in the active runtime

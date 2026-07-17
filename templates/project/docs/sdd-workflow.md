@@ -20,6 +20,20 @@ sdd-enrich-us (pre-process)
 `sdd status` shows two dimensions: the methodological **lifecycle** and the
 **GitHub delivery** state. `sdd next` combines them into one action.
 
+## Runtime prerequisites
+
+The SDD skills are shared by filesystem, but runtime tools are not. Claude Code,
+GitHub Copilot, and Codex each need their own MCP/tool configuration.
+
+- `capabilities.browser: true` means `sdd-runtime-gate` needs a Playwright MCP
+  available in the active runtime. If it is missing, the browser adapter is
+  `blocked` with `DEPENDENCY_UNAVAILABLE`; do not simulate UI evidence.
+- `addons.confluence: true` means the Confluence add-on skills need an
+  authenticated Atlassian MCP in the active runtime before publishing or
+  commenting in Confluence.
+- `sdd doctor` reports these as readiness notes. It does not install or
+  authenticate MCP servers.
+
 ## Rules
 
 - Only a human sets `proposal.status: approved` (and `design.status: approved`).

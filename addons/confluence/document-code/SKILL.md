@@ -130,7 +130,7 @@ Batch:
 
 ## Blocking criteria
 
-- `getAccessibleAtlassianResources` returns no resources → tell the user to authenticate the Atlassian MCP via `/mcp` → "claude.ai Atlassian". Do not continue.
+- `getAccessibleAtlassianResources` returns no resources → tell the user to authenticate the Atlassian MCP in the active runtime (Claude Code, Codex, or GitHub Copilot) and restart the session if needed. Do not continue.
 - The layer chain can't be auto-detected and the user doesn't confirm one → **stop** and ask; never improvise the architecture.
 
 ## What it does NOT replace
@@ -142,7 +142,7 @@ Batch:
 ## Rules
 
 - Always read the real source before writing; never from memory.
-- Requires the Atlassian MCP; if unavailable, stop and tell the user.
+- Requires the Atlassian MCP in the active runtime; if unavailable, stop and tell the user. A Claude Code plugin install is not visible to Codex or GitHub Copilot unless those runtimes are configured separately.
 - Every update reads the current `version` first (`getConfluencePage`) and writes `version + 1`.
 - In batch, discover-or-create-then-link for shared nodes; never duplicate a page.
 - This is an add-on: it must never be installed implicitly with the core.

@@ -99,7 +99,7 @@ Screenshots to upload manually: N   (the [CAPTURA: …] markers, in order)
 
 ## Blocking criteria
 
-- `getAccessibleAtlassianResources` returns no resources → tell the user to authenticate the Atlassian MCP via `/mcp` → "claude.ai Atlassian". Do not continue.
+- `getAccessibleAtlassianResources` returns no resources → tell the user to authenticate the Atlassian MCP in the active runtime (Claude Code, Codex, or GitHub Copilot) and restart the session if needed. Do not continue.
 
 ## What it does NOT replace
 
@@ -111,5 +111,5 @@ Screenshots to upload manually: N   (the [CAPTURA: …] markers, in order)
 - Write for non-technical internal teams, not for IT; output in Spanish voseo.
 - Gather the real procedure from the user; never document from memory.
 - Every update reads the current `version` first (`getConfluencePage`) and writes `version + 1`, without dropping still-relevant content.
-- Requires the Atlassian MCP; if unavailable, stop and tell the user.
+- Requires the Atlassian MCP in the active runtime; if unavailable, stop and tell the user. A Claude Code plugin install is not visible to Codex or GitHub Copilot unless those runtimes are configured separately.
 - This is an add-on: it must never be installed implicitly with the core.
