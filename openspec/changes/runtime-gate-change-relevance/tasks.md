@@ -36,10 +36,10 @@ depends_on: design.md
 ## Phase 3 — Validate cross-check + README + verification sweep
 *Goal: the honor-system gap closes, the guarantee is documented, everything proven end-to-end.* — **AC-06, AC-08** · design §5, §6, §7
 
-- [ ] **T3.1** `src/cli/validate.js`: add the cross-artifact check (design §5) — only when the proposal's `runtime_relevant_capabilities` is present, an excluded-but-enabled capability's adapter status in `runtime-gate-report.md` must be `not_applicable`; otherwise a validation error naming the capability.
-- [ ] **T3.2** `test/validate.cli.test.js`: excluded capability reported as `blocked` → validate error; reported as `not_applicable` → valid; proposal without the field at all → no new check fires (AC-08 proof).
-- [ ] **T3.3** README: add the summarized "Per-change runtime relevance" subsection near "Capability model" (design §6), including the no-auto-reconfiguration guarantee in one sentence.
-- [ ] **T3.4** Verification sweep: full `node --test` green; `sdd validate` on this repo's own changes still green; manually construct a fixture project with `worker: true` + a proposal excluding it → confirm `runtime_cleared` is reachable; confirm a fixture with `worker` included still blocks exactly as before.
+- [x] **T3.1** `src/cli/validate.js`: added the cross-artifact check (design §5) — only when the proposal's `runtime_relevant_capabilities` is present, an excluded-but-enabled capability's adapter status in `runtime-gate-report.md` must be `not_applicable`; otherwise a validation error naming the capability. Uses `loadConfig` (already-loaded `change.artifacts['proposal.md']`) — no new file reads. ✓
+- [x] **T3.2** `test/validate.cli.test.js`: excluded capability reported as `blocked` → `EXIT.VIOLATION` with a message naming the capability; reported as `not_applicable` → `EXIT.OK`; proposal without the field at all (capability still `blocked`) → `EXIT.OK`, proving the new check never fires without it (AC-08). ✓
+- [x] **T3.3** README: added the summarized "Per-change runtime relevance" subsection right after "Capability model" (design §6), including the no-auto-reconfiguration guarantee in one sentence. ✓
+- [x] **T3.4** Verification sweep: full `node --test` green (**184/184**); `sdd validate` on this repo's own changes green (15/15); **real CLI fixtures** (not just unit tests) — a `worker: true` project whose proposal excludes it via `runtime_relevant_capabilities: [http]` reaches `sdd status` → `Lifecycle: runtime_cleared` (the deadlock is fixed); the same project with `worker` declared relevant instead stays at `security_cleared` with `Exception: runtime-gate-report.md is blocked` — identical to today's behavior when the capability actually applies (AC-04 proven end-to-end, not just at the unit level). ✓
 
 ---
 

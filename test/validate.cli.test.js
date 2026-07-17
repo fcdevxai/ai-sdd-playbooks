@@ -166,6 +166,83 @@ test('validate: runtime-gate status disagreeing with adapters is a violation (C-
   assert.equal(await run(['validate', '--cwd', dir], io), EXIT.VIOLATION);
 });
 
+// Per-change relevance cross-check (design §5): only active when the proposal
+// declares `runtime_relevant_capabilities`; project has worker:true throughout.
+const CONFIG_WORKER_TRUE = `version: 2
+methodology:
+  compatible: ">=3.0.0 <4.0.0"
+capabilities:
+  http: true
+  worker: true
+github:
+  base_branch: main
+  require_pull_request: true
+  require_ci: true
+`;
+
+const PROPOSAL_EXCLUDING_WORKER = VALID_PROPOSAL.replace(
+  'security:\n  risk: low\n  triggers: []\n---',
+  'security:\n  risk: low\n  triggers: []\nruntime_relevant_capabilities: [http]\n---',
+);
+
+test('validate: excluded-but-enabled capability reported as anything but not_applicable is a violation', async () => {
+  const dir = makeRepo();
+  fs.writeFileSync(path.join(dir, 'sdd.config.yaml'), CONFIG_WORKER_TRUE);
+  writeChange(dir, 'proposal.md', PROPOSAL_EXCLUDING_WORKER); // excludes worker
+  writeChange(dir, 'runtime-gate-report.md', `---
+schema: runtime-gate-report
+schema_version: 1
+change_id: demo
+status: blocked
+adapters:
+  http: { status: passed }
+  worker: { status: blocked }
+---
+`);
+  const { io, err } = capture();
+  const code = await run(['validate', '--cwd', dir], io);
+  assert.equal(code, EXIT.VIOLATION);
+  assert.match(err.join('\n'), /worker.*excludes it.*not_applicable/s);
+});
+
+test('validate: excluded capability correctly reported not_applicable is valid', async () => {
+  const dir = makeRepo();
+  fs.writeFileSync(path.join(dir, 'sdd.config.yaml'), CONFIG_WORKER_TRUE);
+  writeChange(dir, 'proposal.md', PROPOSAL_EXCLUDING_WORKER); // excludes worker
+  writeChange(dir, 'runtime-gate-report.md', `---
+schema: runtime-gate-report
+schema_version: 1
+change_id: demo
+status: passed
+adapters:
+  http: { status: passed }
+  worker: { status: not_applicable }
+---
+`);
+  const { io } = capture();
+  assert.equal(await run(['validate', '--cwd', dir], io), EXIT.OK);
+});
+
+test('validate: a proposal without runtime_relevant_capabilities triggers no new check (AC-08)', async () => {
+  const dir = makeRepo();
+  fs.writeFileSync(path.join(dir, 'sdd.config.yaml'), CONFIG_WORKER_TRUE);
+  writeChange(dir, 'proposal.md', VALID_PROPOSAL); // no runtime_relevant_capabilities at all
+  writeChange(dir, 'runtime-gate-report.md', `---
+schema: runtime-gate-report
+schema_version: 1
+change_id: demo
+status: blocked
+adapters:
+  http: { status: passed }
+  worker: { status: blocked }
+---
+`);
+  const { io } = capture();
+  // status matches the adapters aggregate (blocked), and the new check never
+  // fires without the field — today's behavior, unaffected.
+  assert.equal(await run(['validate', '--cwd', dir], io), EXIT.OK);
+});
+
 test('validate --precondition: unknown skill is a usage error', async () => {
   const dir = makeRepo();
   writeChange(dir, 'proposal.md', VALID_PROPOSAL);
