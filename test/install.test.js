@@ -174,19 +174,32 @@ test('sdd install --runtime copilot installs only into the Copilot (agents) dir'
   assert.equal(stamped(claude), false);
 });
 
-test('sdd install (default) and --runtime both install into both dirs', async () => {
+test('sdd install --runtime codex installs only into the shared agents dir', async () => {
+  const claude = tmp('sdd-c-'); const agents = tmp('sdd-a-'); const cwd = tmp('sdd-w-');
+  const { code, out } = await runInstall(['install', '--runtime', 'codex', '--cwd', cwd], claude, agents);
+  assert.equal(code, EXIT.OK);
+  assert.ok(stamped(agents));
+  assert.equal(stamped(claude), false);
+  assert.match(out.join('\n'), /GitHub Copilot \+ Codex/);
+});
+
+test('sdd install (default), --runtime all, and --runtime both install into both dirs', async () => {
   const claude = tmp('sdd-c-'); const agents = tmp('sdd-a-'); const cwd = tmp('sdd-w-');
   await runInstall(['install', '--cwd', cwd], claude, agents);
   assert.ok(stamped(claude) && stamped(agents));
   const claude2 = tmp('sdd-c-'); const agents2 = tmp('sdd-a-');
-  await runInstall(['install', '--runtime', 'both', '--cwd', cwd], claude2, agents2);
+  await runInstall(['install', '--runtime', 'all', '--cwd', cwd], claude2, agents2);
   assert.ok(stamped(claude2) && stamped(agents2));
+  const claude3 = tmp('sdd-c-'); const agents3 = tmp('sdd-a-');
+  await runInstall(['install', '--runtime', 'both', '--cwd', cwd], claude3, agents3);
+  assert.ok(stamped(claude3) && stamped(agents3));
 });
 
 test('sdd install --runtime <invalid> is a usage error', async () => {
   const { code, err } = await runInstall(['install', '--runtime', 'vscode', '--cwd', tmp('sdd-w-')], tmp('sdd-c-'), tmp('sdd-a-'));
   assert.equal(code, EXIT.USAGE);
   assert.match(err.join('\n'), /--runtime must be one of/);
+  assert.match(err.join('\n'), /codex/);
 });
 
 test('sdd install (CLI) targets the env dirs and creates no cwd files', async () => {

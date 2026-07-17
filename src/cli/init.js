@@ -128,7 +128,7 @@ export function printProjectPlan(io, { created, skipped, adopted, candidates }) 
   }
 }
 
-const BOOTSTRAP_HINT = 'Capabilities are all false. Run the `sdd-bootstrap-project` skill (in Claude Code or Copilot) to detect and propose them.';
+const BOOTSTRAP_HINT = 'Capabilities are all false. Run the `sdd-bootstrap-project` skill (in Claude Code, GitHub Copilot, or Codex) to detect and propose them.';
 
 export async function initCommand(parsed, io) {
   const cwd = parsed.flags.cwd || process.cwd();
@@ -143,7 +143,7 @@ export async function initCommand(parsed, io) {
   }
   io.out('sdd init');
   printProjectPlan(io, result);
-  io.out('\nNo core methodology files were copied — they live in ~/.claude/skills and ~/.agents/skills.');
+  io.out('\nNo core methodology files were copied — they live in ~/.claude/skills and ~/.agents/skills (GitHub Copilot + Codex).');
   if (capabilitiesUnset) io.out(`\n${BOOTSTRAP_HINT}`);
   return EXIT.OK;
 }

@@ -41,4 +41,4 @@ assignees: ''
 ---
 
 > Process this story with the `sdd-enrich-us` skill (say "sdd-enrich-us" in Claude
-> Code or GitHub Copilot) before generating the technical spec.
+> Code, GitHub Copilot, or Codex) before generating the technical spec.

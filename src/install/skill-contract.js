@@ -1,9 +1,9 @@
 /**
  * Shared SKILL.md frontmatter contract + lint (design §2.2, T5.1).
  *
- * One SKILL.md must load in both Claude Code and GitHub Copilot, so the
- * frontmatter is a small, stable contract. `sdd doctor` (Phase 9) uses this lint;
- * it lives here so it can be reused without importing a CLI command.
+ * One SKILL.md must load in Claude Code, GitHub Copilot, and Codex, so the
+ * frontmatter is a small, stable contract. `sdd doctor` uses this lint; it lives
+ * here so it can be reused without importing a CLI command.
  *
  * Contract: name (kebab), description, version (required);
  *           lifecycle_stage (string|null), produces (array), requires (object).
