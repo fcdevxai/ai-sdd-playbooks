@@ -25,10 +25,21 @@ export function readPackageVersion(root = PACKAGE_ROOT) {
 /** Skill dirs directly under `dir` that contain a SKILL.md. */
 export function listSkills(dir) {
   if (!fs.existsSync(dir)) return [];
-  return fs
-    .readdirSync(dir)
-    .map((name) => ({ name, dir: path.join(dir, name) }))
-    .filter((s) => fs.statSync(s.dir).isDirectory() && fs.existsSync(path.join(s.dir, 'SKILL.md')));
+  const skills = [];
+  for (const name of fs.readdirSync(dir)) {
+    const skillDir = path.join(dir, name);
+    let stat;
+    try {
+      stat = fs.statSync(skillDir);
+    } catch (err) {
+      if (err && err.code === 'ENOENT') continue;
+      throw err;
+    }
+    if (stat.isDirectory() && fs.existsSync(path.join(skillDir, 'SKILL.md'))) {
+      skills.push({ name, dir: skillDir });
+    }
+  }
+  return skills;
 }
 
 export function listAddonSkills(addonsDir, addon) {

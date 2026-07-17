@@ -45,6 +45,13 @@ test('listSkills ignores directories without a SKILL.md', () => {
   assert.deepEqual(names, ['sdd-apply', 'sdd-plan']);
 });
 
+test('listSkills ignores broken symlinks in real global skill dirs', () => {
+  const src = makeSource();
+  fs.symlinkSync(path.join(src, 'missing-skill-target'), path.join(src, 'skills', 'find-skills'), 'dir');
+  const names = listSkills(path.join(src, 'skills')).map((s) => s.name).sort();
+  assert.deepEqual(names, ['sdd-apply', 'sdd-plan']);
+});
+
 test('installSkills installs core into BOTH runtime dirs and stamps the version (AC-02)', () => {
   const src = makeSource();
   const targets = { claude: tmp('sdd-claude-'), agents: tmp('sdd-agents-') };
