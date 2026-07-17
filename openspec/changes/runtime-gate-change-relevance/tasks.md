@@ -28,10 +28,10 @@ depends_on: design.md
 ## Phase 2 — `sdd-new` proposes it, `sdd-runtime-gate` honors it
 *Goal: the two skills that author/consume the field are updated.* — **AC-05** · design §3, §4
 
-- [ ] **T2.1** `skills/sdd-new/SKILL.md`: add `runtime_relevant_capabilities` to the proposal template (step 3), with the propose-from-signals / omit-when-unsure instruction (design §3).
-- [ ] **T2.2** `skills/sdd-runtime-gate/SKILL.md`: add the "read `runtime_relevant_capabilities` if present" instruction before the adapter-selection table; add the new table row (excluded → `not_applicable`/`NOT_RELEVANT_TO_CHANGE`); add the Rules bullet (design §4).
-- [ ] **T2.3** `test/skill-contract.test.js`: assert `sdd-new` body mentions `runtime_relevant_capabilities`; assert `sdd-runtime-gate` body mentions `NOT_RELEVANT_TO_CHANGE` and the omit/absent-field rule.
-- [ ] **T2.4** Full `node --test` green.
+- [x] **T2.1** `skills/sdd-new/SKILL.md`: added `runtime_relevant_capabilities` to the proposal template (step 3, commented example) with the propose-from-signals / omit-when-unsure instruction; updated the Output section to mention confirming it alongside `impact`/`security`. ✓
+- [x] **T2.2** `skills/sdd-runtime-gate/SKILL.md`: added the "read `runtime_relevant_capabilities` if present" instruction before the adapter-selection table; added the new table row (excluded → `not_applicable`/`NOT_RELEVANT_TO_CHANGE`); added the Rules bullet (design §4). ✓
+- [x] **T2.3** `test/skill-contract.test.js`: added assertions — `sdd-runtime-gate` mentions `runtime_relevant_capabilities`, `NOT_RELEVANT_TO_CHANGE`, and the absent-field rule; `sdd-new` mentions `runtime_relevant_capabilities`, "omit the field entirely", and "never guessed". ✓
+- [x] **T2.4** Full `node --test` green: **181/181** (+2). ✓
 
 ## Phase 3 — Validate cross-check + README + verification sweep
 *Goal: the honor-system gap closes, the guarantee is documented, everything proven end-to-end.* — **AC-06, AC-08** · design §5, §6, §7

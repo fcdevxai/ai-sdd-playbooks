@@ -45,6 +45,16 @@ The proposal MUST validate against the proposal schema. Propose the structured
 `impact` and `security` blocks for the human to confirm (C-03/C-04) — you propose,
 the human approves or corrects:
 
+Also propose the optional `runtime_relevant_capabilities`: the subset of the
+project's **already-enabled** capabilities (`sdd.config.yaml`) that this
+requirement's `Impacted modules`/`Expected behavior` **concretely** touch —
+grounded in the requirement, never guessed. This narrows `sdd-runtime-gate` to
+what this change actually exercises (most useful for experimental capabilities
+`cli`/`worker`, which otherwise block every change forever regardless of
+relevance). **When unsure, omit the field entirely** — omission means every
+enabled capability applies, today's behavior. Never propose an empty/partial
+list as a guess; an honest omission is always safer than an inaccurate one.
+
 ```markdown
 ---
 schema: proposal
@@ -68,6 +78,7 @@ impact:            # any true → sdd-design becomes required
 security:          # http:true alone is NOT elevated
   risk: standard   # low | standard | elevated
   triggers: []     # e.g. authorization, personal_data, secrets, external_integration ...
+# runtime_relevant_capabilities: [http]   # optional — see below; omit when unsure
 ---
 
 # <Feature name>
@@ -100,8 +111,8 @@ Waiting: proposal not yet approved. After human approval, run `sdd next`
 ## Output
 
 Confirm `OWNER.md`, `proposal.md`, `tasks.md` created. **Next step**: human
-review of `proposal.md` (confirm `impact`/`security`), then set
-`status: approved`. Then run `sdd next`.
+review of `proposal.md` (confirm `impact`/`security`/`runtime_relevant_capabilities`
+when proposed), then set `status: approved`. Then run `sdd next`.
 
 ## Rules
 
