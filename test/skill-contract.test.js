@@ -74,6 +74,14 @@ test('sdd-bootstrap-project detects and proposes capabilities (Option A)', () =>
   assert.match(b, /signal/i); // proposal is grounded in signals, not guesses
 });
 
+test('sdd-bootstrap-project detects and refreshes a stale workflow doc (closes the sdd doctor promise)', () => {
+  const b = body('sdd-bootstrap-project');
+  assert.match(b, /sdd-methodology/); // checks the same marker `sdd doctor` reads
+  assert.match(b, /workflow/i);
+  assert.match(b, /full replacement/i); // not a partial merge — the doc is methodology-owned
+  assert.match(b, /sdd doctor/i); // description names the doctor-warning trigger explicitly
+});
+
 test('sdd-commit follows the GitHub model: no hardcoded branch, no auto-merge (C-11)', () => {
   const b = body('sdd-commit');
   assert.match(b, /[Nn]ever hardcode/);
