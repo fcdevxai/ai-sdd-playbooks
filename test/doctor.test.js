@@ -112,6 +112,19 @@ test('doctor reports a stamped but incomplete shared agents install', async () =
   });
 });
 
+test('doctor ignores unrelated broken symlinks in a stamped global skill dir', async () => {
+  const dir = await initRepo();
+  await withBrokenGlobalVersion('3.0.0', (global) => {
+    fs.symlinkSync(path.join(global, 'missing-skill-target'), path.join(global, 'find-skills'), 'dir');
+  }, async () => {
+    const { io, out } = capture();
+    const code = await run(['doctor', '--json', '--cwd', dir], io);
+    const json = JSON.parse(out.join('\n'));
+    assert.equal(code, EXIT.OK);
+    assert.equal(json.healthy, true);
+  });
+});
+
 test('doctor blocks when the installed version is outside the compatible range (C-08)', async () => {
   const dir = await initRepo(); // lock compatible ">=3.0.0 <4.0.0"
   await withGlobalVersion('4.0.0', async () => {

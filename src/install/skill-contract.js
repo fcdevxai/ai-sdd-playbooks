@@ -41,8 +41,16 @@ export function lintSkillsDir(dir) {
   if (!fs.existsSync(dir)) return results;
   for (const name of fs.readdirSync(dir)) {
     const skillDir = path.join(dir, name);
-    if (!fs.statSync(skillDir).isDirectory()) continue;
-    const fm = readSkillFrontmatter(skillDir);
+    let fm;
+    try {
+      if (!fs.statSync(skillDir).isDirectory()) continue;
+      fm = readSkillFrontmatter(skillDir);
+    } catch (err) {
+      // Global skill directories may contain dangling symlinks or entries that
+      // disappear while doctor is reading them. They are not installed skills.
+      if (err && err.code === 'ENOENT') continue;
+      throw err;
+    }
     if (fm === null) { results.push({ name, valid: false, errors: ['no SKILL.md'] }); continue; }
     const r = lintSkillFrontmatter(fm);
     results.push({ name, ...r });
