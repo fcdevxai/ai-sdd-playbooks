@@ -98,6 +98,20 @@ test('sdd-runtime-gate never fabricates passed and blocks on missing dependency 
   assert.match(b, /not_applicable/);
 });
 
+test('sdd-runtime-gate honors per-change runtime_relevant_capabilities', () => {
+  const b = body('sdd-runtime-gate');
+  assert.match(b, /runtime_relevant_capabilities/);
+  assert.match(b, /NOT_RELEVANT_TO_CHANGE/);
+  assert.match(b, /absent field.*every enabled capability is relevant/i);
+});
+
+test('sdd-new proposes runtime_relevant_capabilities from signals, never a silent guess', () => {
+  const b = body('sdd-new');
+  assert.match(b, /runtime_relevant_capabilities/);
+  assert.match(b, /omit the field entirely/i);
+  assert.match(b, /never guessed/i);
+});
+
 test('sdd-security-gate states the non-replacement disclaimer and blocking rule (T7.2/T7.3)', () => {
   const b = body('sdd-security-gate');
   assert.match(b, /does not replace a penetration test/i);

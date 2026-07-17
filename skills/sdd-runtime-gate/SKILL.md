@@ -17,15 +17,22 @@ adapter **blocks** — it must never fabricate a `passed`.
 
 ## Adapter selection (C-06)
 
+Read `proposal.md`'s `runtime_relevant_capabilities` if present. A project
+capability `true` but **excluded** from that list is `not_applicable` /
+`NOT_RELEVANT_TO_CHANGE` for this change — it is not evaluated against the
+table below. If the field is absent, every project-enabled capability is
+relevant (today's behavior, unchanged).
+
 For each adapter (`browser`, `http`, `cli`, `worker`):
 
 | Condition | Adapter status |
 |---|---|
 | capability `false` | `not_applicable` (non-blocking) |
-| capability `true`, supported, real evidence gathered | `passed` / `failed` |
-| capability `true`, supported, required dependency absent | `blocked` (`DEPENDENCY_UNAVAILABLE`) |
-| capability `true`, supported, evidence insufficient | `blocked` (`INSUFFICIENT_EVIDENCE`) |
-| capability `true`, **experimental** (`cli`, `worker`) | `blocked` (`ADAPTER_NOT_IMPLEMENTED`) |
+| capability `true`, excluded via `runtime_relevant_capabilities` | `not_applicable` (`NOT_RELEVANT_TO_CHANGE`) |
+| capability `true`, relevant, supported, real evidence gathered | `passed` / `failed` |
+| capability `true`, relevant, supported, required dependency absent | `blocked` (`DEPENDENCY_UNAVAILABLE`) |
+| capability `true`, relevant, supported, evidence insufficient | `blocked` (`INSUFFICIENT_EVIDENCE`) |
+| capability `true`, relevant, **experimental** (`cli`, `worker`) | `blocked` (`ADAPTER_NOT_IMPLEMENTED`) |
 
 - `browser` (supported): drive the real UI via the **Playwright MCP**. If it is
   not registered, set `blocked` with `DEPENDENCY_UNAVAILABLE` — do **not** simulate.
@@ -64,5 +71,6 @@ adapters:
 
 - Never fabricate `passed`; missing evidence or dependency → `blocked` with a `reason_code`.
 - A `false` capability is `not_applicable` and does not block.
-- Experimental adapters (`cli`, `worker`) block when their capability is `true`.
+- Experimental adapters (`cli`, `worker`) block when their capability is `true` **and relevant to this change**.
+- A capability the proposal explicitly marks irrelevant to this change (`runtime_relevant_capabilities` excludes it) is `not_applicable`, not `blocked` — even if experimental. Absent field → every enabled capability is relevant (no narrowing).
 - The gate `status` must equal the aggregate of the per-adapter statuses.

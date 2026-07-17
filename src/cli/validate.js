@@ -18,7 +18,7 @@ import path from 'node:path';
 import { EXIT } from './exit.js';
 import { validateArtifactFrontmatter, validateNamed } from '../schema/validate.js';
 import { loadChange, findChangeDirs, computeDesignRequired } from '../config/artifacts.js';
-import { readConfigFile } from '../config/config.js';
+import { loadConfig, readConfigFile } from '../config/config.js';
 import { readLock } from '../config/lock.js';
 import { gateStatusFromAdapters } from '../adapters/index.js';
 import { evaluatePreconditions, SKILL_PRECONDITIONS } from '../lifecycle/preconditions.js';
@@ -49,9 +49,12 @@ function runValidate({ cwd, changeId, json, io }) {
   const dirs = findChangeDirs(cwd);
   const targets = changeId ? dirs.filter((d) => path.basename(d) === changeId) : dirs;
   const results = [];
+  const { config } = loadConfig({ cwd });
 
   for (const dir of targets) {
     const change = loadChange(dir);
+    const proposalFm = change.artifacts['proposal.md'] && change.artifacts['proposal.md'].frontmatter;
+    const relevant = proposalFm && proposalFm.runtime_relevant_capabilities;
     for (const [, a] of Object.entries(change.artifacts)) {
       const r = validateArtifactFrontmatter(a.frontmatter);
       if (r.skipped) continue;
@@ -59,11 +62,21 @@ function runValidate({ cwd, changeId, json, io }) {
       if (a.frontmatter.change_id && a.frontmatter.change_id !== change.changeId) {
         errors.push(`change_id '${a.frontmatter.change_id}' does not match folder '${change.changeId}'`);
       }
-      // runtime-gate: the declared status must equal the aggregate of its adapters (C-06/C-12)
       if (r.valid && a.frontmatter.schema === 'runtime-gate-report' && a.frontmatter.adapters) {
+        // the declared status must equal the aggregate of its adapters (C-06/C-12)
         const expected = gateStatusFromAdapters(a.frontmatter.adapters);
         if (a.frontmatter.status !== expected) {
           errors.push(`status '${a.frontmatter.status}' disagrees with adapters aggregate '${expected}'`);
+        }
+        // per-change relevance (design §5): only active when the proposal declares it.
+        // An excluded-but-project-enabled capability must be reported not_applicable.
+        if (relevant) {
+          for (const [name, adapter] of Object.entries(a.frontmatter.adapters)) {
+            const enabled = config.capabilities && config.capabilities[name];
+            if (enabled && !relevant.includes(name) && adapter.status !== 'not_applicable') {
+              errors.push(`adapter '${name}' is status '${adapter.status}' but proposal.md's runtime_relevant_capabilities excludes it — expected 'not_applicable'`);
+            }
+          }
         }
       }
       results.push({ file: path.relative(cwd, a.path), valid: errors.length === 0, errors });

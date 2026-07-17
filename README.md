@@ -112,6 +112,17 @@ Backend-only projects (`browser: false`) never invoke Playwright. Set these by
 running `sdd-bootstrap-project` (auto-detect + propose) or by editing the file
 directly.
 
+### Per-change runtime relevance
+
+A project capability (`sdd.config.yaml`) means "the project has this surface";
+an optional `runtime_relevant_capabilities` on a change's `proposal.md` means
+"*this* change touches it." Omit it and every enabled capability applies
+(today's behavior). List a subset to exclude capabilities this change doesn't
+touch — most useful for experimental adapters (`cli`/`worker`), which otherwise
+block forever. Upgrading `sdd` alone never changes any existing artifact's
+state; the new behavior only applies when a human adds the field to a specific
+proposal and re-runs `sdd-runtime-gate`.
+
 ## Validation & CI
 
 `sdd validate --ci` validates frontmatter against JSON Schemas, checks legal
