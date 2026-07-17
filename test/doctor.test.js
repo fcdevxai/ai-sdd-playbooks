@@ -112,6 +112,19 @@ test('doctor reports a stamped but incomplete shared agents install', async () =
   });
 });
 
+test('doctor ignores unrelated broken symlinks in a stamped global skill dir', async () => {
+  const dir = await initRepo();
+  await withBrokenGlobalVersion('3.0.0', (global) => {
+    fs.symlinkSync(path.join(global, 'missing-skill-target'), path.join(global, 'find-skills'), 'dir');
+  }, async () => {
+    const { io, out } = capture();
+    const code = await run(['doctor', '--json', '--cwd', dir], io);
+    const json = JSON.parse(out.join('\n'));
+    assert.equal(code, EXIT.OK);
+    assert.equal(json.healthy, true);
+  });
+});
+
 test('doctor blocks when the installed version is outside the compatible range (C-08)', async () => {
   const dir = await initRepo(); // lock compatible ">=3.0.0 <4.0.0"
   await withGlobalVersion('4.0.0', async () => {
@@ -156,6 +169,23 @@ test('doctor does not warn when the workflow doc carries the current methodology
     const json = JSON.parse(out.join('\n'));
     assert.ok(Array.isArray(json.warnings));
     assert.equal(json.warnings.filter((w) => /sdd-workflow/.test(w)).length, 0);
+  });
+});
+
+test('doctor reports runtime MCP readiness notes without blocking', async () => {
+  const dir = await initRepo();
+  const config = path.join(dir, 'sdd.config.yaml');
+  fs.writeFileSync(config, fs.readFileSync(config, 'utf8')
+    .replace('browser: false', 'browser: true')
+    .replace('confluence: false', 'confluence: true'));
+  await withGlobalVersion('3.0.0', async () => {
+    const { io, out } = capture();
+    const code = await run(['doctor', '--json', '--cwd', dir], io);
+    const json = JSON.parse(out.join('\n'));
+    assert.equal(code, EXIT.OK);
+    assert.equal(json.healthy, true);
+    assert.ok(json.notes.some((n) => /Playwright MCP/.test(n) && /active agent runtime/.test(n)));
+    assert.ok(json.notes.some((n) => /Confluence add-on/.test(n) && /Atlassian MCP/.test(n)));
   });
 });
 

@@ -40,6 +40,15 @@ For each adapter (`browser`, `http`, `cli`, `worker`):
 - `cli` / `worker` (experimental): when their capability is `true`, they `block`
   (`ADAPTER_NOT_IMPLEMENTED`) in 2.0 — they never emit `passed`.
 
+## Runtime tool dependency
+
+Playwright MCP is configured per runtime. A Claude Code plugin install is not
+visible to Codex or GitHub Copilot, and a Codex MCP config is not visible to
+Claude. Before evaluating `browser`, confirm Playwright MCP is registered in the
+active session (for example `/mcp`; Codex can also use `codex mcp list`). If it
+is absent, record `DEPENDENCY_UNAVAILABLE` and include the active runtime in the
+finding when known.
+
 ## Gate status
 
 `passed` iff every applicable adapter is `passed`; `not_applicable` if none apply;

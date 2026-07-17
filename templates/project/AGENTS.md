@@ -31,6 +31,10 @@ globally; run `sdd next` to see the current lifecycle state and the next valid
 step. Claude Code reads the skills from `~/.claude/skills`; GitHub Copilot and
 Codex share `~/.agents/skills`. See [docs/sdd-workflow.md](docs/sdd-workflow.md).
 
+Runtime tools are configured per agent runtime. Browser runtime gates require a
+Playwright MCP in the active runtime; Confluence add-ons require an authenticated
+Atlassian MCP in the active runtime.
+
 ## Conventions
 
 - <naming, layering, and testing conventions>

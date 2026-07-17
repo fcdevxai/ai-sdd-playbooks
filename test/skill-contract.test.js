@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
@@ -32,6 +33,12 @@ test('the Confluence add-on skills lint clean (T12.1)', () => {
   const results = lintSkillsDir(dir);
   assert.deepEqual(results.filter((r) => !r.valid), []);
   assert.deepEqual(results.map((r) => r.name).sort(), ['code-audit-comment', 'document-code', 'operational-guide']);
+});
+
+test('lintSkillsDir ignores broken symlinks in shared global skill dirs', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdd-skill-contract-'));
+  fs.symlinkSync(path.join(dir, 'missing-skill-target'), path.join(dir, 'find-skills'), 'dir');
+  assert.deepEqual(lintSkillsDir(dir), []);
 });
 
 test('the core skills are present (13 skills, 3.0)', () => {
