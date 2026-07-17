@@ -132,7 +132,7 @@ Comments published:
 
 ## Blocking criteria
 
-- `getAccessibleAtlassianResources` returns no resources → tell the user to authenticate the Atlassian MCP via `/mcp` → "claude.ai Atlassian". Do not continue.
+- `getAccessibleAtlassianResources` returns no resources → tell the user to authenticate the Atlassian MCP in the active runtime (Claude Code, Codex, or GitHub Copilot) and restart the session if needed. Do not continue.
 - The real code file behind the page can't be identified → **stop** and ask for the path; never guess the component.
 
 ## What it does NOT replace
@@ -146,5 +146,5 @@ Comments published:
 - Every finding traces to real code read this run; never assume.
 - Confirm the exact comment text with the user before each publish; a prior batch's OK does not cover new content.
 - `textSelection` is plain text (no markdown) — or the inline comment 400s.
-- Requires the Atlassian MCP; if unavailable, stop and tell the user.
+- Requires the Atlassian MCP in the active runtime; if unavailable, stop and tell the user. A Claude Code plugin install is not visible to Codex or GitHub Copilot unless those runtimes are configured separately.
 - This is an add-on: it must never be installed implicitly with the core.

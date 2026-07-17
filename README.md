@@ -62,6 +62,23 @@ Until a capability is set, `sdd-runtime-gate` treats it as `not_applicable`, so
 setting them correctly is what turns on the right runtime checks (e.g. a web app
 needs `browser: true` for the Playwright-driven UI checks to run).
 
+## Runtime tool prerequisites
+
+`sdd install` installs methodology skills only. Runtime tools such as MCP
+servers are configured in each agent runtime and are not shared automatically
+between Claude Code, GitHub Copilot, and Codex.
+
+| Need | Claude Code | Codex | GitHub Copilot |
+|---|---|---|---|
+| Browser/runtime evidence (`capabilities.browser: true`) | Install/enable Playwright MCP in Claude and verify it with `/mcp`. | `codex mcp add playwright -- npx -y @playwright/mcp`, restart the Codex session, then verify with `/mcp` or `codex mcp list`. | Configure Playwright MCP in the IDE/workspace (for example `.vscode/mcp.json`) or in GitHub repo/org MCP settings for Copilot cloud/code review. |
+| Confluence add-on (`addons.confluence: true`) | Install/authenticate the Atlassian MCP in Claude and verify it with `/mcp`. | Configure/authenticate an Atlassian MCP in Codex (`~/.codex/config.toml` or `codex mcp add`, depending on the server transport), then restart the session. | Configure/authenticate Atlassian MCP in the IDE/workspace or in GitHub repo/org MCP settings, subject to your org policy. |
+
+If a required MCP is missing in the active runtime, the related skill must stop
+or mark the adapter `blocked` with `DEPENDENCY_UNAVAILABLE`; it must not
+simulate evidence. `sdd doctor` emits readiness notes when `browser` or the
+Confluence add-on are enabled, but the CLI does not install or authenticate MCP
+servers for you.
+
 ## Command reference
 
 | Command | Purpose |

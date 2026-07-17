@@ -172,6 +172,23 @@ test('doctor does not warn when the workflow doc carries the current methodology
   });
 });
 
+test('doctor reports runtime MCP readiness notes without blocking', async () => {
+  const dir = await initRepo();
+  const config = path.join(dir, 'sdd.config.yaml');
+  fs.writeFileSync(config, fs.readFileSync(config, 'utf8')
+    .replace('browser: false', 'browser: true')
+    .replace('confluence: false', 'confluence: true'));
+  await withGlobalVersion('3.0.0', async () => {
+    const { io, out } = capture();
+    const code = await run(['doctor', '--json', '--cwd', dir], io);
+    const json = JSON.parse(out.join('\n'));
+    assert.equal(code, EXIT.OK);
+    assert.equal(json.healthy, true);
+    assert.ok(json.notes.some((n) => /Playwright MCP/.test(n) && /active agent runtime/.test(n)));
+    assert.ok(json.notes.some((n) => /Confluence add-on/.test(n) && /Atlassian MCP/.test(n)));
+  });
+});
+
 test('workflowStaleness: null when no install, doc missing, current, or newer', () => {
   const dir = tmp();
   assert.equal(workflowStaleness({ cwd: dir, config: {}, installed: null }), null);      // no install
