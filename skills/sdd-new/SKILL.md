@@ -45,6 +45,20 @@ The proposal MUST validate against the proposal schema. Propose the structured
 `impact` and `security` blocks for the human to confirm (C-03/C-04) — you propose,
 the human approves or corrects:
 
+Keep the three proposal taxonomies separate:
+
+- `impact.*` describes delivery/design impact. For example, a public API or
+  response contract change is `impact.public_contract: true`.
+- `security.triggers` describes security-sensitive concerns only. Valid examples
+  include `authentication`, `authorization`, `personal_data`, `sensitive_data`,
+  `secrets`, `external_integration`, and `sensitive_logging`.
+- `runtime_relevant_capabilities` describes which enabled runtime adapters this
+  change must exercise, such as `http` or `browser`.
+
+Never place capability names (`http`, `browser`, `cli`, `worker`) or impact keys
+(`public_contract`, `data_model`, etc.) inside `security.triggers`; they are
+different schema fields and will make `sdd validate` fail.
+
 Also propose the optional `runtime_relevant_capabilities`: the subset of the
 project's **already-enabled** capabilities (`sdd.config.yaml`) that this
 requirement's `Impacted modules`/`Expected behavior` **concretely** touch —
