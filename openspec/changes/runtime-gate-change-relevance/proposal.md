@@ -3,7 +3,7 @@ schema: proposal
 schema_version: 1
 change_id: runtime-gate-change-relevance
 title: "Runtime gate: per-change capability relevance (fix the permanent experimental-adapter deadlock)"
-status: draft
+status: approved
 owner: felipe.campos
 created: 2026-07-16
 updated: 2026-07-16
@@ -108,6 +108,14 @@ applies uniformly to every change.
   `runtime_relevant_capabilities`, flag it — closes the honor-system gap so
   this isn't purely convention.
 
+**Add — README documentation**
+
+- A short, summarized section explaining the per-change relevance model and its
+  backward-compatibility guarantee: existing/in-progress changes are never
+  auto-reconfigured by upgrading the package — the new behavior only activates
+  when a human explicitly adds `runtime_relevant_capabilities` to a specific
+  `proposal.md` and re-runs `sdd-runtime-gate` for that change.
+
 **Out of scope (non-goals)**
 
 - Not implementing a real `worker`/`cli` runtime adapter (that's a separate,
@@ -129,6 +137,7 @@ applies uniformly to every change.
 - **AC-05** `sdd-new`/`sdd-enrich-us` propose `runtime_relevant_capabilities` from concrete requirement signals (never silently guessed) for human approval; `sdd-runtime-gate` reads and honors it.
 - **AC-06** `sdd validate --ci` flags a runtime-gate-report that reports anything other than `not_applicable` for a capability the proposal explicitly excluded.
 - **AC-07** Full test suite green; no regression in existing adapter/engine/validate/skill-contract tests.
+- **AC-08** **No auto-reconfiguration guarantee**: upgrading the `sdd` package alone changes zero existing artifacts' computed state — no `proposal.md`, `sdd.config.yaml`, or `runtime-gate-report.md` already on disk is rewritten or reinterpreted differently, for any in-progress or completed change, until a human explicitly adds `runtime_relevant_capabilities` to that change's `proposal.md` and re-runs `sdd-runtime-gate`. README documents this guarantee, summarized.
 
 ## Risks
 
