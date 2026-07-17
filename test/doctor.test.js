@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { run, EXIT } from '../src/cli/dispatch.js';
+import { workflowStaleness } from '../src/cli/doctor.js';
 
 function tmp() { return fs.mkdtempSync(path.join(os.tmpdir(), 'sdd-doctor-')); }
 function capture() {
@@ -89,4 +90,53 @@ test('doctor --fix is additive only: creates missing openspec/changes, edits not
   assert.ok(fs.existsSync(path.join(dir, 'openspec', 'changes')));
   const after = new Map(snapshot(dir).map((s) => [s.split(':')[0], s]));
   for (const b of before) assert.equal(after.get(b.split(':')[0]), b);
+});
+
+test('doctor warns (advisory, still exit 0) when the workflow doc predates the methodology (AC-01/AC-02/AC-04)', async () => {
+  const dir = await initRepo();
+  // simulate a pre-3.0 project doc: strip the marker `sdd init` scaffolded
+  const wf = path.join(dir, 'docs', 'sdd-workflow.md');
+  fs.writeFileSync(wf, fs.readFileSync(wf, 'utf8').replace(/<!--\s*sdd-methodology:[^>]*-->\n?/, ''));
+  await withGlobalVersion('3.0.0', async () => {
+    const { io, out } = capture();
+    const code = await run(['doctor', '--json', '--cwd', dir], io);
+    const json = JSON.parse(out.join('\n'));
+    assert.equal(code, EXIT.OK);          // advisory: never fails the exit code
+    assert.equal(json.healthy, true);
+    assert.ok(Array.isArray(json.warnings));
+    assert.ok(json.warnings.some((w) => /sdd-workflow\.md/.test(w) && /sdd-bootstrap-project/.test(w)));
+  });
+});
+
+test('doctor does not warn when the workflow doc carries the current methodology marker (AC-03)', async () => {
+  const dir = await initRepo(); // scaffolds `<!-- sdd-methodology: 3.0 -->`
+  await withGlobalVersion('3.0.0', async () => {
+    const { io, out } = capture();
+    await run(['doctor', '--json', '--cwd', dir], io);
+    const json = JSON.parse(out.join('\n'));
+    assert.ok(Array.isArray(json.warnings));
+    assert.equal(json.warnings.filter((w) => /sdd-workflow/.test(w)).length, 0);
+  });
+});
+
+test('workflowStaleness: null when no install, doc missing, current, or newer', () => {
+  const dir = tmp();
+  assert.equal(workflowStaleness({ cwd: dir, config: {}, installed: null }), null);      // no install
+  assert.equal(workflowStaleness({ cwd: dir, config: {}, installed: '3.0.0' }), null);    // doc missing
+  fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
+  const wf = path.join(dir, 'docs', 'sdd-workflow.md');
+  fs.writeFileSync(wf, '<!-- sdd-methodology: 3.0 -->\n# wf\n');
+  assert.equal(workflowStaleness({ cwd: dir, config: {}, installed: '3.0.0' }), null);    // current major
+  fs.writeFileSync(wf, '<!-- sdd-methodology: 4.0 -->\n# wf\n');
+  assert.equal(workflowStaleness({ cwd: dir, config: {}, installed: '3.0.0' }), null);    // newer, not stale
+});
+
+test('workflowStaleness: warns on an older major or a missing marker', () => {
+  const dir = tmp();
+  fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
+  const wf = path.join(dir, 'docs', 'sdd-workflow.md');
+  fs.writeFileSync(wf, '<!-- sdd-methodology: 2.0 -->\n# wf\n');
+  assert.match(workflowStaleness({ cwd: dir, config: {}, installed: '3.0.0' }), /predates the installed methodology/);
+  fs.writeFileSync(wf, '# wf, no marker\n');
+  assert.match(workflowStaleness({ cwd: dir, config: {}, installed: '3.0.0' }), /no methodology-version marker/);
 });

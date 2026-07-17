@@ -13,7 +13,7 @@ import { EXIT } from './exit.js';
 import { PACKAGE_ROOT } from '../install/skills.js';
 import { resolveTargets } from '../install/targets.js';
 import { loadConfig, validateConfig } from '../config/config.js';
-import { resolveAllDocuments } from '../config/docmap.js';
+import { resolveAllDocuments, resolveDocument } from '../config/docmap.js';
 import { readLock, lockPathFor } from '../config/lock.js';
 import { loadChange, findChangeDirs } from '../config/artifacts.js';
 import { computeState } from '../lifecycle/engine.js';
@@ -25,10 +25,41 @@ function readStamp(dir) {
   return fs.existsSync(p) ? fs.readFileSync(p, 'utf8').trim() : null;
 }
 
+const METHODOLOGY_MARKER = /<!--\s*sdd-methodology:\s*([\d.]+)\s*-->/;
+
+/**
+ * Advisory check: is the project's `workflow` doc older than the installed
+ * methodology? Returns a warning string or null. Pure/testable.
+ *
+ * Null (nothing to say) when no methodology is installed or the doc is absent —
+ * those are already covered by doctor's `problems`. Warns when the doc carries no
+ * methodology marker, or a major older than the installed one.
+ */
+export function workflowStaleness({ cwd, config, installed }) {
+  if (!installed) return null;
+  const resolved = resolveDocument(config, 'workflow');
+  if (!resolved.path) return null;
+  const abs = path.join(cwd, resolved.path);
+  if (!fs.existsSync(abs)) return null;
+
+  const installedMajor = parseInt(String(installed).split('.')[0], 10);
+  const fix = 'refresh it with the `sdd-bootstrap-project` skill';
+  const m = fs.readFileSync(abs, 'utf8').match(METHODOLOGY_MARKER);
+  if (!m) {
+    return `\`${resolved.path}\` has no methodology-version marker; it may predate methodology ${installedMajor}.x — ${fix}`;
+  }
+  const docMajor = parseInt(m[1].split('.')[0], 10);
+  if (docMajor < installedMajor) {
+    return `\`${resolved.path}\` predates the installed methodology (doc: ${docMajor}.x, installed: ${installedMajor}.x) — ${fix}`;
+  }
+  return null;
+}
+
 export async function doctorCommand(parsed, io) {
   const cwd = parsed.flags.cwd || process.cwd();
   const fix = parsed.rest.includes('--fix');
   const problems = [];
+  const warnings = [];
   const fixes = [];
   const notes = [];
 
@@ -56,6 +87,10 @@ export async function doctorCommand(parsed, io) {
     if (!d.path || !fs.existsSync(path.join(cwd, d.path))) problems.push(`missing document ${d.name} (${d.path})`);
   }
 
+  // workflow doc staleness vs the installed methodology (advisory — never fails)
+  const stale = workflowStaleness({ cwd, config, installed });
+  if (stale) warnings.push(stale);
+
   // openspec structure (additive-fixable)
   const changesDir = path.join(cwd, 'openspec', 'changes');
   if (!fs.existsSync(changesDir)) {
@@ -81,14 +116,16 @@ export async function doctorCommand(parsed, io) {
 
   notes.push('GitHub delivery reader lands in a later phase; delivery is reported as unknown');
 
+  // `warnings` are advisory: they never affect `healthy` or the exit code.
   const healthy = problems.length === 0;
   if (parsed.flags.json) {
-    io.out(JSON.stringify({ command: 'doctor', healthy, problems, fixes, notes }, null, 2));
+    io.out(JSON.stringify({ command: 'doctor', healthy, problems, warnings, fixes, notes }, null, 2));
   } else {
     io.out('sdd doctor');
     for (const f of fixes) io.out(`  fixed: ${f}`);
     if (healthy) io.out('  ✓ healthy');
     for (const p of problems) io.err(`  ✗ ${p}`);
+    for (const w of warnings) io.out(`  ⚠ ${w}`);
     for (const n of notes) io.out(`  note: ${n}`);
   }
   return healthy ? EXIT.OK : EXIT.ENVIRONMENT;
