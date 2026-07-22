@@ -1,0 +1,27 @@
+{
+  "$id": "https://playbook-ai.dev/schemas/runtime-gate-report.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SDD runtime-gate-report artifact frontmatter",
+  "type": "object",
+  "required": ["schema", "schema_version", "change_id", "status", "adapters"],
+  "properties": {
+    "schema": { "const": "runtime-gate-report" },
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "change_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+    "status": { "enum": ["passed", "failed", "blocked", "not_applicable"] },
+    "created": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "updated": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "adapters": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": { "enum": ["passed", "failed", "blocked", "not_applicable"] },
+          "reason_code": { "type": "string" },
+          "findings": { "type": "array" }
+        }
+      }
+    }
+  }
+}

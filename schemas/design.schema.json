@@ -1,0 +1,30 @@
+{
+  "$id": "https://playbook-ai.dev/schemas/design.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SDD design artifact frontmatter",
+  "type": "object",
+  "required": ["schema", "schema_version", "change_id", "status", "security"],
+  "properties": {
+    "schema": { "const": "design" },
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "change_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+    "title": { "type": "string" },
+    "status": { "enum": ["draft", "approved", "not_applicable", "archived"] },
+    "owner": { "type": "string" },
+    "created": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "updated": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "depends_on": { "type": "string" },
+    "security": {
+      "type": "object",
+      "required": ["risk", "threat_model_required", "controls"],
+      "properties": {
+        "risk": { "enum": ["low", "standard", "elevated"] },
+        "threat_model_required": { "type": "boolean" },
+        "controls": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^SEC-[0-9]{3}$" }
+        }
+      }
+    }
+  }
+}

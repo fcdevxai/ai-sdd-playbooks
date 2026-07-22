@@ -1,0 +1,14 @@
+{
+  "$id": "https://playbook-ai.dev/schemas/adr.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "adr",
+  "type": "object",
+  "required": ["status", "date", "ticket"],
+  "properties": {
+    "status": { "enum": ["proposed", "accepted", "superseded", "rejected"] },
+    "date": { "type": "string" },
+    "ticket": { "type": "string" },
+    "supersedes": { "type": "string", "pattern": "^ADR-\\d{3}$" },
+    "superseded_by": { "type": "string", "pattern": "^ADR-\\d{3}$" }
+  }
+}

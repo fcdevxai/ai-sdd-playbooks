@@ -1,0 +1,16 @@
+# CODEOWNERS — archivos que requieren revisión antes del merge.
+# Sintaxis: https://docs.github.com/articles/about-code-owners
+#
+# TODO: reemplazar @tu-org/reviewers con el handle real de tu equipo.
+
+# Spec de sistema global — cambios de arquitectura global
+openspec/specs/system.md   @tu-org/reviewers
+
+# Specs permanentes archivadas — protegidas
+openspec/specs/            @tu-org/reviewers
+
+# CI/CD — cambios de workflow requieren revisión
+.github/workflows/         @tu-org/reviewers
+
+# El propio CODEOWNERS
+.github/CODEOWNERS         @tu-org/reviewers

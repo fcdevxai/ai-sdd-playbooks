@@ -1,0 +1,17 @@
+{
+  "$id": "https://playbook-ai.dev/schemas/security-report.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SDD security-report artifact frontmatter",
+  "type": "object",
+  "required": ["schema", "schema_version", "change_id", "status", "risk"],
+  "properties": {
+    "schema": { "const": "security-report" },
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "change_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+    "status": { "enum": ["passed", "failed", "blocked", "not_applicable"] },
+    "risk": { "enum": ["low", "standard", "elevated"] },
+    "threat_model_required": { "type": "boolean" },
+    "created": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "updated": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+  }
+}

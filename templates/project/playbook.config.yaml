@@ -1,0 +1,29 @@
+version: 2
+project:
+  name: mi-proyecto
+  language: es          # idioma del contenido humano (cuerpos de los documentos)
+methodology:
+  scope: user           # instalación global
+  compatible: ">=0.1.0 <1.0.0"
+capabilities:           # marca las que tu proyecto realmente tiene (activa sdd-runtime-gate)
+  browser: false        # tiene una UI web; requiere Playwright MCP en el runtime activo
+  http: false           # tiene una superficie HTTP/REST
+  cli: false             # tiene una superficie de línea de comandos (adapter experimental)
+  worker: false          # tiene workers/colas en background (adapter experimental)
+design:
+  always: false         # fuerza sdd-design sin importar el impact declarado
+security:
+  default_risk: standard   # low | standard | elevated
+  threat_model: auto       # auto | always | never
+github:
+  base_branch: main        # nunca hardcodeado en el código; se lee de acá o de GitHub
+  require_pull_request: true
+  require_ci: true
+documents:                 # adopta documentos existentes apuntando estas rutas a los reales
+  system_spec: openspec/specs/system.md
+  agent_architecture: docs/agent_architecture.md
+  architecture: docs/doc_architecture.md
+  verification: docs/doc_verification_guide.md
+  workflow: docs/sdd-workflow.md
+addons:
+  confluence: false        # requiere Atlassian MCP en el runtime activo

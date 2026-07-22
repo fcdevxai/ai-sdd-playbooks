@@ -1,0 +1,38 @@
+name: Alerta de proposals obsoletas
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'   # lunes 09:00 UTC
+  workflow_dispatch:
+
+jobs:
+  check-stale-proposals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detectar proposals sin actividad hace más de 14 días
+        run: |
+          STALE=()
+          for DIR in openspec/changes/*/; do
+            [ -d "$DIR" ] || continue
+            LAST=$(git log -1 --format="%ci" -- "$DIR" 2>/dev/null || true)
+            [ -n "$LAST" ] || continue
+            DAYS=$(( ( $(date +%s) - $(date -d "$LAST" +%s) ) / 86400 ))
+            if [ "$DAYS" -gt 14 ]; then
+              OWNER="desconocido"
+              if [ -f "${DIR}OWNER.md" ]; then
+                OWNER=$(grep -m1 -i "Developer" "${DIR}OWNER.md" | sed -E 's/.*Developer[^:]*:[[:space:]]*//' || echo "desconocido")
+              fi
+              STALE+=("$DIR (${DAYS}d inactivo, owner: ${OWNER:-desconocido})")
+            fi
+          done
+          if [ ${#STALE[@]} -gt 0 ]; then
+            echo "::warning::Proposals SDD obsoletas detectadas (>14 días inactivas):"
+            for S in "${STALE[@]}"; do echo "  - $S"; done
+            echo "Acción: archivar con la skill sdd-archive, eliminar, o retomar activamente."
+          else
+            echo "No se encontraron proposals obsoletas."
+          fi
