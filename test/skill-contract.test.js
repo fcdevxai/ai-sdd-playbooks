@@ -129,6 +129,13 @@ test('sdd-bootstrap-project proposes multi-repo topology without filtering candi
   assert.match(b, /role: sdd/);
 });
 
+test('sdd-bootstrap-project re-invokes the sibling detector on re-run instead of treating a populated repos: as already resolved (AC-1, AC-2)', () => {
+  const b = body('sdd-bootstrap-project');
+  assert.match(b, /re-run|re-invoke/i, 're-run/re-invoke instruction present');
+  assert.match(b, /already (has entries|populated|confirmed)/i, 'addresses the populated-repos: case explicitly');
+  assert.match(b, /never.*(skip|reason to skip)/i, 'states a populated repos: is never a reason to skip re-detection');
+});
+
 test('sdd-bootstrap-project detects and refreshes a stale workflow doc (closes the playbook doctor promise)', () => {
   const b = body('sdd-bootstrap-project');
   assert.match(b, /sdd-methodology/); // checks the same marker `playbook doctor` reads
