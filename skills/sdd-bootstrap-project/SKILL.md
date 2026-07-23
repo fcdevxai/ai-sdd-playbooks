@@ -88,6 +88,16 @@ detection, semantic doc analysis, and refactoring — but it is
    Skip this step entirely (propose nothing) if the parent directory has no
    git-repo siblings, or if the human says this is a single-repo project.
 
+   **On a re-run, `repos:` already having entries is never a reason to skip
+   this step.** `detectSiblingRepos` is stateless — it reflects the current
+   filesystem, not what was true at the last bootstrap. Always re-invoke it,
+   diff its output against the repos already confirmed in
+   `playbook.config.yaml`, and present only the candidates not already
+   listed there. Do not re-propose already-confirmed repos as if they were
+   new, and do not read a populated `repos:` block as "topology already
+   resolved" — that reading is exactly how a sibling repo added after the
+   first bootstrap goes undetected.
+
 4. **Propose document mappings** for the logical docs (`system_spec`,
    `agent_architecture`, `architecture`, `verification`, `workflow`) — e.g. map
    `docs/Arquitectura.md` to `architecture`, or an existing agent guide to
