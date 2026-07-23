@@ -6,7 +6,7 @@ last_updated: 2026-07-03
 
 # CI — spec-lint Workflow Behavior
 
-> **Inherited from specloom** (`owner: bernardo`), adapted for `playbook-ai`. In `playbook-ai` this workflow ships as `playbook-validation.yml` (runs `playbook validate --ci`); its live behavior is the authority and may differ from this inherited spec. `.specloom/` is the runtime dir. See `CREDITS` and `ADR-026`.
+> **Inherited from specloom**, adapted for `playbook-ai`. In `playbook-ai` this workflow ships as `playbook-validation.yml` (runs `playbook validate --ci`); its live behavior is the authority and may differ from this inherited spec. `.specloom/` is the runtime dir. See `CREDITS` and `ADR-026`.
 
 ## Purpose
 

@@ -19,7 +19,7 @@ test('init on a fresh repo creates the full project-local set and no core copies
   const { io } = capture();
   assert.equal(await run(['init', '--cwd', dir], io), EXIT.OK);
   for (const f of [
-    'playbook.config.yaml', 'playbook.lock', 'AGENTS.md', 'CLAUDE.md', '.claude/settings.json',
+    'playbook.config.yaml', 'playbook.lock', 'AGENTS.md', 'CLAUDE.md',
     '.github/copilot-instructions.md', '.github/workflows/playbook-validation.yml',
     '.github/CODEOWNERS', '.github/PULL_REQUEST_TEMPLATE.md',
     '.github/ISSUE_TEMPLATE/user-story.md', '.github/workflows/archive-cleanup.yml',
@@ -32,15 +32,6 @@ test('init on a fresh repo creates the full project-local set and no core copies
   // no core skills copied into the consumer repo
   assert.equal(has(dir, 'skills'), false);
   assert.equal(validateConfig(readConfigFile(path.join(dir, 'playbook.config.yaml'))).valid, true);
-});
-
-test('init scaffolds .claude/settings.json with the destructive-command guardrails', async () => {
-  const dir = tmp();
-  await run(['init', '--cwd', dir], capture().io);
-  const settings = JSON.parse(fs.readFileSync(path.join(dir, '.claude', 'settings.json'), 'utf8')); // valid JSON
-  assert.ok(settings.permissions.deny.includes('Bash(rm -rf:*)'), 'denies rm -rf');
-  assert.ok(settings.permissions.deny.includes('Bash(git reset --hard:*)'), 'denies git reset --hard');
-  assert.ok(settings.permissions.allow.includes('Read(**)'), 'allows reads');
 });
 
 test('init hints to run sdd-bootstrap-project when capabilities are all false', async () => {

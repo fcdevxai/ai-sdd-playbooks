@@ -6,7 +6,7 @@ last_updated: 2026-07-04
 
 # Playbooks and Agent Skill Metadata
 
-> **Inherited from specloom** (`owner: bernardo`), adapted for `playbook-ai`. Command names shown as `loom <x>` map to `playbook <x>`, and the runtime dir is `.specloom/`. The live CLI and playbooks are the authority on current behavior. See `CREDITS` and `ADR-026`.
+> **Inherited from specloom**, adapted for `playbook-ai`. Command names shown as `loom <x>` map to `playbook <x>`, and the runtime dir is `.specloom/`. The live CLI and playbooks are the authority on current behavior. See `CREDITS` and `ADR-026`.
 
 ## Purpose
 

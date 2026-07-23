@@ -6,7 +6,7 @@ last_updated: 2026-07-08
 
 # CLI Consumer-Root Behavior
 
-> **Inherited from specloom** (`owner: bernardo`), adapted for `playbook-ai`. Command names shown as `loom <x>` map to `playbook <x>`, and the runtime dir is `.specloom/`. The live CLI (`playbook --help`) is the authority on the exact command surface. See `CREDITS` and `ADR-026`.
+> **Inherited from specloom**, adapted for `playbook-ai`. Command names shown as `loom <x>` map to `playbook <x>`, and the runtime dir is `.specloom/`. The live CLI (`playbook --help`) is the authority on the exact command surface. See `CREDITS` and `ADR-026`.
 
 ## Purpose
 

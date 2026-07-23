@@ -48,7 +48,7 @@ Descartado: borra la autoría de una creación propia del equipo sin ganancia t�
 
 - backend: sin impacto (framework de specs; no hay backend).
 - frontend: sin impacto.
-- security: se restaura el template `.claude/settings.json` con guardrails (`deny: rm -rf`, `git reset --hard`) que la fusión había perdido.
+- security: sin cambios. Se evaluó restaurar el template `.claude/settings.json` de specloom, pero se dejó fuera: es solo de Claude Code (el proyecto es multi-runtime) y la política de permisos es decisión de cada consumidor.
 - data: se re-crea el corpus `openspec/specs/adr/ADR-001..025` + los specs de dominio; el runtime escribe en `.specloom/`.
 - deployment: sin impacto en CI.
 - testing: tests anti-referencia-colgante y de scaffolding de `.claude/settings.json`.
