@@ -13,7 +13,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      # This is the dogfood repo validating itself: run the checked-out binary
+      # directly (never `npx playbook-ai` here) — `playbook-ai` is private/unpublished,
+      # and that package name already exists on the public npm registry under an
+      # unrelated project, so `npx` would silently fetch a stranger's package
+      # instead of failing loudly. A consumer project's CI (see
+      # templates/project/github/workflows/playbook-validation.yml) still needs a
+      # real distribution decision — tracked separately, not fixed by this change.
+      - name: Install (clean)
+        run: npm ci
       # Valida artefactos, config, lock, estado legal del lifecycle, gates, adapters.
       # Solo checks estructurados — sin matchear verdicts/encabezados/emojis, sin mutar.
       - name: playbook validate --ci
-        run: npx --yes playbook-ai validate --ci
+        run: node bin/playbook.js validate --ci
