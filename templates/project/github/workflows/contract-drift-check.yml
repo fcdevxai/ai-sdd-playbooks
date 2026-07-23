@@ -1,0 +1,48 @@
+# Contract-drift CI template — install this in the BACKEND repo's CI, not in
+# the hub (loom) repo. It checks the backend's actual OpenAPI surface against
+# the hub's canonical contract (contract.path_in_loom in playbook.config.yaml),
+# so the API drifting from what the hub declared fails the PR instead of
+# silently reaching a frontend.
+#
+# Structural check only: missing/extra endpoints and missing/extra required
+# fields. It does not catch type changes, query/path params, response
+# schemas, or non-JSON content types.
+#
+# [TODO before installing]: fill in HUB_REPO_CHECKOUT_PATH (relative checkout
+# path of the hub repo, or an actions/checkout step against it) and the
+# generate-openapi step for this backend's stack (e.g. springdoc, drf-spectacular,
+# swagger-jsdoc — whatever generates openapi.json/yaml from the running app or
+# its route definitions).
+name: Contract drift check
+
+on:
+  pull_request:
+
+jobs:
+  contract-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # [TODO]: checkout the hub (loom) repo so the canonical contract is
+      # available at HUB_REPO_CHECKOUT_PATH, e.g.:
+      # - uses: actions/checkout@v4
+      #   with:
+      #     repository: <org>/<hub-repo>
+      #     path: HUB_REPO_CHECKOUT_PATH
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # [TODO]: generate this backend's OpenAPI document. Examples:
+      #   ./mvnw springdoc:generate  # Java/Spring
+      #   python manage.py spectacular --file generated-openapi.yaml  # Django
+      #   npx swagger-jsdoc -d swaggerDef.js -o generated-openapi.yaml  # Node
+      - name: Generate backend OpenAPI (fill in for this stack)
+        run: |
+          echo "TODO: generate this backend's OpenAPI document to generated-openapi.yaml"
+          exit 1
+
+      - name: Check contract drift against the hub's canonical contract
+        run: npx --yes playbook-ai contract-drift generated-openapi.yaml

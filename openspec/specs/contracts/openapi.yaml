@@ -1,0 +1,13 @@
+openapi: 3.0.3
+info:
+  title: playbook-ai — shared API contract
+  version: 0.1.0
+  description: >
+    Canonical, hub-authored OpenAPI contract (contract.source_of_truth:
+    loom-first). Endpoints are authored here during sdd-plan, before backend
+    implementation starts, then checked against the backend's generated
+    OpenAPI via `playbook contract-drift` (see
+    templates/project/github/workflows/contract-drift-check.yml). Starts empty
+    on purpose — every path is added feature by feature, never bulk-imported
+    from an implementation.
+paths: {}
