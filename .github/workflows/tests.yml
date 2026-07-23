@@ -1,0 +1,33 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['18', '20']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install (clean)
+        run: npm ci
+      # Full unit suite. Runs under strict ESM — catches extensionless/broken
+      # imports (e.g. the `ajv/dist/2020` vs `ajv/dist/2020.js` regression) that
+      # take the schema/config/validate stack down before any assertion runs.
+      - name: Test
+        run: npm test
+      # The installed SKILL.md files must stay byte-identical to what the
+      # generator produces from skills/*/canonical.md. Fails on any drift.
+      - name: Skills in sync
+        run: npm run generate:check
+      # Smoke: the CLI binary loads and prints the methodology version.
+      - name: CLI smoke
+        run: node bin/playbook.js --version

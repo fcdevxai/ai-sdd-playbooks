@@ -8,7 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import Ajv2020 from 'ajv/dist/2020';
+import Ajv2020 from 'ajv/dist/2020.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const SCHEMA_DIR = path.resolve(__dirname, '..', '..', 'schemas');

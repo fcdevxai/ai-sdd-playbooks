@@ -1,0 +1,10 @@
+# Dependencies — reconstructed with `npm ci` from package-lock.json, never committed.
+node_modules/
+
+# Run telemetry / verification logs (compacted output lives here; not committed).
+.playbook/
+
+# OS / editor noise
+.DS_Store
+*.log
+npm-debug.log*
