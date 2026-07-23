@@ -130,6 +130,32 @@ merge silently disconnecting it.
 - `sdd-apply` and `sdd-archive` are excluded from both directives — they need the
   complete context to implement / to edit permanent source-of-truth files.
 
+## Bootstrap re-run: config as diff baseline, not completion signal
+
+Fixed in change `bootstrap-repos-diff-on-rerun` (see ADR-028 for the full
+decision and alternatives considered). Reported from real dogfooding: a
+consumer project bootstrapped once, later added a new sibling repo, re-ran
+`sdd-bootstrap-project`, and the new repo was never proposed.
+
+- `detectSiblingRepos` (`src/config/detect-siblings.js`) is stateless — it
+  reflects the current filesystem on every call, not what was true at the
+  last bootstrap.
+- `sdd-bootstrap-project` paso 3 (sibling-repo detection) always re-invokes
+  the detector, even on a re-run where `repos:` in `playbook.config.yaml`
+  already has entries, and diffs its output against those already-confirmed
+  repos, presenting only the new candidates.
+- A populated `repos:` block is never, by itself, a reason to skip
+  re-detection — reading it as "topology already resolved" is exactly the
+  failure mode this fix closes.
+- Scope is additive only: detecting repos removed or renamed after the
+  first bootstrap is explicitly out of scope. The same re-run pattern in
+  `sdd-bootstrap-project`'s other steps (capabilities, document mappings) is
+  a separate decision, to be made only if that gap is independently
+  confirmed (ADR-028).
+- `test/skill-contract.test.js` carries a content assertion tying this
+  instruction to the generated `SKILL.md`, so a future merge cannot silently
+  disconnect it again.
+
 ## Security thread across `sdd-enrich-us` and `sdd-verify`
 
 Repaired in change `wire-token-and-security-policy`. The thread that seeds and
