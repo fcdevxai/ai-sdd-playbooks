@@ -1,7 +1,7 @@
 /**
  * Multi-repo git-state primitives — ported from specloom's
  * `resolveRepoBaseBranch`/`readRepoGitState`/`resolveImplicitBase`
- * (framework/cli/lib.js). Pure with respect to the caller beyond the git
+ * (specloom). Pure with respect to the caller beyond the git
  * calls themselves: every git call is argv via execFileSync, never a shell.
  */
 import fs from 'node:fs';

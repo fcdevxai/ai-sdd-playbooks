@@ -1,7 +1,7 @@
 /**
  * `playbook gate-check <change-id>` — cross-repo verification gate, ported
  * from specloom's `normalizeGateCheckPlan`/`runGateCheck`
- * (framework/cli/lib.js, ADR-016/ADR-017). Runs the `verification:` commands
+ * (specloom, ADR-016/ADR-017). Runs the `verification:` commands
  * configured for every repo listed in a change's `## Impacted repos`,
  * locally — it never queries remote CI.
  */

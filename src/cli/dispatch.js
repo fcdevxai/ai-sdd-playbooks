@@ -23,6 +23,7 @@ import { adrCommand } from './adr.js';
 import { packetCommand } from './packet.js';
 import { specReadCommand, specIndexCommand } from './spec.js';
 import { runCommand } from './run.js';
+import { usageReportCommand } from './usage.js';
 import {
   repoPlanCommand, commitPlanCommand, prepareReposCommand, gateCheckCommand, changedFilesCommand, contractDriftCommand,
 } from './repos.js';
@@ -45,6 +46,7 @@ export const COMMAND_NAMES = [
   'spec-read',
   'spec-index',
   'run',
+  'usage-report',
   'repo-plan',
   'commit-plan',
   'prepare-repos',
@@ -66,6 +68,7 @@ const COMMAND_SUMMARIES = {
   'spec-read': 'Read one section of a permanent spec: <file.md#anchor>.',
   'spec-index': 'Rebuild the local structural index of permanent specs.',
   run: 'Run a verification command with compacted output + telemetry.',
+  'usage-report': 'Offline token accounting from local Claude Code transcripts.',
   'repo-plan': 'Read-only multi-repo plan for a change (requires repos: in config).',
   'commit-plan': 'Read-only PR-payload plan per impacted repo.',
   'prepare-repos': 'Create/switch the change branch per impacted repo (branches only).',
@@ -152,6 +155,7 @@ const HANDLERS = {
   'spec-read': specReadCommand,
   'spec-index': specIndexCommand,
   run: runCommand,
+  'usage-report': usageReportCommand,
   'repo-plan': repoPlanCommand,
   'commit-plan': commitPlanCommand,
   'prepare-repos': prepareReposCommand,

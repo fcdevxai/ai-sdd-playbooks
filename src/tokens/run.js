@@ -1,13 +1,13 @@
 /**
  * `playbook run` telemetry + compaction — ported from specloom's
  * `persistRun`/`formatRunSummary`/`resolveRunMetadata`/`countPriorRuns`
- * (framework/cli/lib.js, ADR-007/ADR-008/ADR-009). Adapted to the cwd-only
- * path model: `.specloom/runs/` → `.playbook/runs/`, no `repoRoot` parameter.
+ * (specloom, ADR-007/ADR-008/ADR-009). Adapted to the cwd-only path model
+ * (no `repoRoot` parameter); runs live under `.specloom/runs/`.
  *
  * Every verification command a skill runs goes through here instead of raw
  * shell output: on success it prints a one-line summary; on failure it prints
  * the exit code plus the last `MAX_FAILURE_SUMMARY_LINES` lines. The full
- * output always lands on disk at `.playbook/runs/<run-id>/full.log` — nothing
+ * output always lands on disk at `.specloom/runs/<run-id>/full.log` — nothing
  * is lost, only what reaches the agent's context is compacted.
  */
 import fs from 'node:fs';
@@ -31,7 +31,7 @@ export function defaultChangesDir(cwd = process.cwd()) {
 }
 
 export function runsDir(cwd = process.cwd()) {
-  return path.join(cwd, '.playbook', 'runs');
+  return path.join(cwd, '.specloom', 'runs');
 }
 
 /**
@@ -67,7 +67,7 @@ export function resolveRunMetadata({ change, step, harness, cwd = process.cwd() 
  * How many prior runs already recorded the exact same {changeId, step, command}
  * triple. The caller stamps this as the new run's retryCount, so the first run
  * of a command is 0, the next 1, and so on. Stateless across processes: the
- * answer lives entirely in .playbook/runs/ on disk. A corrupt/partial
+ * answer lives entirely in .specloom/runs/ on disk. A corrupt/partial
  * usage.json is skipped, never crashing the count.
  */
 export function countPriorRuns(dir, { changeId, step, command }) {
@@ -106,7 +106,7 @@ export function filesInChange(changeId, changesDir = defaultChangesDir()) {
 export const MAX_FAILURE_SUMMARY_LINES = 40;
 
 /**
- * Writes a command's telemetry to .playbook/runs/<run-id>/. Optional metadata
+ * Writes a command's telemetry to .specloom/runs/<run-id>/. Optional metadata
  * is appended to usage.json for callers such as gate-check without changing
  * the stable base fields.
  */

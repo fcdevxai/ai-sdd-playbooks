@@ -1,6 +1,6 @@
 /**
  * Shell-like command-string splitter — ported from specloom's `splitCommand`
- * (framework/cli/lib.js). Understands quotes and backslash-escapes; never
+ * (specloom). Understands quotes and backslash-escapes; never
  * invokes a shell itself, just tokenizes a `verification:` command string into
  * argv for execFileSync/spawnSync.
  */

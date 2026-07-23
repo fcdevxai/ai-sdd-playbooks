@@ -3,7 +3,7 @@
  *
  * Runs a verification command through the telemetry/compaction layer
  * (src/tokens/run.js) instead of raw shell output: full output always lands
- * at `.playbook/runs/<run-id>/full.log`; only a compacted summary reaches
+ * at `.specloom/runs/<run-id>/full.log`; only a compacted summary reaches
  * stdout/stderr (one line on success, exit code + last 40 lines on failure).
  */
 import { spawnSync } from 'node:child_process';

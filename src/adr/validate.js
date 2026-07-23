@@ -1,6 +1,6 @@
 /**
  * ADR (Architecture Decision Record) structural validation — ported from
- * specloom's `validateADR` (framework/cli/lib.js). Structural check for a
+ * specloom's `validateADR`. Structural check for a
  * single ADR file (draft or promoted); issues are unprefixed, callers add the
  * file name. Pure with respect to the caller: takes a path, reads it once.
  */

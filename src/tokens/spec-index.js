@@ -1,9 +1,9 @@
 /**
  * Permanent-spec structural index + section-first reads — ported from
  * specloom's `buildSpecIndex`/`writeSpecIndex`/`readSpecSection`
- * (framework/cli/lib.js, ADR-012). Adapted to the cwd-only path model.
+ * (specloom, ADR-012). Adapted to the cwd-only path model.
  *
- * The index (`.playbook/index/spec-index.json`) stores structure only — file
+ * The index (`.specloom/index/spec-index.json`) stores structure only — file
  * list, H1 title, `status` frontmatter, and headings with line ranges — never
  * section bodies, so it stays small regardless of spec size. `readSpecSection`
  * parses the live file directly to return a section's real body, confined to
@@ -15,7 +15,7 @@ import matter from 'gray-matter';
 import { parseMarkdownHeadings } from '../util/markdown.js';
 
 export function defaultSpecIndexPath(cwd = process.cwd()) {
-  return path.join(cwd, '.playbook', 'index', 'spec-index.json');
+  return path.join(cwd, '.specloom', 'index', 'spec-index.json');
 }
 
 /** Permanent specs indexed: system.md and one-level domain spec.md files only. */

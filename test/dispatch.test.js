@@ -19,10 +19,10 @@ test('exit-code map matches design §1.4', () => {
   assert.deepEqual(EXIT, { OK: 0, VIOLATION: 1, BLOCKED: 2, USAGE: 3, ENVIRONMENT: 4 });
 });
 
-test('the command surface is exactly these eighteen commands', () => {
+test('the command surface is exactly these nineteen commands', () => {
   assert.deepEqual(COMMAND_NAMES, [
     'install', 'init', 'doctor', 'status', 'next', 'validate', 'sync', 'adr',
-    'packet', 'spec-read', 'spec-index', 'run',
+    'packet', 'spec-read', 'spec-index', 'run', 'usage-report',
     'repo-plan', 'commit-plan', 'prepare-repos', 'gate-check', 'changed-files', 'contract-drift',
   ]);
 });

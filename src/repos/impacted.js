@@ -1,6 +1,6 @@
 /**
  * `## Impacted repos` extraction from proposal.md — ported from specloom's
- * `extractImpactedRepos`/`readImpactedRepos` (framework/cli/lib.js, ADR-015).
+ * `extractImpactedRepos`/`readImpactedRepos` (specloom, ADR-015).
  */
 import fs from 'node:fs';
 import path from 'node:path';

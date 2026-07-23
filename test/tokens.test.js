@@ -186,7 +186,7 @@ test('playbook spec-index writes the cache and playbook spec-read reads a sectio
   const idx = capture();
   const code1 = await run(['spec-index', '--cwd', cwd], idx.io);
   assert.equal(code1, EXIT.OK);
-  assert.ok(fs.existsSync(path.join(cwd, '.playbook', 'index', 'spec-index.json')));
+  assert.ok(fs.existsSync(path.join(cwd, '.specloom', 'index', 'spec-index.json')));
 
   const rd = capture();
   const code2 = await run(['spec-read', 'openspec/specs/system.md#product-principles', '--cwd', cwd], rd.io);

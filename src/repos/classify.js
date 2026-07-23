@@ -1,7 +1,7 @@
 /**
  * Repo file classification against the protected-path denylist — ported from
  * specloom's `classifyRepoFiles`/`parseGroupedFilesTouched`
- * (framework/cli/lib.js, ADR-025). Pure: no filesystem, no git.
+ * (specloom, ADR-025). Pure: no filesystem, no git.
  */
 
 /**

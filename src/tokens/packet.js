@@ -1,6 +1,6 @@
 /**
  * context-packet.md — ported from specloom's `buildPacket`/`writePacket`
- * (framework/cli/lib.js, ADR-010/ADR-019). Generated once by `sdd-plan`,
+ * (specloom, ADR-010/ADR-019). Generated once by `sdd-plan`,
  * consumed by the gates/commit/verify skills instead of re-reading the full
  * proposal.md + tasks.md every time — the core of the token-efficiency layer.
  *

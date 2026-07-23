@@ -1,6 +1,6 @@
 /**
  * Diff-first changed-file discovery — ported from specloom's
- * `collectChangedFiles` (framework/cli/lib.js, ADR-011/ADR-022). Lists paths
+ * `collectChangedFiles` (specloom, ADR-011/ADR-022). Lists paths
  * changed for a change in the consumer repo or a configured sibling repo, with
  * a deterministic fallback (context-packet.md -> tasks.md -> local git state)
  * when no diff base resolves — never a thrown error for "no base found".

@@ -23,6 +23,7 @@ export const TPL = path.join(PACKAGE_ROOT, 'templates', 'project');
 const FIXED = [
   ['AGENTS.md', 'AGENTS.md'],
   ['CLAUDE.md', 'CLAUDE.md'],
+  ['.claude/settings.json', '.claude/settings.json'],
   ['copilot-instructions.md', '.github/copilot-instructions.md'],
   ['github/CODEOWNERS', '.github/CODEOWNERS'],
   ['github/PULL_REQUEST_TEMPLATE.md', '.github/PULL_REQUEST_TEMPLATE.md'],

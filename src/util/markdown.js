@@ -1,7 +1,7 @@
 /**
- * Markdown structural primitives — extracted once from specloom's
- * `framework/cli/lib.js` so validation, tokens (context-packet) and multi-repo
- * body-linting all share a single implementation instead of three copies.
+ * Markdown structural primitives — extracted once from specloom's shared lib
+ * so validation, tokens (context-packet) and multi-repo body-linting all
+ * share a single implementation instead of three copies.
  *
  * Pure: no filesystem, no network. Callers pass already-read file contents.
  */

@@ -2,7 +2,11 @@
 node_modules/
 
 # Run telemetry / verification logs (compacted output lives here; not committed).
-.playbook/
+.specloom/
+
+# Claude Code local state (the shared settings.json IS committed; these are not)
+.claude/settings.local.json
+.claude/worktrees/
 
 # OS / editor noise
 .DS_Store

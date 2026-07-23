@@ -1,6 +1,6 @@
 /**
  * Multi-repo topology — ported from specloom's `resolveSddRepo`/
- * `resolveConfiguredRepoPath`/`resolveRepoRunTarget` (framework/cli/lib.js,
+ * `resolveConfiguredRepoPath`/`resolveRepoRunTarget` (specloom,
  * ADR-020/ADR-024). Reads the SAME `playbook.config.yaml` the single-repo
  * engine uses — `repos:`/`contract:`/`gating:` are additive keys on top of
  * `capabilities:`/`github:`/etc., not a separate file.

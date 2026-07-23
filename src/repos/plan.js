@@ -1,6 +1,6 @@
 /**
  * Multi-repo planning + branch prep — ported from specloom's
- * `buildRepoPlan`/`buildCommitPlan`/`prepareRepos` (framework/cli/lib.js,
+ * `buildRepoPlan`/`buildCommitPlan`/`prepareRepos` (specloom,
  * ADR-023/ADR-024). playbook-ai PLANS; the agent + `gh` EXECUTE.
  * `repo-plan`/`commit-plan` are read-only; `prepareRepos` is the only
  * mutator and only creates/switches branches — never add/commit/push/--force,

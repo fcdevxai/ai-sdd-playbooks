@@ -1,6 +1,6 @@
 /**
  * ADR promotion — ported from specloom's `promoteAdrPlan`/`applyPromotePlan`
- * (framework/cli/lib.js), adapted to the cwd-only path model (no
+ * (specloom), adapted to the cwd-only path model (no
  * `consumerRoot(cwd, repoRoot)` — playbook-ai installs globally, so every path
  * here is resolved directly against the consumer's own `cwd`).
  *
