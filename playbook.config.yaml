@@ -27,3 +27,14 @@ documents:                 # adopta documentos existentes apuntando estas rutas 
   workflow: docs/sdd-workflow.md
 addons:
   confluence: false        # requiere Atlassian MCP en el runtime activo
+
+# playbook-ai es un framework de specs (sin backend propio); esta sección
+# declara el contrato canónico igual, para que `playbook contract-drift` y su
+# suite de tests tengan una config real que ejercitar. `path_in_loom` arranca
+# en `paths: {}` — se llena feature por feature en sdd-plan.
+contract:
+  source_of_truth: loom-first
+  path_in_loom: openspec/specs/contracts/openapi.yaml
+  drift_check:
+    ci_template: templates/project/github/workflows/contract-drift-check.yml
+    runs_in: "el CI del repo que implemente la API — no en este repo"

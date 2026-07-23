@@ -27,3 +27,15 @@ documents:                 # adopta documentos existentes apuntando estas rutas 
   workflow: docs/sdd-workflow.md
 addons:
   confluence: false        # requiere Atlassian MCP en el runtime activo
+
+# Opcional — solo si un backend de este hub expone una API que uno o más
+# frontends consumen. Loom-first: el contrato se autora acá (durante sdd-plan)
+# antes de que el backend lo implemente; `playbook contract-drift` compara
+# estructuralmente el contrato canónico contra el OpenAPI generado del backend.
+# Descomentar y ajustar cuando exista un backend real:
+# contract:
+#   source_of_truth: loom-first
+#   path_in_loom: openspec/specs/contracts/openapi.yaml
+#   drift_check:
+#     ci_template: templates/project/github/workflows/contract-drift-check.yml
+#     runs_in: "el CI del backend — instalar el template ahí, no en este repo"
