@@ -104,3 +104,45 @@ See ADR-010 for the full reasoning. `sdd-ff` generates `openspec/changes/[ticket
 - `sdd-apply` is excluded and continues to require full reads because it implements from complete spec context.
 - `sdd-archive` is excluded and continues to require full reads before editing permanent source-of-truth files.
 - The index is navigation metadata only; it must not be treated as a source of section body content.
+
+## Token-efficient reads wired into the gate/verify/commit playbooks
+
+Wired in change `wire-token-and-security-policy`. The `playbook changed-files`
+and `playbook spec-read` commands already existed and were tested, but no
+playbook invoked them (grep over `skills/` = 0), so the savings never happened.
+These directives connect the already-ported commands to the playbook prose;
+generated `SKILL.md` files carry them (Principle 1 — regenerate, never hand-edit).
+Content tests in `test/skill-contract.test.js` blind the wiring against a future
+merge silently disconnecting it.
+
+- **diff-first (changed files).** `sdd-code-review`, `sdd-security-gate`, and
+  `sdd-runtime-gate` instruct `playbook changed-files <change-id> --diff` first,
+  and full-read a file only when the diff touches authorization/ownership/input
+  or is insufficient to judge. `sdd-security-gate` **retains its explicit right
+  to full-read any file on a sensitive surface** (routes/controllers,
+  authorization middleware, database queries, anything handling user input) —
+  diff-first is the default, never a limit on security judgment.
+- **section-first (specs) via `spec-read`.** `sdd-code-review`,
+  `sdd-security-gate`, `sdd-runtime-gate`, `sdd-verify`, and `sdd-commit` instruct
+  `playbook spec-read <file>#<anchor>` to read only the relevant section; if the
+  anchor is absent, they fall back to full-read and report why. This is the CLI
+  command form of the "Section-first permanent spec context" convention above.
+- `sdd-apply` and `sdd-archive` are excluded from both directives — they need the
+  complete context to implement / to edit permanent source-of-truth files.
+
+## Security thread across `sdd-enrich-us` and `sdd-verify`
+
+Repaired in change `wire-token-and-security-policy`. The thread that seeds and
+then re-checks `SEC-N` security considerations had broken at both ends.
+
+- **enrich seeds the SEC-N.** `sdd-enrich-us` lists "Security and data
+  sensitivity" as a **mandatory** decision dimension to close before drafting the
+  requirement — which data, permissions, or external input the feature touches
+  and how each is protected. Its answers seed the proposal's `SEC-N` entries;
+  it is never skipped, even when the closed answer is "no sensitive surface".
+- **verify re-checks the SEC-N against merged code.** `sdd-verify` re-runs each
+  `SEC-N`'s negative test against the **merged** code (never trusting the
+  pre-merge `security-report.md`), emits a `## Security considerations` table in
+  `verification-report.md`, and marks `status: failed` on any `SEC-N` lacking
+  post-merge evidence. The report's security section is enforced by
+  `playbook validate` — see the CLI spec's "Verification-report body validation".
