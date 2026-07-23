@@ -202,6 +202,16 @@ The `loom` CLI must operate on the consumer project when specloom is installed a
 - JSON mode is opt-in; the default text output remains stable for humans and playbook prose.
 - Error cases in JSON mode emit a JSON error object and exit non-zero without mixing plain text into stdout.
 
+## Verification-report body validation
+
+Added in change `wire-token-and-security-policy`.
+
+- `playbook validate` validates the `verification-report.md` **body** (not just its frontmatter) via `validateVerificationBody` (`src/schema/body-rules.js`), the same section-presence/emptiness pattern as `validateProposalBody`/`validateDesignBody`. It is wired under `BODY_VALIDATORS['verification-report.md']` in `src/cli/validate.js`.
+- Required sections — must exist and be non-empty: `## Acceptance criteria`, `## Security considerations`, `## Regression`. `"Not applicable: <reason>"` counts as content, exactly as for proposal bodies (the HTML-comment placeholder is stripped; real prose is not).
+- A `verification-report.md` that omits `## Security considerations` fails with `missing section: "## Security considerations"`; one that leaves it empty fails with `empty content in "## Security considerations"`. Either makes `playbook validate` exit non-zero.
+- This is the enforcement half that keeps the security thread from silently disconnecting: a post-merge report cannot drop its security evidence and still validate. It never matches verdict strings or emojis — only section presence/emptiness (C-12).
+- Covered by `test/schema.test.js` (unit: `validateVerificationBody`) and `test/validate.cli.test.js` (CLI: missing/empty section → violation, complete report → exit 0).
+
 ## Validation
 
 - Installed-consumer behavior is covered by `framework/cli/test/installed-consumer.test.js`.
