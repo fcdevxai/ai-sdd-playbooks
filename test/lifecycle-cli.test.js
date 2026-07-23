@@ -121,3 +121,30 @@ test('playbook next resolves an explicit change-id among many', async () => {
   assert.equal(code, EXIT.OK);
   assert.match(out.join('\n'), /Next skill: sdd-apply/);
 });
+
+// --- Task 2.1: multi-repo delivery aggregation wired into status/next ---
+
+test('playbook status --json on a single-repo change (no ## Impacted repos) includes delivery.per_repo with just the hub (AC-5/AC-6, no regression)', async () => {
+  const dir = makeRepo();
+  writeArtifact(dir, 'demo', 'proposal.md', 'approved');
+  writeArtifact(dir, 'demo', 'tasks.md', 'ready');
+  const { io, out } = capture();
+  const code = await run(['status', '--json', '--cwd', dir], io);
+  assert.equal(code, EXIT.OK);
+  const parsed = JSON.parse(out.join('\n'));
+  assert.equal(parsed.lifecycle.state, 'planned'); // unchanged from the pre-existing test above
+  assert.equal(parsed.delivery.state, 'unknown'); // unchanged: no git repo here either
+  assert.ok(Array.isArray(parsed.delivery.per_repo));
+  assert.equal(parsed.delivery.per_repo.length, 1);
+  assert.equal(parsed.delivery.per_repo[0].state, 'unknown');
+});
+
+test('playbook status (text) prints a per-repo breakdown line', async () => {
+  const dir = makeRepo();
+  writeArtifact(dir, 'demo', 'proposal.md', 'approved');
+  writeArtifact(dir, 'demo', 'tasks.md', 'ready');
+  const { io, out } = capture();
+  const code = await run(['status', '--cwd', dir], io);
+  assert.equal(code, EXIT.OK);
+  assert.match(out.join('\n'), /Per-repo:/);
+});

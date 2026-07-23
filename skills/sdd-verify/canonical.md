@@ -22,7 +22,10 @@ evidence in the current codebase and detect regressions. Produce a schema-valid
 `verification-report.md` that gates `sdd-archive`.
 
 > Runs after the branch is **merged** (the CLI gates this on `delivery: merged`)
-> and requires terminal access.
+> and requires terminal access. For a multi-repo change, confirm the per-repo
+> breakdown with `playbook status --json` (`delivery.per_repo`) — `merged` here
+> is unanimous by construction, but re-check it: no impacted repo may be
+> unmerged.
 
 ## Context
 

@@ -13,7 +13,8 @@ import { loadConfig } from '../config/config.js';
 import { readLock, lockPathFor } from '../config/lock.js';
 import { computeState } from '../lifecycle/engine.js';
 import { SECURITY_DISCLAIMER } from '../security/classify.js';
-import { resolveDelivery, gitRunner, currentBranch } from '../github/index.js';
+import { gitRunner, currentBranch } from '../github/index.js';
+import { resolveMultiRepoDelivery } from '../repos/delivery.js';
 
 function resolveChangeDir(cwd, changeId) {
   const dirs = findChangeDirs(cwd);
@@ -35,9 +36,11 @@ function prepare(cwd, changeId) {
   const { config } = loadConfig({ cwd });
   const lock = readLock(lockPathFor(cwd, null));
   const change = loadChange(resolved.dir);
-  // Delivery: live from local Git + GitHub (or unknown). Never persisted (C-10).
-  const delivery = resolveDelivery({ cwd });
+  // Delivery: live from local Git + GitHub (or unknown), aggregated across
+  // impacted repos when the proposal declares them. Never persisted (C-10).
+  const delivery = resolveMultiRepoDelivery({ cwd, slug: change.changeId });
   const result = computeState(config, lock, change.artifacts, delivery);
+  result.delivery.per_repo = delivery.per_repo;
   return { change, result };
 }
 
@@ -54,6 +57,7 @@ export async function statusCommand(parsed, io) {
   io.out(`Change: ${change.changeId}`);
   io.out(`Lifecycle: ${result.lifecycle.state} (design_required: ${result.lifecycle.design_required})`);
   io.out(`GitHub delivery: ${result.delivery.state}`);
+  io.out(`Per-repo: ${result.delivery.per_repo.map((r) => `${r.repo}=${r.state}`).join(' · ')}`);
   if (result.exception) io.out(`Exception: ${result.exception.artifact} is ${result.exception.status}`);
   return EXIT.OK;
 }

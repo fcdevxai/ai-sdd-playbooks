@@ -39,3 +39,26 @@ addons:
 #   drift_check:
 #     ci_template: templates/project/github/workflows/contract-drift-check.yml
 #     runs_in: "el CI del backend — instalar el template ahí, no en este repo"
+
+# Opcional — solo para proyectos multi-repo. Declara acá cada repo que una
+# proposal puede nombrar en su `## Impacted repos`; `playbook status`/`next`
+# agregan el delivery de todos ellos (regla "eslabón más débil": `merged` solo
+# si TODOS lo están — ver ADR multi-repo-delivery-reduction). Un nombre listado
+# en `## Impacted repos` pero ausente de acá cuenta como `unknown` (fail-closed).
+# Descomentar y ajustar cuando el proyecto tenga repos hermanos reales:
+# repos:
+#   loom:                          # el hub SDD (este repo); role: sdd es opcional
+#     path: .
+#     role: sdd
+#   backend:
+#     path: ../mi-proyecto-backend
+#     role: impacted
+#     verification:
+#       tests: npm test
+#   frontend:
+#     path: ../mi-proyecto-frontend
+#     role: impacted
+#     verification:
+#       tests: npm test
+# gating:
+#   strategy: per-feature           # el merge de una feature exige TODOS sus repos impactados mergeados

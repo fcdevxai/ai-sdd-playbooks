@@ -47,7 +47,9 @@ affected `openspec/specs/<domain>/spec.md`, `openspec/specs/system.md`, and
    domain spec. If not passed, stop. If `## Impacted repos` in `proposal.md`
    is non-empty, also run `playbook gate-check <change-id>` — it re-runs every
    impacted repo's configured verification commands locally (not remote CI).
-   Any failure stops the archive.
+   Any failure stops the archive. Also confirm the per-repo breakdown with
+   `playbook status --json` (`delivery.per_repo`): no impacted repo may be
+   unmerged — the aggregate only reaches `merged` when every repo does.
 2. **Promote ADR drafts.** Run `playbook adr promote <change-id>` (use
    `--dry-run` first to preview). It assigns the next sequential `ADR-NNN`
    (never reuses or renumbers an existing one) to every `adr-<decision-slug>.md`
