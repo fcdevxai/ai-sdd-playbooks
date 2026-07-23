@@ -48,9 +48,15 @@ packet blindly over contradicting live sources.
 
 Also read: `design.md` if present (`controls`), `openspec/specs/system.md`, and
 `docs/security-checklist.md` (project-specific known sensitive surfaces and
-accepted risks). Read every file listed as created/modified, with particular
-attention to routes/controllers, authorization middleware, database queries,
-and anything handling user input or external data.
+accepted risks). To scope the changed files, run
+`playbook changed-files <change-id> --diff` first; full-read a file only when the
+diff touches authorization/ownership/input or is insufficient to judge. The
+security gate always retains its right to **full-read any file on a sensitive
+surface** (routes/controllers, authorization middleware, database queries, and
+anything handling user input or external data) — diff-first is the default, never
+a limit on security judgment. Use `playbook spec-read <file>#<anchor>` to read
+only the relevant section of a spec; if the anchor is absent, fall back to
+full-read and report why.
 
 ## Behavior
 

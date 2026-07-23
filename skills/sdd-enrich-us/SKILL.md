@@ -45,7 +45,13 @@ questions. If you cannot read them, stop and tell the user.
    suggested default grounded in the real codebase (existing endpoints, contracts,
    services, conventions). Ask as many as needed.
    Cover every dimension: solution shape, expected output, behavior (normal/edge/
-   failure), actor & usage context, scope boundaries, success criteria.
+   failure), actor & usage context, scope boundaries, success criteria, and
+   **security and data sensitivity**.
+   **Security and data sensitivity is a mandatory dimension** — always close it
+   before drafting: which data, permissions, or external input the feature
+   touches and how each is protected. Its answers seed the proposal's `SEC-N`
+   considerations, so never skip it — even when the closed answer is "no
+   sensitive surface".
 3. **Flag hard-to-reverse decisions as ADR candidates.** While closing a
    decision, if it concerns authentication/authorization, module/service
    structure, a public contract, adoption of a significant library, a

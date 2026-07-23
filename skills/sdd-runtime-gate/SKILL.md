@@ -34,6 +34,14 @@ One capability-driven runtime gate that replaces separate UX and E2E gates.
 Applicability comes from `capabilities:` in `playbook.config.yaml`. An
 incomplete adapter **blocks** — it must never fabricate a `passed`.
 
+## Context
+
+To scope which changed files to exercise, run
+`playbook changed-files <change-id> --diff` first; full-read a file only when the
+diff touches authorization/ownership/input or is insufficient to judge what to
+drive. Use `playbook spec-read <file>#<anchor>` to read only the relevant section
+of a spec; if the anchor is absent, fall back to full-read and report why.
+
 ## Rules
 
 - Never fabricate `passed`; missing evidence or dependency → `blocked` with a `reason_code`.

@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadValidators } from '../src/schema/load.js';
 import { validateArtifactFrontmatter, validateNamed } from '../src/schema/validate.js';
+import { validateVerificationBody } from '../src/schema/body-rules.js';
 
 const EXPECTED_SCHEMAS = [
   'adr', 'code-review-report', 'context-packet', 'design', 'proposal', 'runtime-gate-report',
@@ -123,4 +124,57 @@ test('playbook.lock: compatible range is required (C-08)', () => {
     version: 2, methodology: { compatible: '>=0.1.0 <1.0.0', resolved: '0.1.3' },
   }).valid, true);
   assert.equal(validateNamed('playbook.lock', { version: 2, methodology: {} }).valid, false);
+});
+
+// --- validateVerificationBody (Task 1.1 — SEC-1 enforcement) ---
+
+const VERIFICATION_BODY_FULL = [
+  '# Verification Report — Demo',
+  '',
+  '## Acceptance criteria',
+  '| # | Criterion | Test/Check | Result |',
+  '|---|---|---|---|',
+  '| AC-01 | does the thing | `test/foo.test.js` | passed |',
+  '',
+  '## Security considerations',
+  '| SEC-N | control | test/check | result |',
+  '|---|---|---|---|',
+  '| SEC-1 | rejects unauth | `test/foo.test.js` | passed |',
+  '',
+  '## Regression',
+  '**Result**: green',
+].join('\n');
+
+// SEC-1 negative case FIRST: a report with no security evidence is rejected.
+test('validateVerificationBody: a body without "## Security considerations" is rejected (SEC-1 negative)', () => {
+  const body = VERIFICATION_BODY_FULL.replace(/## Security considerations[\s\S]*?\n## Regression/, '## Regression');
+  const r = validateVerificationBody(body);
+  assert.equal(r.ok, false);
+  assert.ok(r.issues.some((i) => /missing section: "## Security considerations"/.test(i)), JSON.stringify(r.issues));
+});
+
+test('validateVerificationBody: an empty "## Security considerations" is rejected (EC-2)', () => {
+  const body = VERIFICATION_BODY_FULL.replace(
+    /## Security considerations[\s\S]*?\n\n## Regression/,
+    '## Security considerations\n\n## Regression',
+  );
+  const r = validateVerificationBody(body);
+  assert.equal(r.ok, false);
+  assert.ok(r.issues.some((i) => /empty content in "## Security considerations"/.test(i)), JSON.stringify(r.issues));
+});
+
+test('validateVerificationBody: all three required sections non-empty is accepted', () => {
+  const r = validateVerificationBody(VERIFICATION_BODY_FULL);
+  assert.deepEqual(r.issues, []);
+  assert.equal(r.ok, true);
+});
+
+test('validateVerificationBody: "Not applicable: <reason>" counts as content (same as proposal body)', () => {
+  const body = VERIFICATION_BODY_FULL.replace(
+    /## Security considerations[\s\S]*?\n\n## Regression/,
+    '## Security considerations\nNot applicable: no SEC-N declared in the proposal.\n\n## Regression',
+  );
+  const r = validateVerificationBody(body);
+  assert.deepEqual(r.issues, []);
+  assert.equal(r.ok, true);
 });

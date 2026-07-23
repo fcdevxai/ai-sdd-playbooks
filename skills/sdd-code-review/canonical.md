@@ -36,7 +36,11 @@ after the packet was generated), prefer the full sources and note the
 discrepancy in the report.
 
 Also read: `openspec/specs/system.md`, `docs/doc_architecture.md` /
-`docs/doc_verification_guide.md`, and every file listed as changed.
+`docs/doc_verification_guide.md`. To scope the changed files, run
+`playbook changed-files <change-id> --diff` first; full-read a file only when the
+diff touches authorization/ownership/input or is insufficient to judge. Use
+`playbook spec-read <file>#<anchor>` to read only the relevant section of a spec;
+if the anchor is absent, fall back to full-read and report why.
 
 ## Behavior
 
