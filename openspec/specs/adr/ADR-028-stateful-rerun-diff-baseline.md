@@ -1,6 +1,6 @@
 ---
 schema: adr
-status: proposed
+status: accepted
 date: "2026-07-23"
 ticket: bootstrap-repos-diff-on-rerun
 ---
