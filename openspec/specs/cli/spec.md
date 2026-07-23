@@ -1,7 +1,7 @@
 ---
 status: implemented
 owner: bernardo
-last_updated: 2026-07-08
+last_updated: 2026-07-23
 ---
 
 # CLI Consumer-Root Behavior
@@ -94,6 +94,40 @@ The `loom` CLI must operate on the consumer project when specloom is installed a
 - Base branch resolution is per repo: real `origin/HEAD` wins, then `repos.<name>.default_base`, then the built-in probe candidates. If none resolves, the repo gets `base_branch_unresolved` and requires human action.
 - Git safety blockers are fail-closed and actionable: missing declared repo path, ambiguous git state, dirty working tree on the wrong branch, unresolved base branch, undeclared-only modifications, expected files absent, and protected path candidates.
 - The canonical `## Files touched` format is grouped by logical repo name with repo-relative paths, e.g. `- frontend: src/app.ts`. Legacy flat lists remain interpreted as SDD-repo files only; the CLI does not infer repo ownership from path prefixes. See ADR-025.
+
+## Multi-repo delivery aggregation (`playbook status` / `playbook next`)
+
+- `resolveMultiRepoDelivery({ cwd, changesDir?, slug?, resolveOne? })`
+  (`src/repos/delivery.js`) is the `deliveryStatus` input `computeState`
+  (the pure lifecycle engine) already consumed for single-repo projects —
+  the engine's signature and purity are unchanged (ADR-027). It computes the
+  value live on every `status`/`next` call and never persists it (`sdd.lock`
+  stays untouched).
+- **Single-repo back-compat.** When the active change's `## Impacted repos`
+  is empty, `resolveMultiRepoDelivery` early-returns exactly
+  `resolveDelivery({ cwd })`'s state — identical behavior to before this
+  aggregation existed.
+- **Multi-repo reduction ("weakest link", ADR-027).** When `## Impacted
+  repos` is non-empty, the aggregate is computed over the hub (`cwd`) plus
+  every impacted repo, resolved to a path via `config.yaml` `repos` (the same
+  allowlist `gate-check`/`loom run --repo` use). Precedence, first match
+  wins: `unknown` → `ci_failed` → `uncommitted` → `committed` → `pr_open`/
+  `ci_pending` (folded into `ci_pending`) → `ci_passed` (also covers a
+  `ci_passed`+`merged` mix) → `merged`. The aggregate reaches `merged` only
+  when **every** repo — hub included — is `merged`.
+- **Fail-closed on unresolvable paths.** An impacted repo name absent from
+  `config.yaml` `repos`, or without a `path`, is never skipped and never
+  read from outside the configured tree: it becomes a synthetic `unknown`
+  target with `blocked_reason: REPO_PATH_UNRESOLVED @<repo>`, which — by the
+  precedence table — pulls the whole aggregate down to `unknown`.
+- **`per_repo` in output.** `playbook status --json` adds `delivery.per_repo`
+  (array of `{ repo, path, state, blocked_reason? }`, hub first) additively —
+  existing `delivery` fields (`provider`, `state`, `blocked_reason?`) are
+  unchanged. Text output prints a `Per-repo: <repo>=<state> · …` line.
+- **`sdd-verify`/`sdd-archive` confirmation.** Both playbooks reference
+  `playbook status --json`'s `delivery.per_repo` before proceeding on a
+  multi-repo change, since `merged` at the aggregate level is unanimous by
+  construction but worth re-confirming per repo.
 
 ## Cross-repo gate check (`loom gate-check`)
 

@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 date: 2026-07-23
 ticket: multi-repo-delivery-aggregation
 # supersedes: ADR-NNN

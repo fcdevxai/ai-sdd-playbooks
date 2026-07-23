@@ -1,7 +1,7 @@
 ---
 status: implemented
 owner: bernardo
-last_updated: 2026-07-04
+last_updated: 2026-07-23
 ---
 
 # Playbooks and Agent Skill Metadata
@@ -66,6 +66,7 @@ See ADR-011 for the decision context and trade-offs behind these limits.
 - `sdd-archive` must run `loom gate-check <ticket-slug>` during precondition validation and before any write to `openspec/specs/`.
 - If `loom gate-check` exits non-zero, `sdd-archive` stops and reports the failing repo, command, exit code, or missing path. It must not update permanent specs until the gate passes.
 - If `loom gate-check` reports a no-op because `config.yaml`/`repos`/`## Impacted repos` are absent or empty, `sdd-archive` continues with its normal single-repo archive flow.
+- `sdd-verify` and `sdd-archive` also confirm the per-repo delivery breakdown via `playbook status --json`'s `delivery.per_repo` (see `openspec/specs/cli/spec.md`, "Multi-repo delivery aggregation", ADR-027): no impacted repo may be unmerged, even though the aggregate only reaches `merged` when every repo does.
 
 ## cwd-safe command convention
 

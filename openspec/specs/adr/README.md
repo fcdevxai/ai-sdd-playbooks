@@ -1,10 +1,8 @@
 # ADR Index
 
-Architecture Decision Records: registran el contexto, las alternativas y los trade-offs detrás de decisiones difíciles de revertir. Son inmutables una vez promovidos aquí — si una decisión cambia, un ADR nuevo la reemplaza declarando `supersedes: ADR-NNN`; el antiguo solo recibe la actualización de frontmatter (`status: superseded`, `superseded_by`).
+Architecture Decision Records: they document the context, alternatives, and trade-offs behind hard-to-reverse decisions.
 
-Este índice se deriva del contenido del directorio — nunca al revés.
-
-| # | Título | Status | Fecha | Ticket de origen |
+| # | Title | Status | Date | Originating change |
 |---|---|---|---|---|
 | ADR-001 | Adoptar Architecture Decision Records en el ciclo SDD | accepted | 2026-07-02 | adr-decision-records |
 | ADR-002 | Distribuir specloom como dependencia git privada, no como registro npm ni como repo clonado | accepted | 2026-07-03 | npm-package-distribution |
@@ -32,3 +30,4 @@ Este índice se deriva del contenido del directorio — nunca al revés.
 | ADR-024 | repo SDD explícito en `config.yaml` + campos `default_base` y `protected_paths` | accepted | 2026-07-08 | multi-repo-commit-orchestration |
 | ADR-025 | `## Files touched` agrupado por nombre lógico repo-relativo como fuente del mapeo archivo→repo | accepted | 2026-07-08 | multi-repo-commit-orchestration |
 | ADR-026 | Fusión de ai-sdd-playbooks y specloom en playbook-ai; herencia de ADRs y retención de `.specloom/` | accepted | 2026-07-23 | restore-specloom-provenance |
+| ADR-027 | Reducción "eslabón más débil" para delivery multi-repo | accepted | 2026-07-23 | multi-repo-delivery-aggregation |

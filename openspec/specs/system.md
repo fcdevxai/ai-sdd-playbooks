@@ -48,7 +48,7 @@ bin/playbook.js → src/cli/*.js → { src/lifecycle, src/config, src/schema,
 | `src/install/` | Global skill installation + shared SKILL.md frontmatter contract |
 | `src/adr/` | ADR structural validation + promotion (draft → numbered record) |
 | `src/tokens/` | context-packet, compacted `run`, spec index/read, usage-report |
-| `src/repos/` | Multi-repo config, git-state, classification, planning, gate-check |
+| `src/repos/` | Multi-repo config, git-state, classification, planning, gate-check, delivery aggregation |
 | `src/generator/` | `canonical.md` → `SKILL.md` (the only thing `install` copies) |
 
 ## Main data model
