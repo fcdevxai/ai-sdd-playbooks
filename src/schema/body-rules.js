@@ -31,6 +31,16 @@ export const PROPOSAL_SECTIONS_MAY_BE_EMPTY = ['Open technical decisions'];
 
 export const DESIGN_REQUIRED_SECTIONS = ['Approach', 'Module impact', 'Trade-offs'];
 
+// verification-report.md sections that must exist AND have real content. Keeps
+// the security thread from silently disconnecting: a report with no security
+// evidence fails validation (SEC-1). "Not applicable: <reason>" counts as
+// content, exactly as in validateProposalBody.
+export const VERIFICATION_REQUIRED_SECTIONS = [
+  'Acceptance criteria',
+  'Security considerations',
+  'Regression',
+];
+
 /** Checks a proposal.md BODY (not frontmatter) for missing/empty required sections. */
 export function validateProposalBody(body) {
   const sections = splitSections(body);
@@ -58,6 +68,25 @@ export function validateDesignBody(body) {
   const sections = splitSections(body);
   const issues = [];
   for (const required of DESIGN_REQUIRED_SECTIONS) {
+    if (!(required in sections)) {
+      issues.push(`missing section: "## ${required}"`);
+      continue;
+    }
+    if (isEmpty(sections[required])) issues.push(`empty content in "## ${required}"`);
+  }
+  return { ok: issues.length === 0, issues };
+}
+
+/**
+ * Checks a verification-report.md BODY for missing/empty required sections —
+ * same pattern as validateProposalBody. This is the enforcement half of SEC-1:
+ * without it, `sdd-verify` could ship a report that drops security evidence and
+ * validation would stay silent.
+ */
+export function validateVerificationBody(body) {
+  const sections = splitSections(body);
+  const issues = [];
+  for (const required of VERIFICATION_REQUIRED_SECTIONS) {
     if (!(required in sections)) {
       issues.push(`missing section: "## ${required}"`);
       continue;

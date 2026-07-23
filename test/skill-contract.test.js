@@ -67,6 +67,37 @@ test('parity checklist: reconciled skills carry their key behavior', () => {
   assert.match(body('sdd-enrich-us'), /decision/i);
 });
 
+test('diff-first: the 3 gates instruct changed-files --diff; security-gate keeps full-read on sensitive surface (AC-1, SEC-2)', () => {
+  for (const name of ['sdd-code-review', 'sdd-security-gate', 'sdd-runtime-gate']) {
+    assert.match(body(name), /changed-files .*--diff/, `${name} instructs diff-first`);
+  }
+  // SEC-2: diff-first must never strip the security gate's right to full-read on a sensitive surface.
+  const sec = body('sdd-security-gate');
+  assert.match(sec, /full-read/i, 'security gate keeps full-read clause');
+  assert.match(sec, /sensitive surface/i, 'security gate scopes full-read to the sensitive surface');
+});
+
+test('section-first: gates + verify + commit instruct spec-read; apply/archive do not (AC-2)', () => {
+  for (const name of ['sdd-code-review', 'sdd-security-gate', 'sdd-runtime-gate', 'sdd-verify', 'sdd-commit']) {
+    assert.match(body(name), /spec-read/, `${name} instructs section-first`);
+  }
+  for (const name of ['sdd-apply', 'sdd-archive']) {
+    assert.doesNotMatch(body(name), /spec-read/, `${name} must not instruct section-first`);
+  }
+});
+
+test('sdd-verify re-runs SEC-N negatives post-merge and carries a Security considerations table (AC-3, SEC-3)', () => {
+  const b = body('sdd-verify');
+  assert.match(b, /SEC-N/, 'names the SEC-N considerations');
+  assert.match(b, /post-merge|merged code|re-run/i, 'instructs re-running negatives against merged code');
+  assert.match(b, /## Security considerations/, 'report template carries the Security considerations table');
+});
+
+test('sdd-enrich-us lists Security and data sensitivity as a mandatory decision dimension (AC-5)', () => {
+  const b = body('sdd-enrich-us');
+  assert.match(b, /security and data sensitivity/i);
+});
+
 test('core skills use approved, not a pending status', () => {
   for (const name of ['sdd-apply', 'sdd-new']) {
     assert.doesNotMatch(body(name), /status:\s*pending/);

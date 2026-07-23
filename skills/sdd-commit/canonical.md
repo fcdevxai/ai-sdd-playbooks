@@ -21,6 +21,12 @@ Deliver the change to GitHub: commit → push → open/update the Pull Request. 
 methodological work is done; this is the **delivery** dimension. GitHub is the
 only supported provider.
 
+## Context
+
+Use `playbook spec-read <file>#<anchor>` to read only the relevant section of a
+spec (e.g. `proposal.md#impacted-repos`); if the anchor is absent, fall back to
+full-read and report why.
+
 ## Preconditions (self-check)
 
 1. Local lifecycle preconditions met (proposal approved, gates cleared).

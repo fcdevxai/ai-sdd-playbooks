@@ -79,6 +79,25 @@ status: ready
 # Tasks
 `;
 
+const VALID_VERIFICATION = `---
+schema: verification-report
+schema_version: 1
+change_id: demo
+status: passed
+updated: 2026-07-23
+---
+# Verification Report — Demo
+
+## Acceptance criteria
+AC-01: covered by test/foo.test.js.
+
+## Security considerations
+Not applicable: no SEC-N declared.
+
+## Regression
+Result: green.
+`;
+
 test('validate: a valid change exits 0', async () => {
   const dir = makeRepo();
   writeChange(dir, 'proposal.md', VALID_PROPOSAL);
@@ -122,6 +141,38 @@ test('validate: a proposal body missing a required section is a violation', asyn
   const code = await run(['validate', '--cwd', dir], io);
   assert.equal(code, EXIT.VIOLATION);
   assert.match(err.join('\n'), /Security considerations/);
+});
+
+// SEC-1 enforcement at the CLI level: the security section of a
+// verification-report.md is a hard requirement — a report that drops it fails
+// `playbook validate`, not just the unit validator.
+test('validate: a verification-report.md without "## Security considerations" is a violation (SEC-1)', async () => {
+  const dir = makeRepo();
+  writeChange(dir, 'proposal.md', VALID_PROPOSAL);
+  writeChange(dir, 'verification-report.md', VALID_VERIFICATION.replace('## Security considerations\nNot applicable: no SEC-N declared.\n\n', ''));
+  const { io, err } = capture();
+  const code = await run(['validate', '--cwd', dir], io);
+  assert.equal(code, EXIT.VIOLATION);
+  assert.match(err.join('\n'), /missing section: "## Security considerations"/);
+});
+
+test('validate: a verification-report.md with an empty "## Security considerations" is a violation (EC-2)', async () => {
+  const dir = makeRepo();
+  writeChange(dir, 'proposal.md', VALID_PROPOSAL);
+  writeChange(dir, 'verification-report.md', VALID_VERIFICATION.replace('Not applicable: no SEC-N declared.', ''));
+  const { io, err } = capture();
+  const code = await run(['validate', '--cwd', dir], io);
+  assert.equal(code, EXIT.VIOLATION);
+  assert.match(err.join('\n'), /empty content in "## Security considerations"/);
+});
+
+test('validate: a complete verification-report.md exits 0 (AC-4)', async () => {
+  const dir = makeRepo();
+  writeChange(dir, 'proposal.md', VALID_PROPOSAL);
+  writeChange(dir, 'verification-report.md', VALID_VERIFICATION);
+  const { io } = capture();
+  const code = await run(['validate', '--cwd', dir], io);
+  assert.equal(code, EXIT.OK);
 });
 
 test('validate: a present context-packet.md missing a required section is a violation', async () => {

@@ -16,7 +16,7 @@ import path from 'node:path';
 import matter from 'gray-matter';
 import { EXIT } from './exit.js';
 import { validateArtifactFrontmatter, validateNamed } from '../schema/validate.js';
-import { validateProposalBody, validateDesignBody } from '../schema/body-rules.js';
+import { validateProposalBody, validateDesignBody, validateVerificationBody } from '../schema/body-rules.js';
 import { loadChange, findChangeDirs, computeDesignRequired } from '../config/artifacts.js';
 import { loadConfig, readConfigFile } from '../config/config.js';
 import { readLock } from '../config/lock.js';
@@ -52,6 +52,7 @@ export async function validateCommand(parsed, io) {
 const BODY_VALIDATORS = {
   'proposal.md': validateProposalBody,
   'design.md': validateDesignBody,
+  'verification-report.md': validateVerificationBody,
 };
 
 function runValidate({ cwd, changeId, json, io }) {

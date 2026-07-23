@@ -34,7 +34,10 @@ full for acceptance criteria and verification commands (verbatim copies). If
 it doesn't exist, fall back to reading both in full. Also read
 `docs/doc_verification_guide.md` (project verification commands), and run
 commands through `playbook run --change <change-id> --step verify -- <command>`
-for the same compacted-summary + full-log behavior `sdd-apply` uses.
+for the same compacted-summary + full-log behavior `sdd-apply` uses. Use
+`playbook spec-read <file>#<anchor>` to read only the relevant section of a spec
+(e.g. `proposal.md#acceptance-criteria`); if the anchor is absent, fall back to
+full-read and report why.
 
 ## Behavior
 
@@ -42,8 +45,12 @@ for the same compacted-summary + full-log behavior `sdd-apply` uses.
 2. Map each acceptance criterion (`AC-N`) to a passing test/check; any uncovered
    criterion is a gap.
 3. Confirm each error case (`EC-N`) has passing evidence for its failure path.
-4. Run the required regression command(s); confirm no blocking failures.
-5. Write `verification-report.md`:
+4. **Re-run each `SEC-N`'s negative test against the merged code** (unauthorized
+   access rejected, missing-section validation fails, …) — do **not** trust the
+   pre-merge security report; confirm every declared control still holds in the
+   post-merge state.
+5. Run the required regression command(s); confirm no blocking failures.
+6. Write `verification-report.md`:
 
 ```markdown
 ---
@@ -63,12 +70,23 @@ updated: <YYYY-MM-DD>
 ## Error cases
 | # | Error case | Test/Check | Result |
 
+## Security considerations
+| # | Control | Test/Check (negative, re-run post-merge) | Result |
+|---|---|---|---|
+| SEC-1 | <control> | `<negative test>` | passed |
+<!-- No SEC-N declared in proposal.md? Write: Not applicable: <reason> -->
+
 ## Regression
 **Result**: <summary>
 ```
 
+`playbook validate` requires `## Acceptance criteria`, `## Security
+considerations`, and `## Regression` in the report body — a report that drops the
+security section fails validation (SEC-1 enforcement).
+
 ## Rules
 
 - Any acceptance criterion without passing evidence → `status: failed`.
+- Any `SEC-N` without passing post-merge evidence → `status: failed`.
 - Any blocking regression → `status: failed`.
 - Never proceed to `sdd-archive` while `status: failed`.
