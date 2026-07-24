@@ -28,7 +28,9 @@ const CHECKS = {
   none: '',
 };
 
-function fakeGh({ authed = true, pr = null, checks = 'none' } = {}) {
+// `prByBranch` is additive: when absent, the single-`pr` path below behaves exactly
+// as before, so the pre-existing tests keep asserting the same thing (AC-2, AC-5).
+function fakeGh({ authed = true, pr = null, checks = 'none', prByBranch = null, checksByBranch = null } = {}) {
   return (args) => {
     const cmd = args.join(' ');
     if (cmd.startsWith('auth status')) {
@@ -36,10 +38,20 @@ function fakeGh({ authed = true, pr = null, checks = 'none' } = {}) {
       return 'Logged in\n';
     }
     if (cmd.startsWith('pr view')) {
+      const branch = args[2];
+      if (prByBranch) {
+        const found = prByBranch[branch];
+        if (!found) throw new Error('no pull request');
+        return JSON.stringify(found);
+      }
       if (!pr) throw new Error('no pull request');
       return JSON.stringify(pr);
     }
-    if (cmd.startsWith('pr checks')) return CHECKS[checks];
+    if (cmd.startsWith('pr checks')) {
+      const branch = args[2];
+      if (checksByBranch) return CHECKS[checksByBranch[branch] || 'none'];
+      return CHECKS[checks];
+    }
     throw new Error(`unexpected gh: ${cmd}`);
   };
 }
@@ -77,6 +89,54 @@ test('PR open maps checks → ci_passed / ci_failed / ci_pending / pr_open', () 
   assert.equal(delivery({ dirty: false }, { pr: { state: 'OPEN', number: 2 }, checks: 'failed' }).state, 'ci_failed');
   assert.equal(delivery({ dirty: false }, { pr: { state: 'OPEN', number: 2 }, checks: 'pending' }).state, 'ci_pending');
   assert.equal(delivery({ dirty: false }, { pr: { state: 'OPEN', number: 2 }, checks: 'none' }).state, 'pr_open');
+});
+
+// --- A change's delivery resolves by its own branch, not the current one ---
+
+test('an invalid slug fails closed to unknown without invoking gh (AC-6, EC-1)', () => {
+  // Negative half first: the guard must run before any runner is touched, so a
+  // malformed slug never becomes a `gh` argument. A counter proves it — if the
+  // check sat after githubContext(), `gh auth status` would already have run.
+  // `-R` / `--web` would be parsed by `gh` as options, not as a branch name: the
+  // classic argv hazard, distinct from shell injection (there is no shell here).
+  for (const bad of ['../evil', 'a/b', 'a\\b', '..', '.', '', '-R', '--web', '-']) {
+    let ghCalls = 0;
+    const countingGh = (args) => { ghCalls++; return fakeGh({ authed: true })(args); };
+    const d = resolveDelivery({ runGit: fakeGit({ branch: 'main' }), runGh: countingGh, slug: bad });
+    assert.equal(ghCalls, 0, `gh must not be invoked for slug ${JSON.stringify(bad)}`);
+    assert.equal(d.state, 'unknown', `slug ${JSON.stringify(bad)} fails closed`);
+    assert.equal(d.blocked_reason, 'INVALID_CHANGE_SLUG');
+  }
+});
+
+test('a merged change resolves as merged from any branch (AC-1, AC-4)', () => {
+  const gitOnMain = fakeGit({ branch: 'main' });
+  const gh = fakeGh({ prByBranch: { 'my-change': { state: 'MERGED', number: 42 } } });
+
+  // Without a slug the current branch is used: `main` has no PR → committed.
+  assert.equal(resolveDelivery({ runGit: gitOnMain, runGh: gh }).state, 'committed');
+  // With the slug, the change's own branch answers — regardless of what is checked out.
+  assert.equal(resolveDelivery({ runGit: gitOnMain, runGh: gh, slug: 'my-change' }).state, 'merged');
+});
+
+test('the slug also selects which branch CI checks are read from (AC-1)', () => {
+  const d = resolveDelivery({
+    runGit: fakeGit({ branch: 'main' }),
+    runGh: fakeGh({
+      prByBranch: { 'my-change': { state: 'OPEN', number: 7 } },
+      checksByBranch: { 'my-change': 'passed' },
+    }),
+    slug: 'my-change',
+  });
+  assert.equal(d.state, 'ci_passed');
+});
+
+test('no slug falls back to the current branch (AC-2, EC-4)', () => {
+  const d = resolveDelivery({
+    runGit: fakeGit({ branch: 'feature/x' }),
+    runGh: fakeGh({ prByBranch: { 'feature/x': { state: 'MERGED', number: 3 } } }),
+  });
+  assert.equal(d.state, 'merged');
 });
 
 // --- Task 1.1: reduceDelivery — "eslabón más débil" precedence table ---
@@ -285,4 +345,39 @@ test('resolveMultiRepoDelivery: EC-1/SEC-2 — impacted repo not declared in con
   // cwd (hub) and backendPath were passed, never anything else.
   assert.equal(resolveOne.calls.length, 2);
   assert.deepEqual(new Set(resolveOne.calls), new Set([cwd, backendPath]));
+});
+
+// --- The slug must reach resolveDelivery, in both paths (AC-3) ---
+
+test('resolveMultiRepoDelivery forwards the slug to resolveOne (AC-3)', () => {
+  // Spy that records the FULL opts, not just cwd: the point is that `slug` arrives.
+  function spy(statesByCwd) {
+    const seen = [];
+    const fn = (opts) => {
+      seen.push(opts);
+      const entry = statesByCwd[opts.cwd];
+      if (!entry) throw new Error(`no fake state for cwd ${opts.cwd}`);
+      return entry;
+    };
+    fn.seen = seen;
+    return fn;
+  }
+
+  // single-repo path (no impacted repos → early return)
+  const soloCwd = makeChange({ impactedReposSection: 'No aplica.' });
+  const soloSpy = spy({ [soloCwd]: { state: 'merged' } });
+  resolveMultiRepoDelivery({ cwd: soloCwd, slug: 'demo', resolveOne: soloSpy });
+  assert.equal(soloSpy.seen.length, 1);
+  assert.equal(soloSpy.seen[0].slug, 'demo', 'single-repo path forwards the slug');
+
+  // per-repo fan-out: the hub and every impacted repo use the same change branch
+  const multiCwd = makeChange({ impactedReposSection: '- backend' });
+  const backendPath = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-backend-slug-'));
+  writeConfig(multiCwd, { repos: { backend: { path: backendPath } } });
+  const multiSpy = spy({ [multiCwd]: { state: 'merged' }, [backendPath]: { state: 'merged' } });
+  resolveMultiRepoDelivery({ cwd: multiCwd, slug: 'demo', resolveOne: multiSpy });
+  assert.equal(multiSpy.seen.length, 2);
+  for (const opts of multiSpy.seen) {
+    assert.equal(opts.slug, 'demo', `fan-out forwards the slug (cwd ${opts.cwd})`);
+  }
 });

@@ -67,7 +67,7 @@ export function resolveMultiRepoDelivery({
   const impacted = readImpactedRepos(slug, changesDir);
 
   if (impacted.length === 0) {
-    const hub = resolveOne({ cwd });
+    const hub = resolveOne({ cwd, slug });
     return { state: hub.state, per_repo: [{ repo: resolveSddRepo({ cwd }).name, path: cwd, state: hub.state, blocked_reason: hub.blocked_reason }] };
   }
 
@@ -78,7 +78,8 @@ export function resolveMultiRepoDelivery({
     if (target.path === null) {
       return { repo: target.repo, path: null, state: 'unknown', blocked_reason: `REPO_PATH_UNRESOLVED @${target.repo}` };
     }
-    const resolved = resolveOne({ cwd: target.path });
+    // Every impacted repo carries the change's branch too (`prepare-repos` creates it).
+    const resolved = resolveOne({ cwd: target.path, slug });
     return { repo: target.repo, path: target.path, state: resolved.state, blocked_reason: resolved.blocked_reason };
   });
 
