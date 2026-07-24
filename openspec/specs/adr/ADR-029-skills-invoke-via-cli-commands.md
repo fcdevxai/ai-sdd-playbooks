@@ -1,6 +1,6 @@
 ---
 schema: adr
-status: proposed
+status: accepted
 date: "2026-07-24"
 ticket: cli-detect-siblings
 ---

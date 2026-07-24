@@ -139,11 +139,12 @@ consumer project bootstrapped once, later added a new sibling repo, re-ran
 
 - `detectSiblingRepos` (`src/config/detect-siblings.js`) is stateless — it
   reflects the current filesystem on every call, not what was true at the
-  last bootstrap.
+  last bootstrap. It is invoked through `playbook detect-siblings` (see
+  ADR-029) — the skill never runs the JS function directly.
 - `sdd-bootstrap-project` paso 3 (sibling-repo detection) always re-invokes
-  the detector, even on a re-run where `repos:` in `playbook.config.yaml`
-  already has entries, and diffs its output against those already-confirmed
-  repos, presenting only the new candidates.
+  `playbook detect-siblings`, even on a re-run where `repos:` in
+  `playbook.config.yaml` already has entries, and diffs its output against
+  those already-confirmed repos, presenting only the new candidates.
 - A populated `repos:` block is never, by itself, a reason to skip
   re-detection — reading it as "topology already resolved" is exactly the
   failure mode this fix closes.
@@ -155,6 +156,33 @@ consumer project bootstrapped once, later added a new sibling repo, re-ran
 - `test/skill-contract.test.js` carries a content assertion tying this
   instruction to the generated `SKILL.md`, so a future merge cannot silently
   disconnect it again.
+
+## Skills invoke capabilities via `playbook` commands, never internal source references
+
+Fixed in change `cli-detect-siblings` (see ADR-029 for the full decision and
+alternatives considered). Prior to this fix, `sdd-bootstrap-project` paso 3
+told the executing agent to run "`detectSiblingRepos` in
+`src/config/detect-siblings.js`" — an internal JS function with no CLI wrapper,
+forcing the agent to run arbitrary source by hand or eyeball the parent
+directory. This was part of why the ADR-028 bootstrap re-run bug was so easy to
+introduce: the fix said "re-invoke the detector" without a clean way to invoke it.
+
+- A skill MUST invoke a capability through a stable `playbook <command>`, never
+  by naming an internal source function or file path as the thing to execute.
+- If a capability a skill needs is implemented in `src/` but has no CLI surface,
+  a thin CLI command is added to expose it before the skill is wired to it —
+  see `playbook detect-siblings` (`src/cli/repos.js`), a read-only wrapper over
+  the unchanged `detectSiblingRepos`.
+- An internal function/file reference in skill prose is allowed only as
+  explanatory context (e.g. "the same heuristic as `detectSiblingRepos`"),
+  never as the invocation mechanism.
+- This is the same class of gap already closed for `spec-read`/`changed-files`
+  (`wire-token-and-security-policy`) and generalizes to the remaining wiring
+  gaps catalogued in the workspace migration plan (e.g. wiring
+  `playbook spec-index` for discovery).
+- `test/skill-contract.test.js` carries a content assertion tying
+  `sdd-bootstrap-project` to `playbook detect-siblings`, so a future merge
+  cannot silently disconnect it again.
 
 ## Security thread across `sdd-enrich-us` and `sdd-verify`
 
