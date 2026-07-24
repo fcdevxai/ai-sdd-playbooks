@@ -43,11 +43,31 @@ Read fully: `proposal.md` (objective, impact, security, constraints),
 1. Design the solution: layer/module deltas, public contracts (endpoints,
    response shapes, events), data-model changes, and how it fits existing
    architecture.
-2. **Security refinement**: carry the proposal's `risk` forward, set
+2. **Canonical contract authoring (conditional).** When the proposal declares
+   `impact.public_contract: true` **and** `playbook.config.yaml` declares
+   `contract.path_in_loom`, add or update this feature's endpoints in the file
+   that key points at — the hub-owned canonical contract, authored
+   **loom-first**, before the implementing repo builds it. Take the path from
+   `contract.path_in_loom`; never hardcode it. The resolved path must stay
+   **inside the repo** — if it escapes the project root, stop and report it
+   instead of writing. If that file does not exist,
+   create it with the minimal skeleton (`openapi`, `info`, `paths`) plus this
+   feature's endpoints — nothing else creates it, not `playbook init` and not
+   bootstrap. The endpoints in the contract and in `design.md`'s
+   `## Public contracts / interfaces` must describe the **same set**: a human
+   reviews both in one sign-off, so a mismatch is a design defect, not a
+   formatting detail. Never put secrets, real tokens, or PII in `example`,
+   `description`, or `servers` — the contract is a versioned artifact shared with
+   every consumer repo, so a leak there is effectively permanent. When
+   `contract.path_in_loom` is absent, **skip this step and say so explicitly**:
+   contract-first is opt-in and there is no default path. `playbook
+   contract-drift` checks an implementation against this contract in the
+   implementing repo's CI — it is a detector, never the authoring mechanism.
+3. **Security refinement**: carry the proposal's `risk` forward, set
    `threat_model_required`, and list the concrete `controls` (`SEC-00x`). Include
    a threat-model section when `risk: elevated` or `threat_model_required: true`.
    You may **raise** risk if the design surfaces new exposure; never lower it.
-3. Write `design.md` with `status: draft`:
+4. Write `design.md` with `status: draft`:
 
 ```markdown
 ---
@@ -68,6 +88,8 @@ updated: <YYYY-MM-DD>
 - Never set `status: approved` yourself — design sign-off is a human action.
 - Never lower an approved risk level; you may raise it with justification.
 - Do not create `design.md` when design is not required.
+- Never write a canonical contract when `contract.path_in_loom` is absent, and
+  never hardcode a contract path — contract-first is opt-in per project.
 
 ## Preconditions (self-check)
 
@@ -101,10 +123,10 @@ updated: <YYYY-MM-DD>
 
 ```
 
-4. Ask the tech lead to review. **A human sets `status: approved`** — this skill
+5. Ask the tech lead to review. **A human sets `status: approved`** — this skill
    never self-approves. While it stays `draft`, `playbook next` reports "await human".
 
 ---
 
-**Output file:** design.md
+**Output file:** design.md (+ the canonical contract at contract.path_in_loom when impact.public_contract: true)
 **Requires terminal:** no

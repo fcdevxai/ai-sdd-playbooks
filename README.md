@@ -167,8 +167,11 @@ add/commit/push/`--force`).
 
 When a backend's API is shared by one or more frontends, the hub owns the
 contract: it's authored in `openspec/specs/contracts/openapi.yaml` —
-**loom-first**, during `sdd-plan`, before the backend implements it — and
-starts as `paths: {}`, filled in feature by feature. `playbook contract-drift
+**loom-first**, during `sdd-design`, before the backend implements it — and
+starts as `paths: {}`, filled in feature by feature. It lands in the design
+stage so the endpoints enter the same human sign-off as `design.md`; a change
+triggers the step by declaring `impact.public_contract: true`.
+`playbook contract-drift
 <generated-openapi>` runs a structural diff (missing/extra endpoints,
 missing/extra required fields — not full semantic equivalence: it won't catch
 a field's type silently changing) between that canonical contract and an

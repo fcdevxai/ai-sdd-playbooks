@@ -245,6 +245,61 @@ test('sdd-apply references .specloom/runs/, not the stale .playbook/runs/ (AC-5,
   assert.doesNotMatch(b, /\.playbook\/runs\//);
 });
 
+test('sdd-design authors the canonical contract when the proposal declares public_contract (AC-1, AC-2)', () => {
+  const b = body('sdd-design');
+  assert.match(b, /impact\.public_contract: true/, 'gated on the proposal impact flag');
+  assert.match(b, /contract\.path_in_loom/, 'gated on the project declaring a contract path');
+  assert.match(b, /skip this step and say so/i, 'contract-first is opt-in: skip and report, never invent a path');
+  assert.match(b, /minimal skeleton/i, 'creates the contract when the configured path does not exist');
+  assert.match(b, /detector, never the authoring mechanism/i, 'contract-drift does not substitute for authoring');
+});
+
+test('sdd-design takes the contract path from config and never hardcodes it (AC-2)', () => {
+  const b = body('sdd-design');
+  assert.doesNotMatch(b, /openspec\/specs\/contracts\/openapi\.yaml/, 'the write target must come from config, not a literal path');
+  assert.match(b, /never hardcode/i);
+  assert.match(b, /Never write a canonical contract when `contract\.path_in_loom` is absent/, 'the ## Rules guard');
+  assert.match(b, /must stay\s+\*\*inside the repo\*\*/, 'the write target is contained to the project root');
+  assert.match(b, /\*\*Output file:\*\*.*contract\.path_in_loom/, 'output_file names the conditional side-effect');
+});
+
+test("sdd-design keeps the canonical contract and design.md's public contracts in sync (AC-3)", () => {
+  const b = body('sdd-design');
+  assert.match(b, /Public contracts \/ interfaces/);
+  assert.match(b, /same set/i, 'the contract and the design prose describe the same endpoints');
+  assert.match(b, /mismatch is a design defect/i, 'a divergence blocks, it is not a formatting detail');
+});
+
+test('sdd-design forbids secrets and PII in the canonical contract (SEC-001, AC-4)', () => {
+  const b = body('sdd-design');
+  // Negative half first (SEC-001): an instruction that forbids leaking secrets
+  // must not ship a credential-shaped literal of its own. Same shape as the
+  // CI-template check in test/contract-first.test.js.
+  assert.doesNotMatch(b, /Bearer\s+[A-Za-z0-9._-]{8,}/, 'no bearer token literal');
+  assert.doesNotMatch(b, /api[_-]?key\s*[:=]\s*\S/i, 'no api key literal');
+  assert.doesNotMatch(b, /-----BEGIN [A-Z ]*PRIVATE KEY-----/, 'no private key material');
+  // Positive half: the prohibition is stated where the authoring happens.
+  assert.match(b, /secrets, real tokens, or PII/i);
+  assert.match(b, /`example`,\s+`description`, or `servers`/, 'names the fields where a leak would hide');
+});
+
+test("sdd-plan does not author the canonical contract — that is sdd-design's step (AC-1)", () => {
+  const b = body('sdd-plan');
+  assert.doesNotMatch(b, /openapi/i, 'contract authoring belongs to the design stage, under human sign-off');
+  assert.doesNotMatch(b, /contract\.path_in_loom/);
+});
+
+test('the README names sdd-design as the contract authoring stage (AC-5)', () => {
+  const readme = fs.readFileSync(fileURLToPath(new URL('../README.md', import.meta.url)), 'utf8');
+  // Assert on the section slice, not the whole file: a failure here should show
+  // the contract-first block, not dump the entire README into the output.
+  const block = readme.split(/^## Contract-first/m)[1]?.split(/^## /m)[0];
+  assert.ok(block, 'README has a "## Contract-first" section');
+  assert.match(block, /authored in `openspec\/specs\/contracts\/openapi\.yaml`/, 'still documents the canonical path');
+  assert.match(block, /during `sdd-design`/);
+  assert.doesNotMatch(block, /during `sdd-plan`/, 'the pre-wiring promise pointed at the wrong stage');
+});
+
 test('sdd-new proposes a complete impact block + security (C-03/C-04)', () => {
   const b = body('sdd-new');
   for (const k of ['public_contract', 'data_model', 'architecture_boundary', 'external_integration',
