@@ -46,11 +46,14 @@ detection, semantic doc analysis, and refactoring — but it is
    `cli`/`worker` are experimental adapters that block when enabled.
 
 3. **Propose sibling repos for multi-repo topology (`repos:`).** Run the
-   sibling detector — the same canonical, tested heuristic this skill applies
-   (`detectSiblingRepos` in `src/config/detect-siblings.js`): it lists every
-   **git-repo directory next to this one** (the parent directory), with a
-   lightweight stack guess (reusing the capability signals above) and naming
-   hints (`sharedTokensWithOwn`, `cluster`).
+   sibling detector via its command: `playbook detect-siblings --json` (use
+   `--json` for programmatic consumption; drop it for a human-readable list). It
+   lists every **git-repo directory next to this one** (the parent directory),
+   with a lightweight stack guess (reusing the capability signals above) and
+   naming hints (`sharedTokensWithOwn`, `cluster`). The command is a read-only
+   wrapper over the canonical, tested heuristic `detectSiblingRepos`
+   (`src/config/detect-siblings.js`) — invoke the command, never run the JS
+   function by hand.
 
    **Naming affinity is a sort hint, never a filter.** A real hub can be named
    `playbook-ai` while its siblings are plainly named `frontend`/`backend` —
