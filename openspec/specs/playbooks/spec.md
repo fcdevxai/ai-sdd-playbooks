@@ -130,6 +130,36 @@ merge silently disconnecting it.
 - `sdd-apply` and `sdd-archive` are excluded from both directives — they need the
   complete context to implement / to edit permanent source-of-truth files.
 
+## Token-saving parity: packet consumers + spec-index discovery completed
+
+Fixed in change `token-saving-parity`. The packet/spec-index design described
+above ("Context packet convention", "Section-first permanent spec context")
+had been only partially implemented after the specloom merge (ADR-026):
+`sdd-commit` and `sdd-runtime-gate` did not actually read `context-packet.md`
+(0 mentions in their canonical text — they re-read `proposal.md`+`tasks.md` in
+full), two `spec-read` examples (`sdd-verify`, `sdd-commit`) pointed at
+`proposal.md#...`/`tasks.md#...` — targets `spec-read` cannot read (see the CLI
+spec's "Spec section reads" confinement to `openspec/specs/`) — and none of the
+five section-first playbooks invoked `playbook spec-index` for anchor
+discovery, so `.specloom/index/` never got created in a consumer project.
+
+- `sdd-commit` and `sdd-runtime-gate` now read `context-packet.md` instead of
+  the full `proposal.md`+`tasks.md`, completing the five designed consumers.
+- The two misdirected `spec-read` examples now point at a permanent spec
+  (`openspec/specs/system.md#code-conventions`); both playbooks state
+  explicitly that proposal/tasks content comes from the packet, never from
+  `spec-read`.
+- All five section-first playbooks (`sdd-code-review`, `sdd-security-gate`,
+  `sdd-runtime-gate`, `sdd-verify`, `sdd-commit`) now instruct `playbook
+  spec-index` to build the index when discovering an unknown anchor, falling
+  back to full-read + reporting the reason on failure — completing the
+  discovery step "Section-first permanent spec context" above already
+  prescribed but no playbook actually invoked.
+- `test/skill-contract.test.js` carries content assertions for all of the
+  above, so a future merge cannot silently disconnect any of it again (same
+  enforcement pattern as the bootstrap re-run and `detect-siblings` fixes
+  below).
+
 ## Bootstrap re-run: config as diff baseline, not completion signal
 
 Fixed in change `bootstrap-repos-diff-on-rerun` (see ADR-028 for the full

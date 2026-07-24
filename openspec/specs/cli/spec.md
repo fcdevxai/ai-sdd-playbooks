@@ -196,6 +196,24 @@ The `loom` CLI must operate on the consumer project when specloom is installed a
 - If `.specloom/index/spec-index.json` cannot be created or written, the command exits non-zero and reports the target path.
 - `loom validate` does not require `.specloom/index/spec-index.json`, does not enforce index freshness, and must not fail because the local index cache is absent or stale.
 
+## Spec index advisory (`playbook doctor`)
+
+Added in change `token-saving-parity`.
+
+- `specIndexAdvisory({ cwd })` (`src/cli/doctor.js`) is a pure, read-only
+  advisory check, modeled on `workflowStaleness`: it returns a warning string
+  when the project has permanent specs to index (`openspec/specs/system.md` or
+  a domain `spec.md` present, via `discoverSpecFiles`) but
+  `.specloom/index/spec-index.json` has not been built yet, and `null` when
+  there is nothing to index or the index already exists.
+- `playbook doctor` pushes the result to the existing, non-blocking
+  `warnings[]` channel (visible in text output and `--json`) — it never
+  affects `healthy` or the exit code, the same contract `workflowStaleness`
+  already established.
+- This closes the loop on `loom index`/spec index above: a consumer project
+  that never ran it now gets a one-line nudge instead of silently missing out
+  on section-first reads.
+
 ## JSON output
 
 - `loom status --json`, `loom validate --json`, and `loom list --json` emit parseable JSON instead of text output.
