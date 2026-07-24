@@ -341,3 +341,37 @@ and an assertion requires that deference so the contradiction cannot return sile
   section-first playbooks, `playbook detect-siblings` in `sdd-bootstrap-project`,
   and canonical-contract authoring in `sdd-design`) were checked against this rule
   and are all reachable — verified, not assumed.
+
+## The `cli` runtime adapter is excluded — with a stated criterion
+
+Decided in change `delivery-state-branch-independence` (see the promoted ADR for the
+alternatives and the accepted risk). `playbook-ai` declares `capabilities.cli: true`
+— it *is* a CLI — and the `cli` adapter is **experimental**, so it `blocks` with
+`ADAPTER_NOT_IMPLEMENTED` for any change that declares it relevant. Four consecutive
+changes excluded it via `runtime_relevant_capabilities: []`, each re-justifying the
+exclusion in its own proposal; for those four the justification was easy because none
+of them touched `src/` at all. The fifth one did, and could not honestly reuse it.
+
+An exclusion repeated five times with no stated criterion is a control decaying into
+a formality. So the exclusion stands, and the criterion is now written down:
+
+- **`cli` is excluded by default in this repository.** A change declares
+  `runtime_relevant_capabilities: []` (or omits `cli`), and the runtime gate records
+  the adapter as `not_applicable` pointing at this section — never as an unexplained
+  omission.
+- **Exclusion is not exemption from evidence.** When a change modifies observable CLI
+  behavior, its `runtime-gate-report.md` MUST record real behavioral evidence: the
+  actual invocation and its output **before and after** the change. The adapter is
+  `not_applicable`; the evidence is not optional.
+- **Unit tests carry the correctness burden.** A change to CLI behavior must have at
+  least one test that **fails against the pre-change code**. That is the substantive
+  gate; the recorded invocation corroborates it, it does not replace it.
+- **The recorded invocation is a point-in-time capture, not a regression suite.** It is
+  not re-run on later changes. What is re-run by `npm test` and CI is the unit test
+  above, which is why rule 3 is not optional either.
+- **The exclusion is not permanent.** If a change ever needs coverage that unit tests
+  plus a recorded invocation cannot give — an interactive flow, or behavior across a
+  real multi-repo topology — the harness gets implemented under its own change, rather
+  than blocking that one.
+- `worker` needs no criterion: `capabilities.worker: false`, so its adapter is
+  `not_applicable` for the ordinary reason.

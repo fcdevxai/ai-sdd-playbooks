@@ -10,6 +10,14 @@
  *      PR merged                 → merged
  *      PR open + checks          → ci_failed | ci_pending | ci_passed | pr_open
  *   not a git repo               → unknown (GIT_UNAVAILABLE)
+ *   malformed change slug        → unknown (INVALID_CHANGE_SLUG)
+ *
+ * A change's delivery is resolved from ITS OWN branch — the `slug` (change-id) —
+ * not from whatever branch happens to be checked out. Only an absent slug
+ * (`undefined`) falls back to the current branch, which is the pre-existing behavior
+ * for callers with no change context; any other malformed value fails closed rather
+ * than silently resolving a different change. The slug is an input, never stored:
+ * delivery stays derived on every call.
  */
 import { execFileSync } from 'node:child_process';
 import { localGitState, currentBranch, isGitRepo, baseBranch } from './repository.js';
@@ -27,7 +35,31 @@ export function ghRunner(cwd) {
   return (args) => execFileSync('gh', args, { cwd, stdio: ['ignore', 'pipe', 'ignore'] }).toString();
 }
 
-export function resolveDelivery({ cwd, runGit, runGh } = {}) {
+/**
+ * A change slug becomes a branch name and then an element of `gh`'s argv. Same
+ * criterion as `isSafeSlug` in src/tokens/packet.js, plus a leading-dash rejection
+ * that only matters here: `gh` would parse `-R` or `--web` as an option instead of a
+ * branch. (There the slug is a path segment, where a leading dash is harmless.)
+ * Duplicated rather than shared because unifying slug validation is its own change.
+ */
+function isSafeBranchSlug(slug) {
+  return (
+    typeof slug === 'string' &&
+    slug.length > 0 &&
+    slug !== '.' &&
+    slug !== '..' &&
+    !slug.startsWith('-') &&
+    !slug.includes('/') &&
+    !slug.includes('\\')
+  );
+}
+
+export function resolveDelivery({ cwd, runGit, runGh, slug } = {}) {
+  // Before any runner is instantiated: a malformed slug must never reach git or gh.
+  if (slug !== undefined && !isSafeBranchSlug(slug)) {
+    return { provider: 'github', state: 'unknown', blocked_reason: 'INVALID_CHANGE_SLUG' };
+  }
+
   const git = runGit || gitRunner(cwd);
   const gh = runGh || ghRunner(cwd);
 
@@ -39,7 +71,7 @@ export function resolveDelivery({ cwd, runGit, runGh } = {}) {
   const ctx = githubContext(gh);
   if (!ctx.available) return { provider: 'github', state: 'unknown', blocked_reason: 'GITHUB_CONTEXT_UNAVAILABLE' };
 
-  const branch = currentBranch(git);
+  const branch = slug || currentBranch(git);
   const pr = prForBranch(branch, gh);
   if (!pr) return { provider: 'github', state: 'committed' };
   if (pr.state === 'MERGED') return { provider: 'github', state: 'merged' };
