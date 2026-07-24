@@ -48,7 +48,8 @@ full-read the spec and report why.
 
 ## Behavior
 
-1. Run the project's feature/domain verification command(s).
+1. **Verify `pwd` first** — never assume the cwd inherited from a previous step.
+   Then run the project's feature/domain verification command(s).
 2. Map each acceptance criterion (`AC-N`) to a passing test/check; any uncovered
    criterion is a gap.
 3. Confirm each error case (`EC-N`) has passing evidence for its failure path.
@@ -56,7 +57,9 @@ full-read the spec and report why.
    access rejected, missing-section validation fails, …) — do **not** trust the
    pre-merge security report; confirm every declared control still holds in the
    post-merge state.
-5. Run the required regression command(s); confirm no blocking failures.
+5. Verify `pwd` again before the regression command(s) — the cwd is not carried
+   over from step 1, and commands from an older `tasks.md`/`context-packet.md` may
+   assume a preceding `cd`. Then run them and confirm no blocking failures.
 6. Write `verification-report.md`:
 
 ```markdown
@@ -97,3 +100,5 @@ security section fails validation (SEC-1 enforcement).
 - Any `SEC-N` without passing post-merge evidence → `status: failed`.
 - Any blocking regression → `status: failed`.
 - Never proceed to `sdd-archive` while `status: failed`.
+- Before running any command from `tasks.md`/`context-packet.md`, verify `pwd`
+  first — never assume the cwd inherited from a prior task or step.

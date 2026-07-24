@@ -300,6 +300,70 @@ test('the README names sdd-design as the contract authoring stage (AC-5)', () =>
   assert.doesNotMatch(block, /during `sdd-plan`/, 'the pre-wiring promise pointed at the wrong stage');
 });
 
+test('sdd-verify verifies pwd before running feature and regression commands (AC-1)', () => {
+  const b = body('sdd-verify');
+  assert.match(b, /Verify `pwd` first/i, 'before the feature/domain commands');
+  assert.match(b, /`pwd`[\s\S]{0,80}regression command/i, 'again before the regression commands');
+  assert.match(b, /Before running any command from `tasks\.md`\/`context-packet\.md`, verify `pwd`/, 'the ## Rules guard');
+});
+
+test("sdd-verify's pwd rule covers context-packet.md commands, not just tasks.md (AC-2)", () => {
+  const b = body('sdd-verify');
+  // Post-token-saving-parity the verification commands come from the packet, so a
+  // rule naming only tasks.md would miss the file actually being read.
+  assert.match(b, /context-packet\.md[\s\S]{0,120}`cd`/i, 'names the packet where an older change folder may assume a cd');
+  assert.match(b, /`tasks\.md`\/`context-packet\.md`/, 'the rule covers both sources');
+});
+
+test('sdd-commit caps the fix→validate→re-run loop at 3 iterations (AC-3)', () => {
+  const b = body('sdd-commit');
+  assert.match(b, /capped at \*\*3\s*\n?\s*iterations\*\*|capped at \*\*3 iterations\*\*|capped at 3 iterations/, 'the numeric cap');
+  assert.match(b, /4th failed attempt/, 'the stop condition');
+  assert.match(b, /exactly as `playbook validate` returns them/, 'reports validate output verbatim');
+  // The Preconditions block is read before Behavior; a flat "validate passes, else
+  // stop" there would make the loop below unreachable and the wiring inert.
+  assert.match(b, /derived\s*\n?\s*artifact this stage may regenerate, which step 1 handles/,
+    'the precondition defers to step 1 instead of contradicting it');
+});
+
+test('sdd-commit forbids blind edits inside the retry loop (AC-4)', () => {
+  const b = body('sdd-commit');
+  assert.match(b, /don't reason about the reports\s*\n?\s*yourself/i, 'no self-reasoning over the reports');
+  assert.match(b, /without further blind edits/i);
+});
+
+test("sdd-commit's retry loop regenerates derived artifacts and never edits signed ones (AC-5)", () => {
+  const b = body('sdd-commit');
+  assert.match(b, /playbook packet <change-id>/, 'the permitted deterministic regeneration');
+  assert.match(b, /Never edit\s*\n?\s*`proposal\.md`, `design\.md`, `tasks\.md`, an `adr-\*\.md` draft, or a gate report/, 'the signed-artifact prohibition');
+  // An ADR draft is `status: proposed`, so the "human-signed" rationale alone would
+  // read as permission to edit it. It is validated by `playbook validate`, so it can
+  // realistically be the thing that fails at commit time — name it explicitly.
+  assert.match(b, /`status:\s*\n?\s*proposed` draft is unreviewed, not unprotected/, 'ADR drafts are protected too');
+  assert.match(b, /without consuming an iteration/i, 'a forbidden fix does not burn the budget');
+  assert.match(b, /not named regenerable counts as signed/i, 'the default is the strict side');
+});
+
+test('sdd-commit never makes validate pass by weakening a gate status (SEC-001)', () => {
+  const b = body('sdd-commit');
+  // Negative half first: the skill must carry no instruction that writes or flips a
+  // report status. A retry budget is never a reason to weaken a security verdict.
+  assert.doesNotMatch(b, /(set|change|update|edit|flip)[^.\n]{0,60}(security-report|gate report|report'?s? status)/i,
+    'no instruction to rewrite a gate report status');
+  assert.doesNotMatch(b, /status:\s*passed/i, 'no example of writing a passed status');
+  // Positive half: the prohibition is stated, and the pre-existing rule it leans on survives.
+  assert.match(b, /weakening a gate report's `status`/i);
+  assert.match(b, /retry budget never overrides a security rule/i);
+  assert.match(b, /Do not commit around a blocking finding/, 'SEC-001 is orphaned without this rule');
+});
+
+test('sdd-apply and sdd-new keep the conventions this change replicates (AC-1, AC-3)', () => {
+  // This change replicates FROM these two skills; if the source is deleted the
+  // convention silently goes half-wired again — the exact drift being fixed here.
+  assert.match(body('sdd-apply'), /pwd/, 'sdd-apply keeps its cwd check');
+  assert.match(body('sdd-new'), /capped at 3 iterations/, 'sdd-new keeps its retry cap');
+});
+
 test('sdd-new proposes a complete impact block + security (C-03/C-04)', () => {
   const b = body('sdd-new');
   for (const k of ['public_contract', 'data_model', 'architecture_boundary', 'external_integration',
