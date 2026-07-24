@@ -216,6 +216,35 @@ test('sdd-apply / sdd-plan SKILL.md requires match the precondition table (no dr
   assert.deepEqual(readSkillFrontmatter(path.join(SKILLS_DIR, 'sdd-plan')).requires, SKILL_PRECONDITIONS['sdd-plan']);
 });
 
+test('sdd-commit and sdd-runtime-gate read the context-packet instead of full proposal/tasks (AC-1, EC-1)', () => {
+  for (const name of ['sdd-commit', 'sdd-runtime-gate']) {
+    const b = body(name);
+    assert.match(b, /context-packet\.md/, `${name} mentions context-packet.md`);
+    assert.match(b, /read it instead of/i, `${name} instructs reading the packet instead of full sources`);
+  }
+});
+
+test('no skill instructs spec-read against proposal.md/tasks.md — spec-read is confined to permanent specs (AC-2, SEC-2)', () => {
+  for (const entry of fs.readdirSync(SKILLS_DIR, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const b = body(entry.name);
+    assert.doesNotMatch(b, /proposal\.md#/, `${entry.name} must not spec-read proposal.md#...`);
+    assert.doesNotMatch(b, /tasks\.md#/, `${entry.name} must not spec-read tasks.md#...`);
+  }
+});
+
+test('the 5 section-first skills instruct spec-index discovery when the index is missing (AC-4, EC-1)', () => {
+  for (const name of ['sdd-code-review', 'sdd-security-gate', 'sdd-runtime-gate', 'sdd-verify', 'sdd-commit']) {
+    assert.match(body(name), /spec-index/, `${name} mentions spec-index`);
+  }
+});
+
+test('sdd-apply references .specloom/runs/, not the stale .playbook/runs/ (AC-5, EC-1)', () => {
+  const b = body('sdd-apply');
+  assert.match(b, /\.specloom\/runs\//);
+  assert.doesNotMatch(b, /\.playbook\/runs\//);
+});
+
 test('sdd-new proposes a complete impact block + security (C-03/C-04)', () => {
   const b = body('sdd-new');
   for (const k of ['public_contract', 'data_model', 'architecture_boundary', 'external_integration',

@@ -49,7 +49,11 @@ Also read: `openspec/specs/system.md`, `docs/doc_architecture.md` /
 `playbook changed-files <change-id> --diff` first; full-read a file only when the
 diff touches authorization/ownership/input or is insufficient to judge. Use
 `playbook spec-read <file>#<anchor>` to read only the relevant section of a spec;
-if the anchor is absent, fall back to full-read and report why.
+if the anchor is absent, fall back to full-read and report why. If you need a
+permanent-spec anchor you don't know and `.specloom/index/spec-index.json`
+doesn't exist, run `playbook spec-index` to build it, then `playbook spec-read
+openspec/specs/<file>#<anchor>`. If `spec-index` or the lookup fails, full-read
+the spec and report why.
 
 ## Behavior
 

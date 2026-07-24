@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { run, EXIT } from '../src/cli/dispatch.js';
-import { workflowStaleness } from '../src/cli/doctor.js';
+import { workflowStaleness, specIndexAdvisory } from '../src/cli/doctor.js';
 import { installSkills } from '../src/install/skills.js';
 
 function tmp() { return fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-doctor-')); }
@@ -172,6 +172,30 @@ test('doctor does not warn when the workflow doc carries the current methodology
   });
 });
 
+test('doctor warns (advisory, still exit 0) when the spec index is missing (AC-6, SEC-1)', async () => {
+  const dir = await initRepo(); // has openspec/specs/system.md, no .specloom/index/ yet
+  await withGlobalVersion('0.1.0', async () => {
+    const { io, out } = capture();
+    const code = await run(['doctor', '--json', '--cwd', dir], io);
+    const json = JSON.parse(out.join('\n'));
+    assert.equal(code, EXIT.OK);   // SEC-1: advisory never changes the exit code
+    assert.equal(json.healthy, true); // SEC-1: advisory never changes healthy
+    assert.ok(json.warnings.some((w) => /spec-index/.test(w) && /spec-index\.json/.test(w)));
+  });
+});
+
+test('doctor does not warn about the spec index once it has been built', async () => {
+  const dir = await initRepo();
+  const { buildSpecIndex, writeSpecIndex, defaultSpecIndexPath } = await import('../src/tokens/spec-index.js');
+  writeSpecIndex(buildSpecIndex(dir), defaultSpecIndexPath(dir));
+  await withGlobalVersion('0.1.0', async () => {
+    const { io, out } = capture();
+    await run(['doctor', '--json', '--cwd', dir], io);
+    const json = JSON.parse(out.join('\n'));
+    assert.equal(json.warnings.filter((w) => /spec-index/.test(w)).length, 0);
+  });
+});
+
 test('doctor reports runtime MCP readiness notes without blocking', async () => {
   const dir = await initRepo();
   const config = path.join(dir, 'playbook.config.yaml');
@@ -209,4 +233,25 @@ test('workflowStaleness: warns on an older major or a missing marker', () => {
   assert.match(workflowStaleness({ cwd: dir, config: {}, installed: '3.0.0' }), /predates the installed methodology/);
   fs.writeFileSync(wf, '# wf, no marker\n');
   assert.match(workflowStaleness({ cwd: dir, config: {}, installed: '3.0.0' }), /no methodology-version marker/);
+});
+
+test('specIndexAdvisory: null when there are no permanent specs to index', () => {
+  const dir = tmp();
+  assert.equal(specIndexAdvisory({ cwd: dir }), null);
+});
+
+test('specIndexAdvisory: warns when system.md exists and the index has not been built (AC-6)', () => {
+  const dir = tmp();
+  fs.mkdirSync(path.join(dir, 'openspec', 'specs'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'openspec', 'specs', 'system.md'), '# system\n');
+  assert.match(specIndexAdvisory({ cwd: dir }), /spec-index/);
+});
+
+test('specIndexAdvisory: null once the index file exists', async () => {
+  const dir = tmp();
+  fs.mkdirSync(path.join(dir, 'openspec', 'specs'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'openspec', 'specs', 'system.md'), '# system\n');
+  const { buildSpecIndex, writeSpecIndex, defaultSpecIndexPath } = await import('../src/tokens/spec-index.js');
+  writeSpecIndex(buildSpecIndex(dir), defaultSpecIndexPath(dir));
+  assert.equal(specIndexAdvisory({ cwd: dir }), null);
 });

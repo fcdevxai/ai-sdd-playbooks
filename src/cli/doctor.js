@@ -20,6 +20,7 @@ import { loadChange, findChangeDirs } from '../config/artifacts.js';
 import { computeState } from '../lifecycle/engine.js';
 import { satisfies } from '../util/semver.js';
 import { ensureDir, copyIfMissing } from '../util/fs-safe.js';
+import { discoverSpecFiles, defaultSpecIndexPath } from '../tokens/spec-index.js';
 
 function readStamp(dir) {
   const p = path.join(dir, '.playbook-version');
@@ -82,6 +83,21 @@ export function workflowStaleness({ cwd, config, installed }) {
   return null;
 }
 
+/**
+ * Advisory check: is there a permanent-spec index to build but none built yet?
+ * Returns a warning string or null. Pure/testable (same molde as `workflowStaleness`).
+ *
+ * Null when there are no permanent specs to index (`openspec/specs/system.md`
+ * absent — nothing to say) or the index already exists. The index is a
+ * gitignoreed session cache: its absence never blocks anything, it only means
+ * skills fall back to full-reading specs instead of `spec-read`-ing a section.
+ */
+export function specIndexAdvisory({ cwd }) {
+  if (discoverSpecFiles(cwd).length === 0) return null;
+  if (fs.existsSync(defaultSpecIndexPath(cwd))) return null;
+  return 'no spec index at `.specloom/index/spec-index.json` — run `playbook spec-index` to enable section-first reads of permanent specs and save tokens';
+}
+
 function runtimeReadinessNotes(config) {
   const notes = [];
   if (config && config.capabilities && config.capabilities.browser === true) {
@@ -133,6 +149,8 @@ export async function doctorCommand(parsed, io) {
   // workflow doc staleness vs the installed methodology (advisory — never fails)
   const stale = workflowStaleness({ cwd, config, installed });
   if (stale) warnings.push(stale);
+  const missingIndex = specIndexAdvisory({ cwd });
+  if (missingIndex) warnings.push(missingIndex);
   notes.push(...runtimeReadinessNotes(config));
 
   // openspec structure (additive-fixable)

@@ -63,7 +63,7 @@ present), `openspec/specs/system.md`, the affected domain spec, the project's
       through `playbook run --change <change-id> --step apply -- <command>` —
       it prints a compacted summary (one line on success; exit code + last 40
       lines on failure) while the full output always lands at
-      `.playbook/runs/<run-id>/full.log`, so a failure's raw output never
+      `.specloom/runs/<run-id>/full.log`, so a failure's raw output never
       floods context unless you need it.
    f. Mark the task `[x]` in `tasks.md`.
 

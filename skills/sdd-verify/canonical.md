@@ -34,10 +34,17 @@ full for acceptance criteria and verification commands (verbatim copies). If
 it doesn't exist, fall back to reading both in full. Also read
 `docs/doc_verification_guide.md` (project verification commands), and run
 commands through `playbook run --change <change-id> --step verify -- <command>`
-for the same compacted-summary + full-log behavior `sdd-apply` uses. Use
-`playbook spec-read <file>#<anchor>` to read only the relevant section of a spec
-(e.g. `proposal.md#acceptance-criteria`); if the anchor is absent, fall back to
-full-read and report why.
+for the same compacted-summary + full-log behavior `sdd-apply` uses. Acceptance
+criteria and verification commands come from the packet (or the full
+`proposal.md`/`tasks.md`), never from `spec-read` — that command is confined to
+`openspec/specs/**`. Use `playbook spec-read <file>#<anchor>` to read only the
+relevant section of a permanent spec (e.g.
+`openspec/specs/system.md#code-conventions`); if the anchor is absent, fall
+back to full-read and report why. If you need a permanent-spec anchor you
+don't know and `.specloom/index/spec-index.json` doesn't exist, run `playbook
+spec-index` to build it, then `playbook spec-read
+openspec/specs/<file>#<anchor>`. If `spec-index` or the lookup fails,
+full-read the spec and report why.
 
 ## Behavior
 
