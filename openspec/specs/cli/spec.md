@@ -1,7 +1,7 @@
 ---
 status: implemented
 owner: bernardo
-last_updated: 2026-07-23
+last_updated: 2026-07-24
 ---
 
 # CLI Consumer-Root Behavior
@@ -69,7 +69,7 @@ The `loom` CLI must operate on the consumer project when specloom is installed a
 - The command runs via `spawn` **without a shell** — no shell interpretation of the passed command, so `loom run -- <cmd>` is equivalent to running `<cmd>` directly. The child's exit code is propagated unchanged; a failing command still fails `loom run` and is still recorded.
 - Each invocation writes `<consumerRoot>/.specloom/runs/<run-id>/` (`runsDir`): `full.log` (the raw combined output) and `usage.json` (`timestamp`, `command`, `changeId`, `step`, `harness`, `exitCode`, `rawOutputLines`, `retryCount`, `filesInChange`). `<run-id>` is unique per invocation; the schema and directory layout are a stable convention downstream tooling depends on. See ADR-008.
 - Metadata resolution (`resolveRunMetadata`): explicit flags win; otherwise `changeId` falls back to the current git branch (`git symbolic-ref --short HEAD`, fail-soft to `"unknown"`), `step` to `"manual"`, `harness` to `"unknown"`.
-- `retryCount` (`countPriorRuns`) is derived by scanning prior `.specloom/runs/*/usage.json` for the exact `{changeId, step, command}` triple — stateless across processes. `filesInChange` guards its `changeId` with the same `isSafeSlug` check as every other slug consumer, so it can never `readdir` outside the changes directory.
+- `retryCount` (`countPriorRuns`) is derived by scanning prior `.specloom/runs/*/usage.json` for the exact `{changeId, step, command}` triple — stateless across processes. `filesInChange` guards its `changeId` with the same `isSafeSlug` check as every other slug consumer that turns a slug into a **path**, so it can never `readdir` outside the changes directory. (`resolveDelivery` turns a slug into a **branch name and a `gh` argument** instead, so it applies a stricter variant — see "Delivery resolves by the change's own branch", ADR-033.)
 - `.specloom/` is git-ignored: run telemetry (which may capture whatever a command prints, including secrets) never leaves the local machine. There is no automatic secret redaction — an accepted, documented risk (see `docs/security-checklist.md`). Compaction reduces this exposure in practice (less of `full.log`'s content reaches the agent's context by default) but does not change the underlying risk on disk.
 - `framework/scripts/report-usage.js` is a standalone read-only reporter: it summarizes input/output/cache tokens per Claude Code session transcript (`~/.claude/projects/*/*.jsonl`) and detects the invoked `sdd-*` skill from the `Launching skill:` marker. The Codex adapter (`parseCodexSession`) is a documented stub pending session-format verification.
 - `sdd-apply` and `sdd-verify` canonical playbooks (and their generated commands/skills) route their verification, quality-gate, and regression commands through `loom run --change <ticket-slug> --step <apply|verify> -- <command>`, so the compacted summary — not raw command output — is what normally reaches an agent during those flows.
@@ -105,8 +105,9 @@ The `loom` CLI must operate on the consumer project when specloom is installed a
   stays untouched).
 - **Single-repo back-compat.** When the active change's `## Impacted repos`
   is empty, `resolveMultiRepoDelivery` early-returns exactly
-  `resolveDelivery({ cwd })`'s state — identical behavior to before this
-  aggregation existed.
+  `resolveDelivery({ cwd, slug })`'s state — identical behavior to before this
+  aggregation existed, except that the change's `slug` is now forwarded (see
+  "Delivery resolves by the change's own branch" below, ADR-033).
 - **Multi-repo reduction ("weakest link", ADR-027).** When `## Impacted
   repos` is non-empty, the aggregate is computed over the hub (`cwd`) plus
   every impacted repo, resolved to a path via `config.yaml` `repos` (the same
@@ -128,6 +129,46 @@ The `loom` CLI must operate on the consumer project when specloom is installed a
   `playbook status --json`'s `delivery.per_repo` before proceeding on a
   multi-repo change, since `merged` at the aggregate level is unanimous by
   construction but worth re-confirming per repo.
+
+## Delivery resolves by the change's own branch (`playbook status` / `playbook next`)
+
+Fixed in change `delivery-state-branch-independence` (see **ADR-033** for the decision,
+its three rejected alternatives, and the accepted risk). `resolveDelivery` took no
+change identifier and resolved the pull request for `currentBranch(git)`, so the same
+merged change reported a different delivery depending on what was checked out: `merged`
+from the change's branch, `committed` from `main` — where `playbook next` then advised
+`sdd-commit (push and open the pull request)` for a change already merged. Observed
+three times while running the `contract-first-authoring` and
+`convention-drift-verify-commit` cycles. It contradicted `system.md`'s first product
+principle: an authority on state that answers differently depending on where you stand
+is not an authority.
+
+- **`resolveDelivery({ cwd, runGit?, runGh?, slug? })`** resolves the pull request and
+  the CI checks for the branch named by `slug` — the change-id. `sdd-new` creates that
+  branch (`git checkout -b <change-id>`) and `OWNER.md` records it, so the convention
+  already existed; this makes it load-bearing.
+- **The current branch is a fallback, not the source of truth.** With no `slug`
+  (`undefined`) the behavior is exactly as before — `currentBranch(git)` — for callers
+  with no change context. Any other malformed value **fails closed** with
+  `unknown` + `INVALID_CHANGE_SLUG` rather than silently resolving a different change.
+- **The slug is validated before it becomes a `gh` argument**, as the *first* statement
+  of the function, before any runner is instantiated: non-empty string, not `.`/`..`,
+  no `/` or `\`, and **no leading `-`**. The dash matters because the value becomes an
+  element of `gh`'s argv, where `-R` or `--web` would be parsed as an option rather than
+  a branch name. (`isSafeSlug` in `src/tokens/packet.js` needs no such rule — there a
+  slug is a path segment, where a leading dash is harmless.)
+- **Nothing is persisted.** The `slug` is an *input*; the pull request is looked up live
+  on every call, so `src/github/`'s "never persisted" property is preserved. The
+  rejected alternative was recording the PR number in the change folder.
+- **Every caller that knows the change passes it.** `resolveMultiRepoDelivery` forwards
+  its `slug` to `resolveOne` in both the single-repo path and the per-repo fan-out — an
+  impacted repo carries the change's branch too (`prepare-repos` creates it).
+- **Accepted risk: local tree state keeps its precedence.** A dirty working tree still
+  short-circuits to `uncommitted` without consulting GitHub — deliberate, pinned by a
+  test, and what keeps the CLI usable offline. So with `lifecycle: runtime_cleared`, a
+  merged PR and any uncommitted file, delivery still reads `uncommitted`. Closing that
+  would break the pinned test and force a network call on the common path; the residual
+  case is one where the operator genuinely does have uncommitted work.
 
 ## Cross-repo gate check (`loom gate-check`)
 

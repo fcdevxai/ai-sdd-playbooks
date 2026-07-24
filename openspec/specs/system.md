@@ -18,7 +18,11 @@ install this package once, globally, and keep only their own
 ## Product principles (architecture constraints)
 
 - **The CLI is the authority on state**, never the language model. `sdd-next`
-  and every gate skill defer to `playbook status`/`next`/`validate`.
+  and every gate skill defer to `playbook status`/`next`/`validate`. That
+  authority must be **independent of where the operator is standing**: for a
+  given change, `status`/`next` answer the same regardless of the branch checked
+  out. An authority that answers differently depending on the current branch is
+  not one — see ADR-033, which fixed exactly that for the delivery dimension.
 - **Never fabricate evidence.** A gate with missing evidence or an
   unavailable dependency blocks — it never reports `passed`.
 - **Schema + code, not one or the other.** JSON Schema (ajv) validates
