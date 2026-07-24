@@ -35,3 +35,5 @@ Architecture Decision Records: they document the context, alternatives, and trad
 | ADR-029 | Skills invoke capabilities through `playbook` commands, never through internal source references | accepted | 2026-07-24 | cli-detect-siblings |
 | ADR-030 | The canonical API contract is authored during `sdd-design`, under human sign-off | accepted | 2026-07-24 | contract-first-authoring |
 | ADR-031 | A retry loop may regenerate derived artifacts, never mutate human-signed ones | accepted | 2026-07-24 | convention-drift-verify-commit |
+| ADR-032 | The `cli` runtime adapter stays unimplemented, and its exclusion carries a stated criterion | accepted | 2026-07-24 | delivery-state-branch-independence |
+| ADR-033 | A change's delivery state resolves by its own branch, never by the current one | accepted | 2026-07-24 | delivery-state-branch-independence |

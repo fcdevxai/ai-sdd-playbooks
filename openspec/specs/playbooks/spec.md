@@ -344,7 +344,7 @@ and an assertion requires that deference so the contradiction cannot return sile
 
 ## The `cli` runtime adapter is excluded — with a stated criterion
 
-Decided in change `delivery-state-branch-independence` (see the promoted ADR for the
+Decided in change `delivery-state-branch-independence` (see **ADR-032** for the
 alternatives and the accepted risk). `playbook-ai` declares `capabilities.cli: true`
 — it *is* a CLI — and the `cli` adapter is **experimental**, so it `blocks` with
 `ADAPTER_NOT_IMPLEMENTED` for any change that declares it relevant. Four consecutive
