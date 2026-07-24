@@ -34,9 +34,23 @@ only supported provider.
 
 ## Context
 
+If `context-packet.md` exists, read it instead of `proposal.md`+`tasks.md` in
+full — it carries acceptance criteria, constraints, security considerations,
+files touched, and verification commands copied verbatim from those sources.
+If it doesn't exist, fall back to reading both in full (no error, no warning).
+If its content visibly contradicts the live `proposal.md`/`tasks.md`, prefer
+the full sources and note the discrepancy. Impacted repos, acceptance
+criteria, and other change-artifact content come from the packet (or the full
+`proposal.md`/`tasks.md`), never from `spec-read` — that command is confined to
+`openspec/specs/**`.
+
 Use `playbook spec-read <file>#<anchor>` to read only the relevant section of a
-spec (e.g. `proposal.md#impacted-repos`); if the anchor is absent, fall back to
-full-read and report why.
+permanent spec (e.g. `openspec/specs/system.md#code-conventions`); if the
+anchor is absent, fall back to full-read and report why. If you need a
+permanent-spec anchor you don't know and `.specloom/index/spec-index.json`
+doesn't exist, run `playbook spec-index` to build it, then `playbook spec-read
+openspec/specs/<file>#<anchor>`. If `spec-index` or the lookup fails, full-read
+the spec and report why.
 
 ## Behavior
 

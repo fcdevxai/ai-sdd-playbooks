@@ -56,7 +56,10 @@ surface** (routes/controllers, authorization middleware, database queries, and
 anything handling user input or external data) — diff-first is the default, never
 a limit on security judgment. Use `playbook spec-read <file>#<anchor>` to read
 only the relevant section of a spec; if the anchor is absent, fall back to
-full-read and report why.
+full-read and report why. If you need a permanent-spec anchor you don't know
+and `.specloom/index/spec-index.json` doesn't exist, run `playbook spec-index`
+to build it, then `playbook spec-read openspec/specs/<file>#<anchor>`. If
+`spec-index` or the lookup fails, full-read the spec and report why.
 
 ## Behavior
 

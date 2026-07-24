@@ -23,11 +23,22 @@ incomplete adapter **blocks** — it must never fabricate a `passed`.
 
 ## Context
 
+If `context-packet.md` exists, read it instead of `proposal.md`+`tasks.md` in
+full — it carries acceptance criteria, constraints, security considerations,
+files touched, and verification commands copied verbatim from those sources.
+If it doesn't exist, fall back to reading both in full (no error, no warning).
+If its content visibly contradicts the live `proposal.md`/`tasks.md`, prefer
+the full sources and note the discrepancy.
+
 To scope which changed files to exercise, run
 `playbook changed-files <change-id> --diff` first; full-read a file only when the
 diff touches authorization/ownership/input or is insufficient to judge what to
 drive. Use `playbook spec-read <file>#<anchor>` to read only the relevant section
-of a spec; if the anchor is absent, fall back to full-read and report why.
+of a spec; if the anchor is absent, fall back to full-read and report why. If you
+need a permanent-spec anchor you don't know and `.specloom/index/spec-index.json`
+doesn't exist, run `playbook spec-index` to build it, then `playbook spec-read
+openspec/specs/<file>#<anchor>`. If `spec-index` or the lookup fails, full-read
+the spec and report why.
 
 ## Adapter selection
 
