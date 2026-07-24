@@ -1,7 +1,7 @@
 ---
 status: implemented
 owner: bernardo
-last_updated: 2026-07-23
+last_updated: 2026-07-24
 ---
 
 # Playbooks and Agent Skill Metadata
@@ -230,3 +230,57 @@ then re-checks `SEC-N` security considerations had broken at both ends.
   `verification-report.md`, and marks `status: failed` on any `SEC-N` lacking
   post-merge evidence. The report's security section is enforced by
   `playbook validate` — see the CLI spec's "Verification-report body validation".
+
+## Canonical contract authoring belongs to `sdd-design`
+
+Wired in change `contract-first-authoring` (see **ADR-030** for the full decision,
+the two rejected alternatives, and the accepted risks). `README.md` promised that a
+hub-owned API contract is authored in `openspec/specs/contracts/openapi.yaml`
+"loom-first, during `sdd-plan`, feature by feature", but no playbook implemented it
+(`grep -i 'openapi|contract-drift'` over `skills/` = 0). The contract in this repo
+existed only because a human hand-wrote it, and `playbook init` does not scaffold
+one. The earlier change `restore-contract-first` had already made the *verification*
+half operational (`playbook contract-drift`, its config block, a CI template, 7
+tests), which sharpened the gap rather than closing it: the hub could detect drift
+against a contract nothing in the lifecycle ever wrote, so the canonical contract
+would end up reverse-engineered from the implementation — the inversion
+`source_of_truth: loom-first` exists to prevent.
+
+- **`sdd-design` owns the authoring, `sdd-plan` must not.** When the proposal
+  declares `impact.public_contract: true` **and** the project declares
+  `contract.path_in_loom`, `sdd-design` adds or updates the feature's endpoints in
+  that file as part of producing `design.md`. It is step 2 of `## Behavior` —
+  before security refinement, so risk is classified against concrete endpoints.
+- **Why the design stage.** `computeDesignRequired` (`src/lifecycle/impact.js`)
+  returns true when *any* `proposal.impact.*` is true, so `public_contract: true`
+  guarantees the design stage exists — the usual "design may be skipped" objection
+  does not apply to this trigger. And `design.md` is the only pre-implementation
+  artifact whose `status: approved` a **human** must set; `tasks.md` has no
+  approval gate. A public contract shared across repositories gets the strongest
+  gate the pre-implementation lifecycle has, not the weakest.
+- **One sign-off, one set of endpoints.** The canonical contract and `design.md`'s
+  `## Public contracts / interfaces` describe the same endpoints and are reviewed
+  together. A mismatch is a design defect, not a formatting detail.
+- **Path from config, contained to the repo.** The write target comes from
+  `contract.path_in_loom` and is never hardcoded; there is no default fallback
+  (`playbook contract-drift` exits `USAGE` when the key is absent). The resolved
+  path must stay inside the project root — if it escapes, the step stops and
+  reports instead of writing.
+- **Contract-first stays opt-in.** With `impact.public_contract: true` but no
+  `contract.path_in_loom`, the step is skipped and the skill says so explicitly. It
+  never invents a path.
+- **Create when absent.** When the configured path does not exist, `sdd-design`
+  creates it with the minimal skeleton (`openapi`, `info`, `paths`) plus this
+  feature's endpoints. Nothing else creates it — not `playbook init`, not bootstrap.
+- **No secrets in the contract.** The authoring step forbids secrets, real tokens,
+  and PII in `example`, `description`, or `servers`: the contract is a versioned
+  artifact shared with every consumer repo, so a leak there is effectively
+  permanent.
+- **`contract-drift` is a detector, not the authoring mechanism.** It runs in the
+  implementing repo's CI and detects nothing useful against `paths: {}`.
+- `test/skill-contract.test.js` carries content assertions for all of the above —
+  including a guard that `sdd-plan` never mentions `openapi`, and the negative half
+  of the secrets rule (the skill text itself carries no credential-shaped literal)
+  — so a future merge cannot silently disconnect any of it, the same enforcement
+  pattern as the packet, `spec-index`, bootstrap re-run, and `detect-siblings`
+  wirings above.
