@@ -55,6 +55,7 @@ See ADR-011 for the decision context and trade-offs behind these limits.
 - The cap never means silent abort or forced success; it means stop/report with the current state and evidence, then wait for human direction.
 - `sdd-apply` caps TDD retries per task at 2 red attempts; the 3rd red result stops the loop, reports the task state plus the last `.specloom/runs/<run-id>/full.log`, and never marks the task complete.
 - `sdd-new` and `sdd-commit` cap the fix -> `loom validate` -> re-run loop at 3 failed iterations; the 4th failed iteration stops and reports the remaining validate issues.
+- The cap bounds *how many times*, not *what*. **ADR-031** adds the scope dimension ADR-011 left open: a loop iteration may regenerate a **derived** artifact (`playbook packet` for a stale `context-packet.md`) but must never mutate a **human-signed** one — `proposal.md`, `design.md`, `tasks.md`, an `adr-*.md` draft, or a gate report — to make `validate` pass. Anything not named regenerable counts as signed, and a forbidden fix stops immediately **without consuming an iteration**. See "Retry-loop scope and the pwd/cap restoration" below.
 - `sdd-enrich-us` caps clarification at 4 Q&A rounds; a 5th unresolved round stops, summarizes the remaining open decisions, and asks whether to continue.
 - Security rules remain stronger than retry caps. In particular, `sdd-apply` must never mark complete a task tied to a security consideration while its negative test is still red.
 
@@ -74,7 +75,7 @@ See ADR-011 for the decision context and trade-offs behind this rule.
 
 - Commands written by `sdd-ff` into `tasks.md` and `context-packet.md` must be executable from the repository root without a preceding `cd`.
 - Prefer root-relative paths or command flags such as `-C` and `--prefix` over shell chains that depend on inherited cwd.
-- `sdd-apply` and `sdd-verify` must verify `pwd` before running commands from `tasks.md` and must not assume cwd state carried over from a previous step.
+- `sdd-apply` and `sdd-verify` must verify `pwd` before running commands from `tasks.md` **or `context-packet.md`** — post `token-saving-parity` the verification commands come from the packet — and must not assume cwd state carried over from a previous step. Wired in **both** playbooks as of change `convention-drift-verify-commit`; `sdd-verify` carries the check at each of its two command-running points (feature commands and regression commands), since the cwd is not carried between them.
 - For older change folders whose commands still depend on `cd`, `sdd-apply` and `sdd-verify` treat the cwd check as a defensive fallback rather than retroactively rewriting the ticket.
 
 ## Non-goals
@@ -284,3 +285,59 @@ would end up reverse-engineered from the implementation — the inversion
   — so a future merge cannot silently disconnect any of it, the same enforcement
   pattern as the packet, `spec-index`, bootstrap re-run, and `detect-siblings`
   wirings above.
+
+## Retry-loop scope and the pwd/cap restoration
+
+Fixed in change `convention-drift-verify-commit` (see **ADR-031** for the retry-loop
+scope decision, its three rejected alternatives, and the accepted risks; ADR-011
+remains in force and is not superseded). Two conventions ADR-011 had already decided
+and named explicitly never reached the executing prompts:
+
+- **`pwd` in `sdd-verify`.** ADR-011's `## Decision` names "`sdd-apply` **and
+  `sdd-verify`**", and the cwd-safe section above said the same, but `grep -c pwd`
+  over `skills/sdd-verify/canonical.md` returned **0** while `sdd-apply` had 2. Now
+  wired at both of `sdd-verify`'s command-running points plus its `## Rules`.
+- **Retry cap in `sdd-commit`.** ADR-011 names "`sdd-new` **and `sdd-commit`**", but
+  `sdd-commit` step 1 read "Run `playbook validate` — stop on any violation": there
+  was no loop at all. Restoring it therefore **introduced behavior**, not just text —
+  `sdd-commit` no longer stops on a stale `context-packet.md`, it regenerates and
+  retries.
+- The restored text replicates specloom's **guard language**, not only the number:
+  "don't reason about the reports yourself" and "at the 4th failed attempt, stop …
+  without further blind edits". A cap without that guard invites exactly the blind
+  iteration it exists to prevent.
+- **A retry budget never overrides a security rule.** `sdd-commit` must never make
+  `validate` pass by weakening a gate report's `status`, least of all
+  `security-report.md`. This is the delivery-stage analogue of ADR-011's rule that
+  the TDD cap can never mark a task complete while its security negative test is
+  red, and it reinforces `sdd-commit`'s "Do not commit around a blocking finding".
+- `test/skill-contract.test.js` carries content assertions for all of the above,
+  including the **negative** half of the security rule (the skill text itself
+  contains no instruction to write or flip a report status) and a guard that
+  `sdd-apply` and `sdd-new` keep the conventions this change replicated **from** —
+  if a source is deleted, the convention silently goes half-wired again.
+
+### A content assertion proves presence, not reachability
+
+The most valuable finding of this change came from its own `sdd-code-review`, and it
+qualifies the enforcement pattern every wiring section above relies on:
+
+> A content test verifies that an instruction **is present**. It does not verify that
+> the instruction is **reachable** — that no earlier section of the same prompt
+> contradicts or short-circuits it.
+
+`sdd-commit`'s `## Preconditions (self-check)` said "`playbook validate` passes" and
+"If any fail, stop and report". Preconditions are read **before** `## Behavior`, so
+the straightforward reading ("validate fails → stop") made the new capped loop
+**unreachable**, with every content assertion green. Shipped, the change would have
+been a no-op that looked complete. The precondition now defers explicitly to step 1,
+and an assertion requires that deference so the contradiction cannot return silently.
+
+- **When wiring a new instruction into a playbook, re-read the sections the agent
+  reads before reaching it** — typically `## Preconditions (self-check)`,
+  `## Context` and `## Rules` — and confirm none of them negates it. Fix any
+  contradiction in the same change and assert it.
+- The three wirings merged before this one (`context-packet.md` in the five
+  section-first playbooks, `playbook detect-siblings` in `sdd-bootstrap-project`,
+  and canonical-contract authoring in `sdd-design`) were checked against this rule
+  and are all reachable — verified, not assumed.

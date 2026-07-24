@@ -60,6 +60,15 @@ change under `openspec/changes/<change-id>/`: `OWNER.md`, `proposal.md`,
 `runtime-gate-report.md`, `verification-report.md`. Schemas for each live in
 `schemas/*.schema.json`.
 
+That set splits along a line a playbook must respect (**ADR-031**):
+`context-packet.md` is **derived** — regenerable on demand from `proposal.md` +
+`tasks.md` via `playbook packet` — while everything else is **signed**, either by a
+human (`proposal.md`/`design.md` carry a human `status: approved`; an `adr-*.md`
+draft awaits a human accept/reject) or by a gate (the three `*-report.md` verdicts).
+A playbook may regenerate a derived artifact to satisfy `playbook validate`; it must
+never edit a signed one for that purpose. Anything not named derived counts as
+signed.
+
 ## Code conventions
 
 - ESM throughout (`"type": "module"`), Node ≥18.

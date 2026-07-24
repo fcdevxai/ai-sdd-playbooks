@@ -34,3 +34,4 @@ Architecture Decision Records: they document the context, alternatives, and trad
 | ADR-028 | Stateful bootstrap skills treat existing config as a diff baseline, not a completion signal | accepted | 2026-07-23 | bootstrap-repos-diff-on-rerun |
 | ADR-029 | Skills invoke capabilities through `playbook` commands, never through internal source references | accepted | 2026-07-24 | cli-detect-siblings |
 | ADR-030 | The canonical API contract is authored during `sdd-design`, under human sign-off | accepted | 2026-07-24 | contract-first-authoring |
+| ADR-031 | A retry loop may regenerate derived artifacts, never mutate human-signed ones | accepted | 2026-07-24 | convention-drift-verify-commit |
