@@ -25,7 +25,7 @@ import { specReadCommand, specIndexCommand } from './spec.js';
 import { runCommand } from './run.js';
 import { usageReportCommand } from './usage.js';
 import {
-  repoPlanCommand, commitPlanCommand, prepareReposCommand, gateCheckCommand, changedFilesCommand, contractDriftCommand,
+  repoPlanCommand, commitPlanCommand, prepareReposCommand, gateCheckCommand, changedFilesCommand, contractDriftCommand, detectSiblingsCommand,
 } from './repos.js';
 import { readPackageVersion } from '../install/skills.js';
 
@@ -52,6 +52,7 @@ export const COMMAND_NAMES = [
   'prepare-repos',
   'gate-check',
   'changed-files',
+  'detect-siblings',
   'contract-drift',
 ];
 
@@ -74,6 +75,7 @@ const COMMAND_SUMMARIES = {
   'prepare-repos': 'Create/switch the change branch per impacted repo (branches only).',
   'gate-check': "Run each impacted repo's verification commands locally.",
   'changed-files': 'Diff-first changed-file list for a change (optionally --repo).',
+  'detect-siblings': 'Read-only list of candidate sibling repos in the parent dir.',
   'contract-drift': 'Structural OpenAPI diff vs the canonical contract.',
 };
 
@@ -161,6 +163,7 @@ const HANDLERS = {
   'prepare-repos': prepareReposCommand,
   'gate-check': gateCheckCommand,
   'changed-files': changedFilesCommand,
+  'detect-siblings': detectSiblingsCommand,
   'contract-drift': contractDriftCommand,
 };
 

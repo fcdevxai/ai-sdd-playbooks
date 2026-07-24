@@ -129,6 +129,11 @@ test('sdd-bootstrap-project proposes multi-repo topology without filtering candi
   assert.match(b, /role: sdd/);
 });
 
+test('sdd-bootstrap-project invokes the `playbook detect-siblings` command, not the JS function directly (AC-5, AC-7)', () => {
+  const b = body('sdd-bootstrap-project');
+  assert.match(b, /playbook detect-siblings/, 'invokes the CLI command');
+});
+
 test('sdd-bootstrap-project re-invokes the sibling detector on re-run instead of treating a populated repos: as already resolved (AC-1, AC-2)', () => {
   const b = body('sdd-bootstrap-project');
   assert.match(b, /re-run|re-invoke/i, 're-run/re-invoke instruction present');

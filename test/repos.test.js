@@ -524,3 +524,36 @@ contract:
   assert.equal(code, EXIT.VIOLATION);
   assert.match(err.join('\n'), /FIELD MISMATCH/);
 });
+
+test('playbook detect-siblings lists git-repo siblings of the parent dir (text)', async () => {
+  const { loomDir } = makeMultiRepoFixture();
+  const { io, out } = capture();
+  const code = await run(['detect-siblings', '--cwd', loomDir], io);
+  assert.equal(code, EXIT.OK);
+  assert.match(out.join('\n'), /backend/);
+});
+
+test('playbook detect-siblings --json emits the detector object', async () => {
+  const { loomDir } = makeMultiRepoFixture();
+  const { io, out } = capture();
+  const code = await run(['detect-siblings', '--json', '--cwd', loomDir], io);
+  assert.equal(code, EXIT.OK);
+  const parsed = JSON.parse(out.join('\n'));
+  assert.equal(parsed.ownName, 'loom');
+  assert.ok(Array.isArray(parsed.candidates));
+  assert.ok(parsed.candidates.some((c) => c.name === 'backend'));
+});
+
+test('playbook detect-siblings with no git siblings returns empty candidates, exit 0', async () => {
+  const root = tmp();
+  const solo = path.join(root, 'solo');
+  fs.mkdirSync(solo, { recursive: true });
+  initRepo(solo, { branch: 'main' });
+  fs.writeFileSync(path.join(solo, 'README.md'), '# solo\n');
+  commitAll(solo, 'init solo');
+  const { io, out } = capture();
+  const code = await run(['detect-siblings', '--json', '--cwd', solo], io);
+  assert.equal(code, EXIT.OK);
+  const parsed = JSON.parse(out.join('\n'));
+  assert.deepEqual(parsed.candidates, []);
+});

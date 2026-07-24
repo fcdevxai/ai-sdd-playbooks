@@ -10,6 +10,7 @@ import { buildRepoPlan, buildCommitPlan, prepareRepos } from '../repos/plan.js';
 import { runGateCheck } from '../repos/gate-check.js';
 import { collectChangedFiles } from '../repos/changed-files.js';
 import { checkContractDrift } from '../repos/contract-drift.js';
+import { detectSiblingRepos } from '../config/detect-siblings.js';
 import { loadConfig } from '../config/config.js';
 
 function positional(rest) {
@@ -32,6 +33,28 @@ export async function repoPlanCommand(parsed, io) {
       io.out(`Repo plan for ${changeId} (sdd repo: ${plan.sddRepo}):`);
       for (const r of plan.repos) {
         io.out(`  ${r.name} [${r.role}] branch=${r.currentBranch || '?'} base=${r.baseBranch || '?'} blocker=${r.blocker || 'none'}`);
+      }
+    }
+    return EXIT.OK;
+  } catch (err) {
+    io.err(`error: ${err.message}`);
+    return EXIT.VIOLATION;
+  }
+}
+
+export async function detectSiblingsCommand(parsed, io) {
+  const cwd = parsed.flags.cwd || process.cwd();
+  try {
+    const result = detectSiblingRepos({ cwd });
+    if (parsed.flags.json) {
+      io.out(JSON.stringify(result, null, 2));
+    } else if (result.candidates.length === 0) {
+      io.out(`No git-repo siblings found in ${result.parentDir}`);
+    } else {
+      io.out(`Sibling repos for ${result.ownName} (parent: ${result.parentDir}):`);
+      for (const c of result.candidates) {
+        const shared = c.sharedTokensWithOwn.length ? c.sharedTokensWithOwn.join(',') : '-';
+        io.out(`  ${c.name} [${c.summary}] shared=${shared} cluster=${c.cluster.length}`);
       }
     }
     return EXIT.OK;
