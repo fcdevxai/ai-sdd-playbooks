@@ -17,6 +17,7 @@ antes de cada revisión de seguridad.
 
 | Superficie | Por qué es sensible | Owner |
 |---|---|---|
+| Contrato canónico de API (`contract.path_in_loom`, por defecto `openspec/specs/contracts/openapi.yaml`) | `sdd-design` escribe acá (ADR-030). Es un artefacto versionado que se comparte con todos los repos consumidores: un secreto/token/PII que entre en `example`/`description`/`servers` queda en el historial de git de cada uno, así que la filtración es permanente. La ruta sale de config, no está hardcodeada, y debe quedar contenida al repo. | maintainers |
 | [ej. Autenticación/sesión] | [ej. un compromiso da acceso total a la cuenta] | [equipo/persona] |
 | [ej. Datos de pago] | [ej. regulado, alto impacto si se filtra] | [equipo/persona] |
 | [ej. Acciones de admin] | [ej. riesgo de escalación de privilegios] | [equipo/persona] |
@@ -41,6 +42,8 @@ antes de cada revisión de seguridad.
 
 | Riesgo | Razonamiento | Aceptado por | Fecha |
 |---|---|---|---|
+| Un change que toca una API pero declara `impact.public_contract: false` saltea el authoring del contrato en silencio | El trigger es un campo de la proposal confirmado por un humano, y declararlo mal ya hoy saltea **toda** la etapa de diseño. El riesgo se hereda del modelo de impact, no lo agrega ADR-030. | maintainers (ADR-030) | 2026-07-24 |
+| Una filtración de secretos/PII en el contrato canónico es irreversible | El contrato se comparte con el historial de git de todos los repos consumidores. La mitigación es preventiva —la prohibición está dentro de la instrucción de `sdd-design` y hay un test de contenido que verifica que el propio texto del skill no traiga literales con forma de credencial— pero **no hay escáner de secretos** sobre el contrato. Si eso pasa a ser insuficiente, es un change aparte. | maintainers (ADR-030) | 2026-07-24 |
 
 ---
 

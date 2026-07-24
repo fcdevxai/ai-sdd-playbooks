@@ -33,3 +33,4 @@ Architecture Decision Records: they document the context, alternatives, and trad
 | ADR-027 | Reducción "eslabón más débil" para delivery multi-repo | accepted | 2026-07-23 | multi-repo-delivery-aggregation |
 | ADR-028 | Stateful bootstrap skills treat existing config as a diff baseline, not a completion signal | accepted | 2026-07-23 | bootstrap-repos-diff-on-rerun |
 | ADR-029 | Skills invoke capabilities through `playbook` commands, never through internal source references | accepted | 2026-07-24 | cli-detect-siblings |
+| ADR-030 | The canonical API contract is authored during `sdd-design`, under human sign-off | accepted | 2026-07-24 | contract-first-authoring |
