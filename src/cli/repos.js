@@ -12,6 +12,7 @@ import { collectChangedFiles } from '../repos/changed-files.js';
 import { checkContractDrift } from '../repos/contract-drift.js';
 import { detectSiblingRepos } from '../config/detect-siblings.js';
 import { loadConfig } from '../config/config.js';
+import { resolveContainedPath } from '../util/fs-safe.js';
 
 function positional(rest) {
   return rest.find((a) => !a.startsWith('-')) || null;
@@ -148,8 +149,15 @@ export async function contractDriftCommand(parsed, io) {
   const { config } = loadConfig({ cwd });
   const canonicalPath = config.contract?.path_in_loom;
   if (!canonicalPath) { io.err('error: playbook.config.yaml has no contract.path_in_loom configured'); return EXIT.USAGE; }
+  let resolvedCanonicalPath;
   try {
-    const issues = checkContractDrift(`${cwd}/${canonicalPath}`, generatedPath);
+    resolvedCanonicalPath = resolveContainedPath(cwd, canonicalPath);
+  } catch (err) {
+    io.err(`error: ${err.message}`);
+    return EXIT.USAGE;
+  }
+  try {
+    const issues = checkContractDrift(resolvedCanonicalPath, generatedPath);
     if (issues.length === 0) {
       io.out('✅ No contract drift detected.');
       return EXIT.OK;

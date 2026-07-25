@@ -19,8 +19,9 @@ import { readLock, lockPathFor } from '../config/lock.js';
 import { loadChange, findChangeDirs } from '../config/artifacts.js';
 import { computeState } from '../lifecycle/engine.js';
 import { satisfies } from '../util/semver.js';
-import { ensureDir, copyIfMissing } from '../util/fs-safe.js';
+import { ensureDir, copyIfMissing, writeIfMissing } from '../util/fs-safe.js';
 import { discoverSpecFiles, defaultSpecIndexPath } from '../tokens/spec-index.js';
+import { readManifest, verifyManifest } from '../install/manifest.js';
 
 function readStamp(dir) {
   const p = path.join(dir, '.playbook-version');
@@ -32,9 +33,32 @@ const TARGET_LABELS = {
   agents: 'GitHub Copilot + Codex',
 };
 
+/**
+ * Content verification (ADR "install verification by content"): compares what's
+ * actually installed in `targetDir` against its `.playbook-manifest.json`. Pure,
+ * read-only. A digest mismatch or dangling link-mode symlink is a `problems`
+ * entry (the install isn't what it claims to be); an absent/unreadable manifest
+ * is a `notes` entry — an install made by a version before this manifest existed
+ * is unknown, not unhealthy. Link mode gets its own note naming the source,
+ * since a link is verified by resolution, never by digest.
+ */
+function installedContentDiagnostics(targetKey, targetDir) {
+  const label = TARGET_LABELS[targetKey] || targetKey;
+  const manifest = readManifest(targetDir);
+  if (!manifest) {
+    return { problems: [], notes: [`${label} install has no manifest at ${targetDir} — it predates content verification (run \`playbook install\` to enable it)`] };
+  }
+  const notes = [];
+  if (manifest.mode === 'link') {
+    notes.push(`${label} install is linked to ${manifest.source} — content verified by symlink resolution, not by digest`);
+  }
+  const problems = verifyManifest(targetDir, manifest).map((f) => `${label} install: ${f}`);
+  return { problems, notes };
+}
+
 function installedTargetDiagnostics(targetKey, targetDir, expectedCoreSkills) {
   const stamp = readStamp(targetDir);
-  if (!stamp) return { target: targetKey, dir: targetDir, installed: null, problems: [] };
+  if (!stamp) return { target: targetKey, dir: targetDir, installed: null, problems: [], notes: [] };
 
   const problems = [];
   const installedNames = new Set(listSkills(targetDir).map((s) => s.name));
@@ -50,7 +74,10 @@ function installedTargetDiagnostics(targetKey, targetDir, expectedCoreSkills) {
     }
   }
 
-  return { target: targetKey, dir: targetDir, installed: stamp, problems };
+  const content = installedContentDiagnostics(targetKey, targetDir);
+  problems.push(...content.problems);
+
+  return { target: targetKey, dir: targetDir, installed: stamp, problems, notes: content.notes };
 }
 
 const METHODOLOGY_MARKER = /<!--\s*sdd-methodology:\s*([\d.]+)\s*-->/;
@@ -126,7 +153,10 @@ export async function doctorCommand(parsed, io) {
   const installed = targetDiagnostics.find((t) => t.installed)?.installed || null;
   const lock = readLock(lockPathFor(cwd, null));
   if (!installed) problems.push('no global methodology installed (run `playbook install`)');
-  for (const d of targetDiagnostics) problems.push(...d.problems);
+  for (const d of targetDiagnostics) {
+    problems.push(...d.problems);
+    notes.push(...(d.notes || []));
+  }
   const range = lock && lock.methodology && lock.methodology.compatible;
   if (installed && range && !satisfies(installed, range)) {
     problems.push(`installed methodology ${installed} is outside the project range "${range}" (run \`playbook install\` / \`playbook sync\`)`);
@@ -156,8 +186,11 @@ export async function doctorCommand(parsed, io) {
   // openspec structure (additive-fixable)
   const changesDir = path.join(cwd, 'openspec', 'changes');
   if (!fs.existsSync(changesDir)) {
-    if (fix) { ensureDir(changesDir); fixes.push('created openspec/changes/'); }
-    else problems.push('missing openspec/changes/ (fixable: `playbook doctor --fix`)');
+    if (fix) {
+      ensureDir(changesDir);
+      writeIfMissing(path.join(changesDir, '.gitkeep'), '');
+      fixes.push('created openspec/changes/');
+    } else problems.push('missing openspec/changes/ (fixable: `playbook doctor --fix`)');
   }
   const wf = path.join(cwd, '.github', 'workflows', 'playbook-validation.yml');
   if (!fs.existsSync(wf)) {

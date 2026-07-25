@@ -15,6 +15,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildManifest, writeManifest } from './manifest.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const PACKAGE_ROOT = path.resolve(__dirname, '..', '..');
@@ -51,12 +52,31 @@ export function listAddonSkills(addonsDir, addon) {
 // `canonical.md` (the authoring source) or generator scratch files.
 const INSTALLABLE_FILES = new Set(['SKILL.md']);
 
-function copySkillArtifacts(src, dest) {
+/**
+ * Installs the installable files of one skill into `dest`, either by copy or
+ * by per-file symlink to `src` (mode: 'link'). In link mode `dest` is still a
+ * real directory — only the files are linked — so `canonical.md` never
+ * appears in the target and directory-level discovery is unaffected.
+ * Returns the list of installed files, for the manifest.
+ */
+function installSkillArtifacts(src, dest, mode) {
   fs.mkdirSync(dest, { recursive: true });
+  const files = [];
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
     if (!entry.isFile() || !INSTALLABLE_FILES.has(entry.name)) continue;
-    fs.copyFileSync(path.join(src, entry.name), path.join(dest, entry.name));
+    const srcFile = path.join(src, entry.name);
+    const destFile = path.join(dest, entry.name);
+    if (mode === 'link') {
+      if (fs.existsSync(destFile) || fs.lstatSync(destFile, { throwIfNoEntry: false })) {
+        fs.rmSync(destFile, { force: true });
+      }
+      fs.symlinkSync(srcFile, destFile);
+    } else {
+      fs.copyFileSync(srcFile, destFile);
+    }
+    files.push({ name: entry.name, sourcePath: srcFile });
   }
+  return files;
 }
 
 /**
@@ -64,10 +84,14 @@ function copySkillArtifacts(src, dest) {
  * Returns a summary; writes nothing outside the target dirs.
  *
  * Requires `playbook sync` to have generated SKILL.md next to each
- * canonical.md first — installSkills only ever copies SKILL.md, never the
+ * canonical.md first — installSkills only ever installs SKILL.md, never the
  * canonical.md source, so a stale/missing SKILL.md installs a stale/missing skill.
+ *
+ * `mode: 'copy'` (default) is byte-for-byte identical to the pre-manifest
+ * behavior. `mode: 'link'` symlinks each installable file to `sourceRoot`
+ * instead — dev-only, opt-in via `playbook install --link`.
  */
-export function installSkills({ targets, version, addons = [], sourceRoot = PACKAGE_ROOT }) {
+export function installSkills({ targets, version, addons = [], sourceRoot = PACKAGE_ROOT, mode = 'copy' }) {
   const core = listSkills(path.join(sourceRoot, 'skills'));
   const addonSkills = addons.flatMap((a) => listAddonSkills(path.join(sourceRoot, 'addons'), a));
   const all = [...core, ...addonSkills];
@@ -75,13 +99,18 @@ export function installSkills({ targets, version, addons = [], sourceRoot = PACK
   const installedInto = {};
   for (const [runtime, targetDir] of Object.entries(targets)) {
     fs.mkdirSync(targetDir, { recursive: true });
-    for (const s of all) copySkillArtifacts(s.dir, path.join(targetDir, s.name));
+    const skillFiles = all.map((s) => ({
+      name: s.name,
+      files: installSkillArtifacts(s.dir, path.join(targetDir, s.name), mode),
+    }));
     fs.writeFileSync(path.join(targetDir, '.playbook-version'), `${version}\n`, 'utf8');
+    writeManifest(targetDir, buildManifest({ version, mode, sourceRoot, skills: skillFiles }));
     installedInto[runtime] = targetDir;
   }
 
   return {
     version,
+    mode,
     core: core.map((s) => s.name),
     addons: addonSkills.map((s) => `${s.addon}/${s.name}`),
     targets: installedInto,

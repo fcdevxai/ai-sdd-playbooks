@@ -15,12 +15,14 @@
     "addons/",
     "schemas/",
     "templates/project/",
+    "scripts/",
     "CHANGELOG.md"
   ],
   "scripts": {
     "test": "node --test test/*.test.js",
     "generate": "node src/generator/generate-skills.js",
-    "generate:check": "node src/generator/generate-skills.js --check"
+    "generate:check": "node src/generator/generate-skills.js --check",
+    "postinstall": "node scripts/postinstall.cjs"
   },
   "dependencies": {
     "ajv": "^8.20.0",
