@@ -57,7 +57,7 @@ insertar el wiring de `sdd-plan` hay que releer las secciones que el agente lee 
 - `src/util/fs-safe.js` — resolvedor de rutas contenidas (frontera también de lectura).
 - `src/cli/repos.js` — `contract-drift` resuelve `contract.path_in_loom` con ese helper.
 - `package.json` — un único lifecycle script (`postinstall`) + entrada en `files:`.
-- `scripts/postinstall.js` — nuevo, message-only.
+- `scripts/postinstall.cjs` — nuevo, message-only.
 - `skills/sdd-plan/canonical.md` (+ `SKILL.md` regenerado) — exige la línea `Regression`.
 - `openspec/specs/cli/spec.md` — describe el postinstall real; borra la promesa de ruta
   absoluta.
@@ -153,7 +153,7 @@ digests.
 stamp de versión en `methodology.resolved`, fijado por test.
 
 **AC-10:** `package.json` declara exactamente un lifecycle script, `postinstall`,
-apuntando a `scripts/postinstall.js`, incluido en `files:`; el script imprime a lo sumo
+apuntando a `scripts/postinstall.cjs`, incluido en `files:`; el script imprime a lo sumo
 tres líneas nombrando `playbook install`, no escribe en disco, no lee el repo del
 consumer, no hace red y sale 0 incluso ante un error interno. `prepare` y `preinstall`
 siguen ausentes.

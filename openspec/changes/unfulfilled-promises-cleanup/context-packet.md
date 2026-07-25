@@ -1,7 +1,7 @@
 ---
 sources:
-  proposal: 81b5c602b2b8cdddb9dcb9d7f75b4482d2ad9e86a223606866d3e9fc5d07102e
-  tasks: 9912e3a7ef3655159870e4de20f2578167b7c7cac7c7696249e6e1ba10f8a751
+  proposal: 4e506f65e705fc12c3d0514a6fc4613a81b08fcccac69ef4e5008f16b550b591
+  tasks: 880e680251b961e084fd13a96e2f935cf363ec86cd29f023c4886ee37468da46
 ---
 # Context Packet — Cerrar las promesas incumplidas del CLI, la distribución y las specs
 
@@ -43,7 +43,7 @@ digests.
 stamp de versión en `methodology.resolved`, fijado por test.
 
 **AC-10:** `package.json` declara exactamente un lifecycle script, `postinstall`,
-apuntando a `scripts/postinstall.js`, incluido en `files:`; el script imprime a lo sumo
+apuntando a `scripts/postinstall.cjs`, incluido en `files:`; el script imprime a lo sumo
 tres líneas nombrando `playbook install`, no escribe en disco, no lee el repo del
 consumer, no hace red y sale 0 incluso ante un error interno. `prepare` y `preinstall`
 siguen ausentes.
@@ -121,7 +121,7 @@ permiso que `install` ya ejerce hoy con `copyFileSync`; este change no lo amplí
 - `test/doctor.test.js`
 - `test/sync.test.js`
 - `src/cli/install.js`
-- `scripts/postinstall.js`
+- `scripts/postinstall.cjs`
 - `package.json`
 - `test/postinstall.test.js`
 - `openspec/specs/cli/spec.md`

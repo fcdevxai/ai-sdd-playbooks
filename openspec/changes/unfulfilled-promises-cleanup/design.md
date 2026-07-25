@@ -86,7 +86,7 @@ directorio: el descubrimiento del harness sigue viendo un directorio real, y el 
 `canonical.md` aparezca en el target. `--link` se parsea en `parseInstallArgs` junto a las
 flags actuales y no altera ninguna otra rama del comando.
 
-**3. Señal de post-update (AC-10, AC-11).** `scripts/postinstall.js`, autocontenido: no
+**3. Señal de post-update (AC-10, AC-11).** `scripts/postinstall.cjs`, autocontenido: no
 importa nada de `src/` —una regresión en un módulo del CLI no puede romper el `npm
 install` de un consumer—, resuelve su propio `package.json` relativo a su ubicación,
 imprime tres líneas y envuelve todo en un `try/catch` que no re-lanza. El comando que
@@ -133,8 +133,8 @@ existentes, sólo un warning nuevo.
 | `src/tokens/packet.js` | `REGRESSION_LABEL_RE` + warning; extracción intacta | AC-3 |
 | `src/util/fs-safe.js` | `resolveContainedPath`; docstring reencuadrado a lecturas derivadas de config | AC-12 |
 | `src/cli/repos.js` | `contractDriftCommand` resuelve por el helper; error claro y `EXIT.USAGE` cuando escapa | AC-12 |
-| `package.json` | un único lifecycle script `postinstall`; `scripts/postinstall.js` en `files:` | AC-10 |
-| `scripts/postinstall.js` (nuevo) | message-only, autocontenido | AC-10 |
+| `package.json` | un único lifecycle script `postinstall`; `scripts/postinstall.cjs` en `files:` | AC-10 |
+| `scripts/postinstall.cjs` (nuevo) | message-only, autocontenido | AC-10 |
 | `skills/sdd-plan/canonical.md` + `SKILL.md` | `Regression` sin qualifier + regla explícita; regenerado | AC-4 |
 | `openspec/specs/cli/spec.md` | corrige el postinstall y borra la promesa de ruta absoluta | AC-11 |
 | `openspec/changes/.gitkeep` (nuevo) | preserva el directorio en git | AC-1 |

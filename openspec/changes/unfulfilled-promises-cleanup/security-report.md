@@ -55,12 +55,17 @@ and asserts silent exit 0.
 
 ## Control checklist (control → evidence)
 
-- **SEC-001** (postinstall supply-chain) → `scripts/postinstall.js:7-18`: only
-  `node:fs`/`node:path`/`node:url` imports, single try/catch with empty catch
-  (never rethrows), ≤2 `console.log` lines, no fs-write/network calls anywhere.
-  `package.json` declares only `postinstall` (no `prepare`/`preinstall`/`install`),
-  script listed in `files:`. Evidence: `test/postinstall.test.js` (structural +
-  behavioral, incl. EC-4 broken-`package.json` case → exit 0, silent).
+- **SEC-001** (postinstall supply-chain) → `scripts/postinstall.cjs`: only
+  `node:fs`/`node:path` requires, single try/catch with empty catch (never
+  rethrows), ≤2 `console.log` lines, no fs-write/network calls anywhere.
+  `.cjs` (not `.js`) so it parses as CommonJS regardless of any package.json's
+  `"type"` field — a Node 18 CI run caught that the original ESM `.js` version
+  hit a hard `SyntaxError` (outside the try/catch) when copied to a directory
+  with no resolvable `package.json`, defeating the EC-4 guarantee; this is
+  the fix. `package.json` declares only `postinstall` (no
+  `prepare`/`preinstall`/`install`), script listed in `files:`. Evidence:
+  `test/postinstall.test.js` (structural + behavioral, incl. EC-4
+  broken-`package.json` case → exit 0, silent).
 - **SEC-002** (lock file leak) → `src/cli/sync.js`: reads only the one-line
   `.playbook-version` stamp, never `.playbook-manifest.json`; writes only that
   stamp to `playbook.lock.methodology.resolved`. Evidence: `test/sync.test.js:35-54`

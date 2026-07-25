@@ -90,7 +90,7 @@ No unhandled exception; exit 0; clear remedy.
 ### Evidence 4 — postinstall message-only signal (AC-10)
 
 ```
-$ node scripts/postinstall.js
+$ node scripts/postinstall.cjs
 playbook-ai 0.1.0 installed.
 Run `playbook install` to (re)install the global Agent Skills.
 $ echo "exit: $?"

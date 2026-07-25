@@ -57,7 +57,7 @@ The `loom` CLI must operate on the consumer project when specloom is installed a
 
 ## Post-update signal (postinstall)
 
-- The root `package.json` declares exactly one lifecycle script: a message-only `postinstall` (`scripts/postinstall.js`, shipped via the `files` whitelist) that prints the installed version plus a reminder to run `playbook install`. See the ADR "postinstall message-only".
+- The root `package.json` declares exactly one lifecycle script: a message-only `postinstall` (`scripts/postinstall.cjs`, shipped via the `files` whitelist) that prints the installed version plus a reminder to run `playbook install`. See the ADR "postinstall message-only".
 - Policy (structurally enforced by `test/postinstall.test.js`): it never writes to the filesystem, never reads the consumer's repo, never touches the network, and never exits non-zero — self-contained, no `src/` import. `prepare`/`preinstall`/`install` remain forbidden.
 - With `--ignore-scripts` there is no signal; the manual flow (`playbook install`) documented in the README is the canonical post-update path.
 

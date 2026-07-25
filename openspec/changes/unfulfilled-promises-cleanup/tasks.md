@@ -86,11 +86,11 @@ anteriores.
 ## Phase 3 — Señal de post-update
 
 ### Task 3.1 — Script `postinstall` message-only [x]
-- **Files**: `scripts/postinstall.js`, `package.json`, `test/postinstall.test.js`
-- **Success criterion**: `node scripts/postinstall.js` sale 0, imprime a lo sumo 3 líneas
+- **Files**: `scripts/postinstall.cjs`, `package.json`, `test/postinstall.test.js`
+- **Success criterion**: `node scripts/postinstall.cjs` sale 0, imprime a lo sumo 3 líneas
   y nombra `playbook install`; copiado a un directorio donde su `package.json` no resuelve,
   sale 0 y no imprime nada (cubre EC-4); `package.json` declara exactamente un lifecycle
-  script (`postinstall`), sin `prepare` ni `preinstall`, y `scripts/postinstall.js` está en
+  script (`postinstall`), sin `prepare` ni `preinstall`, y `scripts/postinstall.cjs` está en
   `files:`.
 - **Linked acceptance criterion**: AC-10
 
@@ -106,7 +106,7 @@ anteriores.
 ### Task 3.3 — Corregir la sección del postinstall en la spec permanente [x]
 - **Files**: `openspec/specs/cli/spec.md`
 - **Success criterion**: la sección `## Post-update signal (postinstall)` describe la ruta
-  real (`scripts/postinstall.js`), el comando real (`playbook install`) y el test real
+  real (`scripts/postinstall.cjs`), el comando real (`playbook install`) y el test real
   (`test/postinstall.test.js`); no queda ninguna referencia a `framework/scripts/`,
   `framework/cli/test/` ni a `specloom sync --check --target all` en esa sección ni en la
   lista de cobertura de tests.
@@ -215,7 +215,7 @@ estaban presentes al iniciar este cierre, verificados a continuación.
 
 **Comandos corridos** (vía `playbook run --change unfulfilled-promises-cleanup --step apply --`):
 
-- `node --check` sobre cada archivo tocado en `src/` y `scripts/postinstall.js` → todos OK
+- `node --check` sobre cada archivo tocado en `src/` y `scripts/postinstall.cjs` → todos OK
 - `node --test test/install.test.js test/doctor.test.js test/postinstall.test.js test/fs-safe.test.js test/repos.test.js test/tokens.test.js test/init.test.js test/sync.test.js test/skill-contract.test.js` → ✓ passed (214 líneas), log en `.specloom/runs/1784945504287-713a512d/full.log`
 - `npm test` (Regression) → ✓ passed (413 líneas), log en `.specloom/runs/1784945511308-696279d8/full.log`
 - `npm run generate:check` (Regression) → ✓ passed (6 líneas), log en `.specloom/runs/1784945516132-b9b7232a/full.log`
@@ -230,3 +230,23 @@ en modo link activo.
 arquitectónicas (manifest content-based, modo link, `fs-safe` boundary, `Regression`
 requerido) ya estaban creados como `status: proposed`, listos para `sdd-code-review` /
 `sdd-archive`.
+
+## Addendum — fix post-CI (Task 3.1)
+
+El check `test (18)` de GitHub Actions (Node 18, PR #17) falló: `scripts/postinstall.js`
+usaba `import` de nivel superior (ESM) sin depender del `package.json` del propio paquete
+al ser copiado fuera de contexto (caso EC-4 del propio test). En Node 18 —sin detección de
+sintaxis ESM sin `package.json`— eso revienta con `SyntaxError` **antes** de que el
+`try/catch` del script pueda actuar, violando la garantía "sale 0, no imprime nada" de
+AC-10/EC-4. El runner de Node 20 del mismo pipeline no lo detectó porque su patch tenía
+detección de sintaxis habilitada.
+
+**Fix**: el script se renombró a `scripts/postinstall.cjs` (CommonJS + `require`), que se
+interpreta como CommonJS sin importar el `package.json` circundante — funciona igual
+dentro del paquete (`type: module` en su `package.json`, ignorado por la extensión `.cjs`)
+y copiado sin contexto. Se actualizaron `package.json` (`postinstall`), `test/postinstall.test.js`
+(rutas y regex de la aserción SEC-001 a `require`) y las referencias de ruta en
+`design.md`, `proposal.md`, `context-packet.md`, `security-report.md`, `runtime-gate-report.md`
+y `openspec/specs/cli/spec.md` — mismo comportamiento, mismo AC/SEC cubiertos, solo el
+nombre de archivo. Verificado localmente: `node --test test/postinstall.test.js` (4/4),
+`npm test`, `npm run generate:check`, todos en verde.
