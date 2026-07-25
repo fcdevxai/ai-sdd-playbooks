@@ -37,3 +37,7 @@ Architecture Decision Records: they document the context, alternatives, and trad
 | ADR-031 | A retry loop may regenerate derived artifacts, never mutate human-signed ones | accepted | 2026-07-24 | convention-drift-verify-commit |
 | ADR-032 | The `cli` runtime adapter stays unimplemented, and its exclusion carries a stated criterion | accepted | 2026-07-24 | delivery-state-branch-independence |
 | ADR-033 | A change's delivery state resolves by its own branch, never by the current one | accepted | 2026-07-24 | delivery-state-branch-independence |
+| ADR-034 | La instalación global se verifica por contenido, no por número de versión | accepted | 2026-07-24 | unfulfilled-promises-cleanup |
+| ADR-035 | `src/util/fs-safe.js` es también la frontera de las lecturas derivadas de configuración | accepted | 2026-07-24 | unfulfilled-promises-cleanup |
+| ADR-036 | `playbook install --link` es un segundo modo de instalación soportado, opt-in y dev-only | accepted | 2026-07-24 | unfulfilled-promises-cleanup |
+| ADR-037 | `tasks.md` debe declarar la línea `Regression`, y `packet` avisa cuando falta | accepted | 2026-07-24 | unfulfilled-promises-cleanup |

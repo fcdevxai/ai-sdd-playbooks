@@ -1,7 +1,7 @@
 ---
 status: implemented
 owner: bernardo
-last_updated: 2026-07-24
+last_updated: 2026-07-25
 ---
 
 # CLI Consumer-Root Behavior
@@ -54,6 +54,29 @@ The `loom` CLI must operate on the consumer project when specloom is installed a
 - In specloom's own dev checkout (package not under `node_modules`) the consumer template check is skipped with a note — the repo's own CI files intentionally diverge from the consumer templates.
 - In the dev checkout, `loom sync --check --target templates|all` also runs a kernel drift check that compares root `CLAUDE.md`/`AGENTS.md` and template `CLAUDE.md`/`AGENTS.md` after harness-name normalization. Root or template kernel divergence and missing kernel files are blocking. Consumer-owned context drift remains informational for installed consumers.
 - `scaffoldProject` ignores the `ownership` field: `init` still copies only what's absent and never overwrites.
+
+## Install manifest and modes (`playbook install`, `playbook doctor`)
+
+- `installSkills({ targets, version, addons, sourceRoot, mode })` writes each
+  target's `.playbook-manifest.json` (`schema_version: 1`) alongside the
+  existing `.playbook-version` stamp. `mode: "copy"` (default) is byte-for-byte
+  identical to the pre-manifest behavior; each installed file gets a sha256
+  digest entry. `mode: "link"` (`playbook install --link`, dev-only) makes the
+  skill directory real but symlinks each installable file (`SKILL.md` only,
+  never `canonical.md`) to `sourceRoot`; the manifest records `mode: "link"`,
+  `source`, and a `link` entry per file instead of a digest. See ADR-034,
+  ADR-036.
+- `playbook doctor` reads the manifest (`installedContentDiagnostics`, pure,
+  read-only) and reports: a blocking **problem** naming the skill/file when
+  installed content differs from its recorded digest (copy mode) or when a
+  linked file's symlink is dangling (source moved/deleted); an informational
+  **note** when the manifest is absent, unreadable, or of an unknown
+  `schema_version` (never an exception); an informational **note** naming the
+  linked source when in link mode (content is verified by symlink resolution,
+  not by digest — link mode never compares digests). See ADR-034.
+- The manifest never reaches `playbook.lock`: `playbook sync` writes only the
+  one-line `.playbook-version` stamp to `methodology.resolved`, regardless of
+  install mode. See ADR-034 (SEC-002).
 
 ## Post-update signal (postinstall)
 
