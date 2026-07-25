@@ -5,7 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { run, EXIT } from '../src/cli/dispatch.js';
 import { workflowStaleness, specIndexAdvisory } from '../src/cli/doctor.js';
-import { installSkills } from '../src/install/skills.js';
+import { installSkills, PACKAGE_ROOT } from '../src/install/skills.js';
+import { manifestPathFor } from '../src/install/manifest.js';
 
 function tmp() { return fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-doctor-')); }
 function capture() {
@@ -110,6 +111,103 @@ test('doctor reports a stamped but incomplete shared agents install', async () =
     assert.ok(json.problems.some((p) => /GitHub Copilot \+ Codex install is missing core skill sdd-plan/.test(p)));
     assert.ok(json.targets.some((t) => t.target === 'agents' && t.installed === '0.1.0'));
   });
+});
+
+test('doctor reports a blocking problem when installed content diverges from the manifest (AC-6)', async () => {
+  const dir = await initRepo();
+  await withGlobalVersion('0.1.0', async () => {
+    const global = process.env.PLAYBOOK_CLAUDE_SKILLS_DIR;
+    fs.writeFileSync(path.join(global, 'sdd-plan', 'SKILL.md'), '# tampered by hand');
+    const { io, out } = capture();
+    const code = await run(['doctor', '--json', '--cwd', dir], io);
+    const json = JSON.parse(out.join('\n'));
+    assert.equal(code, EXIT.ENVIRONMENT);
+    assert.equal(json.healthy, false);
+    assert.ok(json.problems.some((p) => /sdd-plan/.test(p) && /playbook install/.test(p)));
+  });
+});
+
+test('doctor emits a note (not a problem) when the manifest is absent — a pre-manifest install (AC-6)', async () => {
+  const dir = await initRepo();
+  await withGlobalVersion('0.1.0', async () => {
+    const global = process.env.PLAYBOOK_CLAUDE_SKILLS_DIR;
+    fs.rmSync(manifestPathFor(global), { force: true });
+    const { io, out } = capture();
+    const code = await run(['doctor', '--json', '--cwd', dir], io);
+    const json = JSON.parse(out.join('\n'));
+    assert.equal(code, EXIT.OK);
+    assert.equal(json.healthy, true);
+    const claudeTarget = json.targets.find((t) => t.target === 'claude');
+    assert.ok(claudeTarget.notes.some((n) => /manifest/.test(n)));
+  });
+});
+
+test('doctor emits a note, never a crash, when the manifest is unreadable or has an unknown schema_version (AC-6, EC-2)', async () => {
+  const dir = await initRepo();
+  await withGlobalVersion('0.1.0', async () => {
+    const global = process.env.PLAYBOOK_CLAUDE_SKILLS_DIR;
+    fs.writeFileSync(manifestPathFor(global), '{not valid json');
+    const { io, out } = capture();
+    const code = await run(['doctor', '--json', '--cwd', dir], io);
+    const json = JSON.parse(out.join('\n'));
+    assert.equal(code, EXIT.OK);
+    assert.equal(json.healthy, true);
+    const claudeTarget = json.targets.find((t) => t.target === 'claude');
+    assert.ok(claudeTarget.notes.some((n) => /manifest/.test(n)));
+  });
+});
+
+// A disposable copy of the real skills tree, so link-mode tests can point at a
+// sourceRoot that satisfies doctor's expected-core-skills check and can be
+// safely deleted (to simulate a moved/removed dev checkout) without touching
+// this repo.
+function makeDisposableSourceRoot() {
+  const src = tmp('playbook-src-');
+  fs.cpSync(path.join(PACKAGE_ROOT, 'skills'), path.join(src, 'skills'), { recursive: true });
+  return src;
+}
+
+test('doctor in link mode reports the linked source and does not compare digests (AC-8)', async () => {
+  const dir = await initRepo();
+  const global = tmp('playbook-doctor-'); const empty = tmp('playbook-doctor-');
+  const src = makeDisposableSourceRoot();
+  installSkills({ targets: { claude: global }, version: '0.1.0', sourceRoot: src, mode: 'link' });
+  const saved = { c: process.env.PLAYBOOK_CLAUDE_SKILLS_DIR, a: process.env.PLAYBOOK_AGENTS_SKILLS_DIR };
+  process.env.PLAYBOOK_CLAUDE_SKILLS_DIR = global;
+  process.env.PLAYBOOK_AGENTS_SKILLS_DIR = empty;
+  try {
+    const { io, out } = capture();
+    const code = await run(['doctor', '--json', '--cwd', dir], io);
+    const json = JSON.parse(out.join('\n'));
+    assert.equal(code, EXIT.OK);
+    const claudeTarget = json.targets.find((t) => t.target === 'claude');
+    assert.ok(claudeTarget.notes.some((n) => n.includes(src)));
+  } finally {
+    if (saved.c === undefined) delete process.env.PLAYBOOK_CLAUDE_SKILLS_DIR; else process.env.PLAYBOOK_CLAUDE_SKILLS_DIR = saved.c;
+    if (saved.a === undefined) delete process.env.PLAYBOOK_AGENTS_SKILLS_DIR; else process.env.PLAYBOOK_AGENTS_SKILLS_DIR = saved.a;
+  }
+});
+
+test('doctor reports a blocking problem for a dangling link-mode symlink, with the remedy (AC-8, EC-1)', async () => {
+  const dir = await initRepo();
+  const global = tmp('playbook-doctor-'); const empty = tmp('playbook-doctor-');
+  const src = makeDisposableSourceRoot();
+  installSkills({ targets: { claude: global }, version: '0.1.0', sourceRoot: src, mode: 'link' });
+  fs.rmSync(src, { recursive: true, force: true }); // repo moved/deleted → dangling symlink
+  const saved = { c: process.env.PLAYBOOK_CLAUDE_SKILLS_DIR, a: process.env.PLAYBOOK_AGENTS_SKILLS_DIR };
+  process.env.PLAYBOOK_CLAUDE_SKILLS_DIR = global;
+  process.env.PLAYBOOK_AGENTS_SKILLS_DIR = empty;
+  try {
+    const { io, out } = capture();
+    const code = await run(['doctor', '--json', '--cwd', dir], io);
+    const json = JSON.parse(out.join('\n'));
+    assert.equal(code, EXIT.ENVIRONMENT);
+    assert.equal(json.healthy, false);
+    assert.ok(json.problems.some((p) => /sdd-plan/.test(p) && /re-run/.test(p)));
+  } finally {
+    if (saved.c === undefined) delete process.env.PLAYBOOK_CLAUDE_SKILLS_DIR; else process.env.PLAYBOOK_CLAUDE_SKILLS_DIR = saved.c;
+    if (saved.a === undefined) delete process.env.PLAYBOOK_AGENTS_SKILLS_DIR; else process.env.PLAYBOOK_AGENTS_SKILLS_DIR = saved.a;
+  }
 });
 
 test('doctor ignores unrelated broken symlinks in a stamped global skill dir', async () => {

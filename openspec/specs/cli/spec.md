@@ -33,8 +33,7 @@ The `loom` CLI must operate on the consumer project when specloom is installed a
 ## Contract drift
 
 - `contract-drift` compares a generated OpenAPI file against the canonical contract resolved from the consumer project.
-- If `config.yaml` defines `contract.path_in_loom` as a relative path, it resolves against `consumerRoot`.
-- If `contract.path_in_loom` is absolute, that absolute path is used as-is.
+- `config.yaml`'s `contract.path_in_loom` resolves against `consumerRoot` through `resolveContainedPath` — the same containment boundary as every other filesystem access derived from configuration (see `src/util/fs-safe.js`). A path that escapes the repo (`..`, or an absolute path to another tree) is rejected with a clear error naming the rejected path, and the read is never attempted.
 - Without config, the default canonical contract path is `<consumerRoot>/openspec/specs/contracts/openapi.yaml`.
 - Missing canonical-contract errors must report the resolved consumer path.
 - A misleading canonical contract inside `node_modules/specloom` must not be used for an installed consumer.
@@ -58,9 +57,9 @@ The `loom` CLI must operate on the consumer project when specloom is installed a
 
 ## Post-update signal (postinstall)
 
-- The root `package.json` declares exactly one lifecycle script: a message-only `postinstall` (`framework/scripts/postinstall.js`, shipped via the `files` whitelist) that prints the installed version plus a reminder to run `npx specloom sync --check --target all`. See ADR-006.
-- Policy (structurally enforced by `framework/cli/test/postinstall.test.js`): it never writes to the filesystem, never reads the consumer's repo, never touches the network, and never exits non-zero — self-contained, no `lib.js` import. `prepare`/`preinstall`/`install` remain forbidden.
-- With `--ignore-scripts` there is no signal; the root README's "Después de actualizar specloom" section is the canonical post-update flow.
+- The root `package.json` declares exactly one lifecycle script: a message-only `postinstall` (`scripts/postinstall.js`, shipped via the `files` whitelist) that prints the installed version plus a reminder to run `playbook install`. See the ADR "postinstall message-only".
+- Policy (structurally enforced by `test/postinstall.test.js`): it never writes to the filesystem, never reads the consumer's repo, never touches the network, and never exits non-zero — self-contained, no `src/` import. `prepare`/`preinstall`/`install` remain forbidden.
+- With `--ignore-scripts` there is no signal; the manual flow (`playbook install`) documented in the README is the canonical post-update path.
 
 ## Run telemetry and compaction (`loom run`)
 
@@ -282,4 +281,4 @@ Added in change `wire-token-and-security-policy`.
 - `loom packet` generation (happy path, byte-exact verbatim sections, determinism, tolerant tasks extraction, incomplete-proposal rejection, and traversal-safe writes) is covered by `framework/cli/test/packet.test.js`.
 - `loom index` behavior is covered by `framework/cli/test/index.test.js`.
 - Template drift (units, CLI wiring on a simulated install, dev-checkout skip) is covered by `framework/cli/test/template-drift.test.js`.
-- The postinstall policy and root package wiring are covered by `framework/cli/test/postinstall.test.js` and `framework/cli/test/root-package.test.js`.
+- The postinstall policy and root package wiring are covered by `test/postinstall.test.js`.

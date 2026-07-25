@@ -364,6 +364,14 @@ test('sdd-apply and sdd-new keep the conventions this change replicates (AC-1, A
   assert.match(body('sdd-new'), /capped at 3 iterations/, 'sdd-new keeps its retry cap');
 });
 
+test('sdd-plan requires the Regression entry unconditionally and Rules names why (AC-4)', () => {
+  const b = body('sdd-plan');
+  assert.doesNotMatch(b, /Regression\*\*:\s*`<command>`\s*\(if required by risk\)/, 'the qualifier must be gone');
+  assert.match(b, /\*\*Regression\*\*:\s*`<command>`/, 'the template still declares the entry');
+  assert.match(b, /Regression.*mandatory|mandatory.*Regression|is required[\s\S]{0,80}Regression|Regression[\s\S]{0,80}required/i, '## Rules states it is required');
+  assert.match(b, /playbook packet/i, 'names the command that extracts it, so the requirement is grounded');
+});
+
 test('sdd-new proposes a complete impact block + security (C-03/C-04)', () => {
   const b = body('sdd-new');
   for (const k of ['public_contract', 'data_model', 'architecture_boundary', 'external_integration',

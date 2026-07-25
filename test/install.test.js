@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { resolveTargets } from '../src/install/targets.js';
 import { installSkills, listSkills } from '../src/install/skills.js';
+import { buildManifest, readManifest, verifyManifest, manifestPathFor } from '../src/install/manifest.js';
 import { run, EXIT } from '../src/cli/dispatch.js';
 
 function tmp(prefix) {
@@ -26,6 +27,68 @@ function makeSource() {
   fs.mkdirSync(path.join(root, 'skills', 'not-a-skill'), { recursive: true });
   return root;
 }
+
+// ---------------------------------------------------------------------------
+// manifest.js (Task 1.1 — AC-5, AC-6)
+// ---------------------------------------------------------------------------
+
+test('buildManifest computes a sha256 digest per file in copy mode', () => {
+  const dir = tmp('playbook-manifest-');
+  const skillMd = path.join(dir, 'SKILL.md');
+  fs.writeFileSync(skillMd, '# sdd-apply');
+  const manifest = buildManifest({
+    version: '0.1.0',
+    mode: 'copy',
+    skills: [{ name: 'sdd-apply', files: [{ name: 'SKILL.md', sourcePath: skillMd }] }],
+  });
+  assert.equal(manifest.schema_version, 1);
+  assert.equal(manifest.mode, 'copy');
+  assert.equal(manifest.skills['sdd-apply']['SKILL.md'].sha256.length, 64);
+});
+
+test('readManifest: absent → null; invalid JSON → null, never throws', () => {
+  const dir = tmp('playbook-manifest-');
+  assert.equal(readManifest(dir), null);
+  fs.writeFileSync(manifestPathFor(dir), '{not json');
+  assert.doesNotThrow(() => readManifest(dir));
+  assert.equal(readManifest(dir), null);
+});
+
+test('readManifest: unknown schema_version → null', () => {
+  const dir = tmp('playbook-manifest-');
+  fs.writeFileSync(manifestPathFor(dir), JSON.stringify({ schema_version: 99 }));
+  assert.equal(readManifest(dir), null);
+});
+
+test('verifyManifest: matching sha256 → no findings; altered content → a finding naming the skill and file', () => {
+  const dir = tmp('playbook-manifest-');
+  fs.mkdirSync(path.join(dir, 'sdd-apply'), { recursive: true });
+  const installedFile = path.join(dir, 'sdd-apply', 'SKILL.md');
+  fs.writeFileSync(installedFile, '# sdd-apply');
+  const manifest = buildManifest({
+    version: '0.1.0',
+    mode: 'copy',
+    skills: [{ name: 'sdd-apply', files: [{ name: 'SKILL.md', sourcePath: installedFile }] }],
+  });
+  assert.deepEqual(verifyManifest(dir, manifest), []);
+
+  fs.writeFileSync(installedFile, '# tampered');
+  const findings = verifyManifest(dir, manifest);
+  assert.equal(findings.length, 1);
+  assert.match(findings[0], /sdd-apply/);
+  assert.match(findings[0], /SKILL\.md/);
+});
+
+test('none of buildManifest/readManifest/verifyManifest touch process.exit or write to disk', () => {
+  const dir = tmp('playbook-manifest-');
+  const before = fs.readdirSync(dir);
+  const skillMd = path.join(dir, 'SKILL.md');
+  fs.writeFileSync(skillMd, '# x');
+  const manifest = buildManifest({ version: '0.1.0', skills: [{ name: 's', files: [{ name: 'SKILL.md', sourcePath: skillMd }] }] });
+  readManifest(dir);
+  verifyManifest(dir, manifest);
+  assert.deepEqual(fs.readdirSync(dir).sort(), [...before, 'SKILL.md'].sort());
+});
 
 test('resolveTargets honors env overrides', () => {
   const t = resolveTargets({ PLAYBOOK_CLAUDE_SKILLS_DIR: '/c', PLAYBOOK_AGENTS_SKILLS_DIR: '/a' });
@@ -50,6 +113,66 @@ test('listSkills ignores broken symlinks in real global skill dirs', () => {
   fs.symlinkSync(path.join(src, 'missing-skill-target'), path.join(src, 'skills', 'find-skills'), 'dir');
   const names = listSkills(path.join(src, 'skills')).map((s) => s.name).sort();
   assert.deepEqual(names, ['sdd-apply', 'sdd-plan']);
+});
+
+test('installSkills writes a manifest with a sha256 entry per installed skill file, mode "copy" (AC-5)', () => {
+  const src = makeSource();
+  const target = tmp('playbook-claude-');
+  installSkills({ targets: { claude: target }, version: '0.1.0', sourceRoot: src });
+  const manifest = readManifest(target);
+  assert.equal(manifest.mode, 'copy');
+  assert.equal(manifest.version, '0.1.0');
+  assert.equal(manifest.skills['sdd-plan']['SKILL.md'].sha256.length, 64);
+  assert.equal(manifest.skills['sdd-apply']['SKILL.md'].sha256.length, 64);
+  // .playbook-version keeps its exact one-line format
+  assert.equal(fs.readFileSync(path.join(target, '.playbook-version'), 'utf8'), '0.1.0\n');
+});
+
+test('installSkills mode "link": each installable file is a real symlink to sourceRoot, canonical.md never appears, manifest records mode+source+link (AC-7)', () => {
+  const src = makeSource();
+  const target = tmp('playbook-claude-');
+  installSkills({ targets: { claude: target }, version: '0.1.0', sourceRoot: src, mode: 'link' });
+
+  const skillDir = path.join(target, 'sdd-apply');
+  assert.ok(fs.statSync(skillDir).isDirectory()); // directory itself is real
+  const skillMd = path.join(skillDir, 'SKILL.md');
+  assert.ok(fs.lstatSync(skillMd).isSymbolicLink());
+  assert.equal(fs.realpathSync(skillMd), fs.realpathSync(path.join(src, 'skills', 'sdd-apply', 'SKILL.md')));
+  assert.equal(fs.existsSync(path.join(skillDir, 'canonical.md')), false);
+
+  const manifest = readManifest(target);
+  assert.equal(manifest.mode, 'link');
+  assert.equal(path.resolve(manifest.source), path.resolve(src));
+  assert.equal(manifest.skills['sdd-apply']['SKILL.md'].link, path.join(src, 'skills', 'sdd-apply', 'SKILL.md'));
+});
+
+test('installSkills without mode is byte-identical to the pre-link behavior (AC-7)', () => {
+  const src = makeSource();
+  const target = tmp('playbook-claude-');
+  installSkills({ targets: { claude: target }, version: '0.1.0', sourceRoot: src });
+  const skillMd = path.join(target, 'sdd-apply', 'SKILL.md');
+  assert.equal(fs.lstatSync(skillMd).isSymbolicLink(), false);
+  assert.equal(fs.readFileSync(skillMd, 'utf8'), '# sdd-apply');
+});
+
+test('installSkills mode "link" writes nothing outside the target dir and links point only at sourceRoot (SEC-004)', () => {
+  const src = makeSource();
+  const target = tmp('playbook-claude-');
+  const outsideRoot = tmp('playbook-outside-');
+  const beforeOutside = fs.readdirSync(outsideRoot);
+  installSkills({ targets: { claude: target }, version: '0.1.0', sourceRoot: src, mode: 'link' });
+  assert.deepEqual(fs.readdirSync(outsideRoot), beforeOutside); // untouched
+
+  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => {
+    const p = path.join(d, e.name);
+    return e.isDirectory() ? walk(p) : [p];
+  });
+  for (const file of walk(target)) {
+    if (fs.lstatSync(file).isSymbolicLink()) {
+      const resolved = fs.realpathSync(file);
+      assert.ok(path.resolve(resolved).startsWith(path.resolve(src) + path.sep), `${file} → ${resolved} escapes sourceRoot`);
+    }
+  }
 });
 
 test('installSkills installs core into BOTH runtime dirs and stamps the version (AC-02)', () => {
@@ -200,6 +323,34 @@ test('playbook install (default), --runtime all, and --runtime both install into
   const claude3 = tmp('playbook-c-'); const agents3 = tmp('playbook-a-');
   await runInstall(['install', '--runtime', 'both', '--cwd', cwd], claude3, agents3);
   assert.ok(stamped(claude3) && stamped(agents3));
+});
+
+test('playbook install --link installs in link mode and names it in the summary (AC-7)', async () => {
+  const claude = tmp('playbook-c-'); const agents = tmp('playbook-a-'); const cwd = tmp('playbook-w-');
+  const { code, out } = await runInstall(['install', '--link', '--json', '--cwd', cwd], claude, agents);
+  assert.equal(code, EXIT.OK);
+  const res = JSON.parse(out.join('\n'));
+  assert.equal(res.mode, 'link');
+  const manifest = readManifest(claude);
+  assert.equal(manifest.mode, 'link');
+
+  const textClaude = tmp('playbook-c-'); const textAgents = tmp('playbook-a-');
+  const { out: textOut } = await runInstall(['install', '--link', '--cwd', cwd], textClaude, textAgents);
+  assert.match(textOut.join('\n'), /link/);
+});
+
+test('playbook install without --link stays mode "copy" and the summary text is unchanged', async () => {
+  const claude = tmp('playbook-c-'); const agents = tmp('playbook-a-'); const cwd = tmp('playbook-w-');
+  const { code, out } = await runInstall(['install', '--json', '--cwd', cwd], claude, agents);
+  assert.equal(code, EXIT.OK);
+  const res = JSON.parse(out.join('\n'));
+  assert.equal(res.mode, 'copy');
+});
+
+test('playbook install with an unknown flag behaves as it does today', async () => {
+  const claude = tmp('playbook-c-'); const agents = tmp('playbook-a-'); const cwd = tmp('playbook-w-');
+  const { code } = await runInstall(['install', '--bogus-flag', '--cwd', cwd], claude, agents);
+  assert.equal(code, EXIT.OK);
 });
 
 test('playbook install --runtime <invalid> is a usage error', async () => {

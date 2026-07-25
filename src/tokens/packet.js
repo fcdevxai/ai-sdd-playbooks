@@ -47,6 +47,7 @@ export function defaultChangesDir(cwd = process.cwd()) {
 
 const FILES_LABEL_RE = /\*\*Files\*\*:\s*(.+)/i;
 const COMMAND_LABEL_RE = /\*\*(?:Format|Lint\/type-check|Feature tests|Regression)\*\*:\s*(.+)/i;
+const REGRESSION_LABEL_RE = /\*\*Regression\*\*:\s*(.+)/i;
 
 /**
  * sha256 hex digests of a change's packet source files, computed over their
@@ -100,7 +101,11 @@ export function buildPacket(slug, changesDir = defaultChangesDir()) {
   }
   const commands = extractLabeledTokens(tasksRaw, COMMAND_LABEL_RE);
   if (commands.length === 0) {
+    // EC-6: an empty command list already says everything — naming the
+    // missing Regression entry on top of it would just repeat the message.
     warnings.push('Verification commands section is empty — no quality-gate command entries found in tasks.md');
+  } else if (extractLabeledTokens(tasksRaw, REGRESSION_LABEL_RE).length === 0) {
+    warnings.push('tasks.md has no "**Regression**:" entry — the regression command will not reach the gates that read the packet');
   }
 
   const headings = parseMarkdownHeadings(proposalBody);

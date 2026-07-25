@@ -13,7 +13,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { EXIT } from './exit.js';
 import { PACKAGE_ROOT } from '../install/skills.js';
-import { copyIfMissing, ensureDir } from '../util/fs-safe.js';
+import { copyIfMissing, ensureDir, writeIfMissing } from '../util/fs-safe.js';
 import { loadConfig } from '../config/config.js';
 import { resolveDocument } from '../config/docmap.js';
 import { lockPathFor, writeLock, buildLock } from '../config/lock.js';
@@ -108,8 +108,10 @@ export function projectActions(cwd, { write = false } = {}) {
     plan(resolved.path, (abs) => copyIfMissing(path.join(TPL, tpl), abs));
   }
 
-  // 4. openspec/changes
+  // 4. openspec/changes — the directory plus a tracked .gitkeep, so git
+  // preserves it even with no changes active (writeIfMissing: never overwrites).
   plan('openspec/changes', (abs) => ensureDir(abs));
+  if (write) writeIfMissing(path.join(cwd, 'openspec', 'changes', '.gitkeep'), '');
 
   // 5. playbook.lock
   plan('playbook.lock', () => writeLock(

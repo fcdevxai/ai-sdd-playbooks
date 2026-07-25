@@ -27,15 +27,17 @@ const TARGET_LABELS = {
 function parseInstallArgs(rest) {
   const addons = [];
   let runtime = 'all';
+  let link = false;
   for (let i = 0; i < rest.length; i++) {
     if (rest[i] === '--addon' && rest[i + 1]) { addons.push(rest[i + 1]); i++; }
     else if (rest[i] === '--runtime' && rest[i + 1]) { runtime = rest[i + 1]; i++; }
+    else if (rest[i] === '--link') { link = true; }
   }
-  return { addons, runtime };
+  return { addons, runtime, link };
 }
 
 export async function installCommand(parsed, io) {
-  const { addons: flagAddons, runtime } = parseInstallArgs(parsed.rest);
+  const { addons: flagAddons, runtime, link } = parseInstallArgs(parsed.rest);
 
   const keys = RUNTIME_TARGETS[runtime];
   if (!keys) {
@@ -54,7 +56,7 @@ export async function installCommand(parsed, io) {
   const allTargets = resolveTargets(process.env);
   const targetKeys = [...new Set(keys)];
   const targets = Object.fromEntries(targetKeys.map((k) => [k, allTargets[k]]));
-  const result = installSkills({ targets, version, addons });
+  const result = installSkills({ targets, version, addons, mode: link ? 'link' : 'copy' });
 
   if (parsed.flags.json) {
     io.out(JSON.stringify(result, null, 2));
@@ -62,6 +64,7 @@ export async function installCommand(parsed, io) {
   }
 
   io.out(`playbook install — methodology ${version}`);
+  if (link) io.out('  mode: link (dev-only — symlinks to this checkout)');
   io.out(`  core skills: ${result.core.length ? result.core.join(', ') : '(none authored yet)'}`);
   if (addons.length) {
     io.out(`  add-on skills: ${result.addons.length ? result.addons.join(', ') : '(none found)'}`);

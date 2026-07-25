@@ -46,6 +46,7 @@ status: passed
 - **Format**: \`npm run format\`
 - **Lint/type-check**: \`npm run lint\`
 - **Feature tests**: \`npm test\`
+- **Regression**: \`npm run regress\`
 `;
 
 function makeChange() {
@@ -84,6 +85,45 @@ test('buildPacket warns (does not throw) when tasks.md has no Files/commands', (
   fs.writeFileSync(path.join(changesDir, 'demo', 'tasks.md'), '# Tasks — Demo\n\nNo structured content.\n');
   const { warnings } = buildPacket('demo', changesDir);
   assert.equal(warnings.length, 2);
+});
+
+test('buildPacket warns when tasks.md declares Format/Feature tests but no Regression entry (AC-3)', () => {
+  const { changesDir } = makeChange();
+  const tasksNoRegression = `---
+schema: tasks
+status: passed
+---
+# Tasks — Demo
+
+## Phase 1 — Core implementation
+### Task 1.1 — write demo.md
+- **Files**: \`demo.md\`
+- **Success criterion**: test passes
+
+## Phase 2 — Quality gates
+- **Format**: \`npm run format\`
+- **Feature tests**: \`npm test\`
+`;
+  fs.writeFileSync(path.join(changesDir, 'demo', 'tasks.md'), tasksNoRegression);
+  const { content, warnings } = buildPacket('demo', changesDir);
+  assert.ok(warnings.some((w) => /Regression/.test(w)));
+  // advisory only: the packet content itself is unaffected — same commands as before
+  assert.match(content, /`npm run format`/);
+  assert.match(content, /`npm test`/);
+});
+
+test('buildPacket does not duplicate the empty-commands warning with a Regression warning when tasks.md has no commands at all (EC-6)', () => {
+  const { changesDir } = makeChange();
+  fs.writeFileSync(path.join(changesDir, 'demo', 'tasks.md'), '# Tasks — Demo\n\nNo structured content.\n');
+  const { warnings } = buildPacket('demo', changesDir);
+  assert.equal(warnings.filter((w) => /Regression/.test(w)).length, 0);
+  assert.equal(warnings.length, 2); // Files + Verification commands empty — unchanged
+});
+
+test('buildPacket does not warn about Regression when tasks.md declares it', () => {
+  const { changesDir } = makeChange(); // TASKS fixture declares Regression
+  const { warnings } = buildPacket('demo', changesDir);
+  assert.deepEqual(warnings, []);
 });
 
 test('writePacket persists to context-packet.md and is deterministic', () => {

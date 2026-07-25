@@ -25,7 +25,7 @@ test('init on a fresh repo creates the full project-local set and no core copies
     '.github/ISSUE_TEMPLATE/user-story.md', '.github/workflows/archive-cleanup.yml',
     'docs/agent_architecture.md', 'docs/doc_architecture.md',
     'docs/doc_verification_guide.md', 'docs/sdd-workflow.md', 'docs/security-checklist.md',
-    'openspec/specs/system.md', 'openspec/changes',
+    'openspec/specs/system.md', 'openspec/changes', 'openspec/changes/.gitkeep',
   ]) {
     assert.ok(has(dir, f), `expected ${f}`);
   }
@@ -99,6 +99,32 @@ test('init does NOT auto-adopt an ambiguous candidate (C-09)', async () => {
   assert.ok(res.candidates.some((c) => c.includes('arquitectura.md')));
   assert.equal(has(dir, 'docs/doc_architecture.md'), false); // no duplicate created at the default path
   assert.equal(fs.readFileSync(path.join(dir, 'docs', 'arquitectura.md'), 'utf8'), 'MINE\n');
+});
+
+test('init does not overwrite an existing openspec/changes/.gitkeep on re-run (AC-2)', async () => {
+  const dir = tmp();
+  await run(['init', '--cwd', dir], capture().io);
+  fs.writeFileSync(path.join(dir, 'openspec', 'changes', '.gitkeep'), 'custom content\n');
+  await run(['init', '--cwd', dir], capture().io);
+  assert.equal(fs.readFileSync(path.join(dir, 'openspec', 'changes', '.gitkeep'), 'utf8'), 'custom content\n');
+});
+
+test('doctor --fix creates openspec/changes/.gitkeep via the same helper as init (AC-2)', async () => {
+  const dir = tmp();
+  await run(['init', '--cwd', dir], capture().io);
+  fs.rmSync(path.join(dir, 'openspec', 'changes'), { recursive: true, force: true });
+  const global = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-doctor-global-'));
+  const saved = { c: process.env.PLAYBOOK_CLAUDE_SKILLS_DIR, a: process.env.PLAYBOOK_AGENTS_SKILLS_DIR };
+  process.env.PLAYBOOK_CLAUDE_SKILLS_DIR = global;
+  process.env.PLAYBOOK_AGENTS_SKILLS_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-doctor-empty-'));
+  fs.writeFileSync(path.join(global, '.playbook-version'), '0.1.0\n');
+  try {
+    await run(['doctor', '--fix', '--cwd', dir], capture().io);
+    assert.ok(has(dir, 'openspec/changes/.gitkeep'));
+  } finally {
+    if (saved.c === undefined) delete process.env.PLAYBOOK_CLAUDE_SKILLS_DIR; else process.env.PLAYBOOK_CLAUDE_SKILLS_DIR = saved.c;
+    if (saved.a === undefined) delete process.env.PLAYBOOK_AGENTS_SKILLS_DIR; else process.env.PLAYBOOK_AGENTS_SKILLS_DIR = saved.a;
+  }
 });
 
 test('the shipped playbook-validation.yml runs only `playbook validate --ci`', async () => {

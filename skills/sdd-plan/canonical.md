@@ -63,7 +63,7 @@ updated: <YYYY-MM-DD>
 - **Format**: `<command from docs/doc_verification_guide.md>`
 - **Lint/type-check**: `<command>`
 - **Feature tests**: `<command>`
-- **Regression**: `<command>` (if required by risk)
+- **Regression**: `<command>`
 ```
 
 3. Generate the context packet: run `playbook packet <change-id>`. It derives
@@ -83,3 +83,8 @@ updated: <YYYY-MM-DD>
 - Any task implementing a `## Security considerations` entry (`SEC-N`) must name
   its negative test (e.g. "unauthorized access is rejected") as part of its
   success criterion, not only the happy path.
+- The `Regression` entry in the quality-gates phase is mandatory, not
+  conditional on risk: it is the exact line `playbook packet` extracts to
+  carry the regression command to every gate that reads the packet. Omitting
+  it does not skip regression — it silently drops the command before the
+  gates ever see it.

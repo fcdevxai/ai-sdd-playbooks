@@ -525,6 +525,30 @@ contract:
   assert.match(err.join('\n'), /FIELD MISMATCH/);
 });
 
+test('playbook contract-drift rejects a path_in_loom that escapes the repo with a clear error, without attempting the read (AC-12, EC-3)', async () => {
+  const cwd = tmp();
+  fs.writeFileSync(path.join(cwd, 'playbook.config.yaml'), `version: 2
+methodology:
+  compatible: ">=0.1.0 <1.0.0"
+capabilities:
+  http: true
+github:
+  base_branch: main
+  require_pull_request: true
+  require_ci: true
+contract:
+  source_of_truth: "loom-first"
+  path_in_loom: "../../etc/passwd"
+`);
+  const generatedPath = path.join(cwd, 'generated.yaml');
+  fs.writeFileSync(generatedPath, 'paths: {}\n');
+
+  const { io, err } = capture();
+  const code = await run(['contract-drift', generatedPath, '--cwd', cwd], io);
+  assert.equal(code, EXIT.USAGE);
+  assert.match(err.join('\n'), /\.\.\/\.\.\/etc\/passwd/);
+});
+
 test('playbook detect-siblings lists git-repo siblings of the parent dir (text)', async () => {
   const { loomDir } = makeMultiRepoFixture();
   const { io, out } = capture();
