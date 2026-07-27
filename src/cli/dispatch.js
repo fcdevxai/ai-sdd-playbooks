@@ -28,6 +28,7 @@ import {
   repoPlanCommand, commitPlanCommand, prepareReposCommand, gateCheckCommand, changedFilesCommand, contractDriftCommand, detectSiblingsCommand,
 } from './repos.js';
 import { readPackageVersion } from '../install/skills.js';
+import { anyTargetInstalled } from '../install/targets.js';
 
 // Exit-code map lives in ./exit.js to avoid a dispatch↔command cycle.
 export { EXIT };
@@ -197,6 +198,10 @@ export async function run(argv, io = { out: console.log, err: console.error }) {
     io.err('');
     io.err(helpText());
     return EXIT.USAGE;
+  }
+
+  if (parsed.command !== 'install' && !parsed.flags.json && !parsed.rest.includes('--ci') && !anyTargetInstalled()) {
+    io.out(`playbook-ai ${readPackageVersion()} — skills not installed for any target, run \`playbook install\`.`);
   }
 
   return handler(parsed, io);

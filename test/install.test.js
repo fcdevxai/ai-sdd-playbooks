@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { resolveTargets } from '../src/install/targets.js';
+import { resolveTargets, anyTargetInstalled } from '../src/install/targets.js';
 import { installSkills, listSkills } from '../src/install/skills.js';
 import { buildManifest, readManifest, verifyManifest, manifestPathFor } from '../src/install/manifest.js';
 import { run, EXIT } from '../src/cli/dispatch.js';
@@ -100,6 +100,18 @@ test('resolveTargets defaults to ~/.claude and ~/.agents', () => {
   const t = resolveTargets({}, '/home/u');
   assert.equal(t.claude, '/home/u/.claude/skills');
   assert.equal(t.agents, '/home/u/.agents/skills');
+});
+
+test('anyTargetInstalled: false when no target has a .playbook-version stamp', () => {
+  const env = { PLAYBOOK_CLAUDE_SKILLS_DIR: tmp('playbook-c-'), PLAYBOOK_AGENTS_SKILLS_DIR: tmp('playbook-a-') };
+  assert.equal(anyTargetInstalled(env), false);
+});
+
+test('anyTargetInstalled: true when at least one target has a .playbook-version stamp', () => {
+  const claude = tmp('playbook-c-');
+  fs.writeFileSync(path.join(claude, '.playbook-version'), '0.1.0\n');
+  const env = { PLAYBOOK_CLAUDE_SKILLS_DIR: claude, PLAYBOOK_AGENTS_SKILLS_DIR: tmp('playbook-a-') };
+  assert.equal(anyTargetInstalled(env), true);
 });
 
 test('listSkills ignores directories without a SKILL.md', () => {
