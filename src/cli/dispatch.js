@@ -200,7 +200,7 @@ export async function run(argv, io = { out: console.log, err: console.error }) {
     return EXIT.USAGE;
   }
 
-  if (parsed.command !== 'install' && !parsed.flags.json && !anyTargetInstalled()) {
+  if (parsed.command !== 'install' && !parsed.flags.json && !parsed.rest.includes('--ci') && !anyTargetInstalled()) {
     io.out(`playbook-ai ${readPackageVersion()} — skills not installed for any target, run \`playbook install\`.`);
   }
 

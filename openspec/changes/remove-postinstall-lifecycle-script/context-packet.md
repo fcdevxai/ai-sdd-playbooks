@@ -1,7 +1,7 @@
 ---
 sources:
   proposal: c2a64df5fbaf3b46ff50a8837e115b1d8241741dc4f8be9b2341182aa5644ba8
-  tasks: 40c70fbc656a92d2bb4dbc440f19b5347c9ebb86487a8a4054a708ffa4fdc855
+  tasks: 9c117fc17ff6e0ea4b5a755af5ef51bca105683d6f4d52c2cce543ad2a5af693
   contract: 2260109d99574a48c6b6a511d5963f4425e30b430daa082a75e3a115f9aaf70c
 ---
 # Context Packet — Eliminar el postinstall que puede romper `npm install` de consumers

@@ -163,6 +163,48 @@ test('no target installed + --json → the notice does not appear (SEC-2)', asyn
   });
 });
 
+test('no target installed + "validate --ci" (JSON via a command-specific flag, not global --json) → the notice does not contaminate the output (SEC-2)', async () => {
+  const claude = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-c-'));
+  const agents = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-a-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-w-'));
+  fs.mkdirSync(path.join(dir, 'openspec', 'changes', 'demo'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'openspec', 'changes', 'demo', 'proposal.md'), [
+    '---',
+    'schema: proposal',
+    'schema_version: 1',
+    'change_id: demo',
+    'status: draft',
+    'owner: x',
+    'created: 2026-01-01',
+    'updated: 2026-01-01',
+    'impact: { public_contract: false, data_model: false, architecture_boundary: false, external_integration: false, cross_repository: false, authentication: false, authorization: false, infrastructure: false, concurrency: false, migration: false }',
+    'security: { risk: low, triggers: [] }',
+    '---',
+    '# Demo',
+    '## Objective',
+    'x',
+    '## Impacted modules',
+    'x',
+    '## Expected behavior',
+    '### Happy path (Given/When/Then)',
+    'x',
+    '## Acceptance criteria',
+    '**AC-1:** x',
+    '## Error cases',
+    '**EC-1:** x',
+    '## Constraints and non-goals',
+    'x',
+    '## Open technical decisions',
+    'x',
+  ].join('\n'));
+  await withTargets(claude, agents, async () => {
+    const { io, out } = capture();
+    await run(['validate', '--ci', '--cwd', dir], io);
+    assert.equal(out.length, 1); // exactly one io.out call: the JSON payload, no notice line prepended
+    assert.doesNotThrow(() => JSON.parse(out[0]));
+  });
+});
+
 test('at least one target installed + command "status" → the notice does not appear (AC-8)', async () => {
   const claude = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-c-'));
   fs.writeFileSync(path.join(claude, '.playbook-version'), '0.1.0\n');

@@ -165,3 +165,23 @@ non-goals`.
 
 All tasks passed on the first attempt; no STOP encountered, no new ADR
 required.
+
+### Post-push fix (CI-discovered)
+
+GitHub CI (`test (18)`, `test (20)`) failed after the first push on
+`test/validate.cli.test.js`'s `validate --ci --json emits machine-readable
+output` — `JSON.parse` choked on `playbook-ai 0.9.0 — skills not installed...`
+prepended to the output. Root cause: the Task 2.2 guard
+(`!parsed.flags.json`) only accounted for the **global** `--json` flag, but
+`validate --ci` (a command-specific flag forwarded via `rest`) also produces
+JSON output through `validate.js`'s own `json = parsed.flags.json || ci`
+logic — a second path to machine-readable output the guard never covered.
+Locally this repo's dogfooding setup keeps the global skills installed via
+symlink, so `anyTargetInstalled()` was always `true` and the notice never
+fired — masking the gap until a clean CI runner (no skills installed)
+exposed it. Fixed in `src/cli/dispatch.js`
+(`!parsed.rest.includes('--ci')` added to the guard), with a new red→green
+regression test in `test/dispatch.test.js` that simulates the CI condition
+(no target installed, `validate --ci`, asserting single-line valid-JSON
+output). Full `npm test` re-run green (461 lines). Amends **SEC-2**'s
+evidence — no AC/EC renumbered, no scope change.
