@@ -125,11 +125,14 @@ of the contract, and `context-packet.md` carried nothing about it.
   one-line `.playbook-version` stamp to `methodology.resolved`, regardless of
   install mode. See ADR-034 (SEC-002).
 
-## Post-update signal (postinstall)
+## Post-update signal (no lifecycle script)
 
-- The root `package.json` declares exactly one lifecycle script: a message-only `postinstall` (`scripts/postinstall.cjs`, shipped via the `files` whitelist) that prints the installed version plus a reminder to run `playbook install`. See the ADR "postinstall message-only".
-- Policy (structurally enforced by `test/postinstall.test.js`): it never writes to the filesystem, never reads the consumer's repo, never touches the network, and never exits non-zero — self-contained, no `src/` import. `prepare`/`preinstall`/`install` remain forbidden.
-- With `--ignore-scripts` there is no signal; the manual flow (`playbook install`) documented in the README is the canonical post-update path.
+- The root `package.json` declares **no** npm lifecycle script at all (`postinstall`/`preinstall`/`prepare`/`install`). A message-only `postinstall` was tried first (see the superseded ADR "postinstall message-only") but proved unable to guarantee "never fails": npm's git-dependency handling can crash the Node bootstrap resolving the script's path *before* the script's own `try/catch` exists in memory — a failure mode outside any script's control. See ADR-040 (supersedes ADR-006), which removes the lifecycle script outright rather than patch the latest symptom.
+- Policy (structurally enforced by `test/postinstall.test.js`): `package.json`'s `scripts` object must never contain a `postinstall` key, and `scripts/postinstall.cjs` must not exist. Reintroducing either requires a new ADR superseding ADR-040 — the test fails loudly otherwise.
+- The post-update signal moved to two channels outside npm's install-time execution model:
+  - **README** (`## Install (global, once)`) documents the real acquisition command (`npm install -g github:...#semver:^X.Y.Z`) plus the private-repo/git-access note, ahead of the existing `playbook install` commands.
+  - **CLI** — `run()` in `src/cli/dispatch.js`, immediately before dispatching to the resolved command handler: when the invoked command is not `install`, no global `--json` flag is set, no command-specific flag also produces machine-readable output (currently only `validate --ci`), and `anyTargetInstalled()` (`src/install/targets.js`) reports no target has a `.playbook-version` stamp, it prints one line naming the installed version and the `playbook install` reminder via `io.out`, then continues to the handler unchanged. The condition re-evaluates on every invocation — self-extinguishing once any target is installed, no new persisted marker.
+- With `--ignore-scripts` there is no change in behavior: there is no lifecycle script left for the flag to skip.
 
 ## Run telemetry and compaction (`loom run`)
 
@@ -351,4 +354,4 @@ Added in change `wire-token-and-security-policy`.
 - `loom packet` generation (happy path, byte-exact verbatim sections, determinism, tolerant tasks extraction, incomplete-proposal rejection, and traversal-safe writes) is covered by `framework/cli/test/packet.test.js`.
 - `loom index` behavior is covered by `framework/cli/test/index.test.js`.
 - Template drift (units, CLI wiring on a simulated install, dev-checkout skip) is covered by `framework/cli/test/template-drift.test.js`.
-- The postinstall policy and root package wiring are covered by `test/postinstall.test.js`.
+- The no-lifecycle-script policy and root package wiring are covered by `test/postinstall.test.js`; the CLI notice (`anyTargetInstalled`, `dispatch.js`'s `run()`) is covered by `test/install.test.js` and `test/dispatch.test.js`.

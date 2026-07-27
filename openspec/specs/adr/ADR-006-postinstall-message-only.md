@@ -1,7 +1,8 @@
 ---
-status: accepted
-date: 2026-07-03
+status: superseded
+date: '2026-07-03'
 ticket: template-drift-detection
+superseded_by: ADR-040
 ---
 
 # ADR: El postinstall de specloom es message-only — nunca lee, escribe, conecta ni falla

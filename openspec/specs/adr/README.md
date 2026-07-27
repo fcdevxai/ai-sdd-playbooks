@@ -9,7 +9,7 @@ Architecture Decision Records: they document the context, alternatives, and trad
 | ADR-003 | Los playbooks de specloom son fijos, sin mecanismo de customización por proyecto consumidor | accepted | 2026-07-03 | npm-package-distribution |
 | ADR-004 | Los required status checks nunca filtran con `on.paths`; el filtrado de paths vive dentro del job | accepted | 2026-07-03 | spec-lint-required-check |
 | ADR-005 | Modelo de ownership de templates — managed vs consumer-owned | accepted | 2026-07-03 | template-drift-detection |
-| ADR-006 | El postinstall de specloom es message-only — nunca lee, escribe, conecta ni falla | accepted | 2026-07-03 | template-drift-detection |
+| ADR-006 | El postinstall de specloom es message-only — nunca lee, escribe, conecta ni falla | superseded by ADR-040 | 2026-07-03 | template-drift-detection |
 | ADR-007 | `loom run` no comprime salida en su primera versión — full passthrough + log a disco | superseded by ADR-009 | 2026-07-03 | loom-run-usage-telemetry |
 | ADR-008 | Schema de `usage.json` y convención `.specloom/runs/<run-id>/` como base de telemetría | accepted | 2026-07-03 | loom-run-usage-telemetry |
 | ADR-009 | La compactación pasa a ser el comportamiento default de `loom run` | accepted | 2026-07-03 | loom-run-compaction |
@@ -43,3 +43,4 @@ Architecture Decision Records: they document the context, alternatives, and trad
 | ADR-037 | `tasks.md` debe declarar la línea `Regression`, y `packet` avisa cuando falta | accepted | 2026-07-24 | unfulfilled-promises-cleanup |
 | ADR-038 | El contrato canónico declara sus roles provider/consumer y se lee desde el hub, nunca se copia | accepted | 2026-07-27 | contract-first-consumption |
 | ADR-039 | El authoring del contrato canónico se dispara solo sobre superficie HTTP, y la determinación queda registrada por change | accepted | 2026-07-27 | contract-first-consumption |
+| ADR-040 | El paquete no declara ningún lifecycle script de npm — el postinstall se elimina | accepted | 2026-07-27 | remove-postinstall-lifecycle-script |
