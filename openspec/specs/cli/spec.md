@@ -1,7 +1,7 @@
 ---
 status: implemented
 owner: bernardo
-last_updated: 2026-07-25
+last_updated: 2026-07-27
 ---
 
 # CLI Consumer-Root Behavior
@@ -37,6 +37,53 @@ The `loom` CLI must operate on the consumer project when specloom is installed a
 - Without config, the default canonical contract path is `<consumerRoot>/openspec/specs/contracts/openapi.yaml`.
 - Missing canonical-contract errors must report the resolved consumer path.
 - A misleading canonical contract inside `node_modules/specloom` must not be used for an installed consumer.
+
+### Contract roles and consumption (ADR-038, ADR-039)
+
+Wired in change `contract-first-consumption`. Closes the gap where the
+canonical contract was authored (`contract-first-authoring`, ADR-030) but
+nothing downstream read it back: `sdd-plan` and `sdd-apply` had zero mentions
+of the contract, and `context-packet.md` carried nothing about it.
+
+- **Roles.** `contract.provided_by` (string, optional) names the repo that
+  exposes the API; `contract.consumed_by` (array of strings, optional) names
+  the repos that consume it. Both resolve against `repos:` via
+  `resolveConfiguredRepoPath` — a name absent from `repos:` fails validation
+  naming the unknown repo, without touching the filesystem. `consumed_by`
+  declared without `provided_by` is not an error (ADR-038): `provided_by` only
+  determines conformity obligation, not whether the contract is readable.
+- **Authoring trigger is three conditions, not two.** `sdd-design` authors the
+  contract only when `impact.public_contract: true` **and**
+  `contract.path_in_loom` is set **and** `capabilities.http: true` (ADR-039
+  adds the third condition on top of ADR-030's two). With `http: false`, or
+  with `http: true` but the change's public contract is non-HTTP (e.g. a CLI
+  command), the step is skipped and the reason is declared in `design.md`'s
+  `## Public contracts / interfaces` — a silent skip is a design defect.
+- **Advisory validate notice.** `playbook validate` warns when
+  `contract.path_in_loom` is configured but `capabilities.http: false` — a
+  legitimate config for a CLI-only hub keeping a contract for test fixtures
+  (this repo). The notice is non-blocking: it never changes the exit code or
+  invalidates an artifact, and surfaces under the same top-level `notices`
+  channel in `--json`, prefixed `note:` in text output like `doctor`.
+- **Read, never copied.** `sdd-plan` plans tasks against the contract's
+  endpoints when `contract.path_in_loom` exists and the change touches the
+  API; `sdd-apply` reads it per repo role — the provider's obligation is *the
+  spec it must fulfill*, the consumer's is *what's available to call,
+  including error codes to handle*. Both read the contract by path from the
+  hub; neither copies or synchronizes it into the local repo, avoiding the
+  N-copies-can-diverge failure a single canonical contract exists to prevent.
+- **Packet carries the topology.** `context-packet.md`'s optional
+  `sources.contract` and a `## Contract` section (path + declared roles) let a
+  topology change (`path_in_loom`, `provided_by`, `consumed_by`) mark the
+  packet stale; a packet without `sources.contract` is never reported stale by
+  this path, and one without a contract section is byte-identical to before.
+- **`provided_by` does not install CI.** Declaring `provided_by` does not wire
+  `contract-drift` into that repo's CI — that remains a manual template step
+  (ADR-038, accepted risk: a declared `provided_by` can read as "conformity is
+  verified" when the CI isn't installed).
+- `test/contract-first.test.js`, `test/tokens.test.js`, and
+  `test/skill-contract.test.js` carry the enforcement for all of the above, so
+  a future merge cannot silently disconnect any of it again.
 
 ## Generated agent files
 

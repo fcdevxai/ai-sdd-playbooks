@@ -1,7 +1,7 @@
 ---
 status: implemented
 owner: bernardo
-last_updated: 2026-07-24
+last_updated: 2026-07-27
 ---
 
 # Playbooks and Agent Skill Metadata
@@ -285,6 +285,47 @@ would end up reverse-engineered from the implementation — the inversion
   — so a future merge cannot silently disconnect any of it, the same enforcement
   pattern as the packet, `spec-index`, bootstrap re-run, and `detect-siblings`
   wirings above.
+
+## Contract consumption wired into `sdd-plan` and `sdd-apply`
+
+Fixed in change `contract-first-consumption` (see **ADR-038** for the
+provider/consumer role decision and **ADR-039** for the three-condition
+authoring trigger; both complement ADR-030 without superseding it). The
+authoring half above made the canonical contract get written; nothing made it
+get *read back*. Verified on `main` before this change: of 13 skills, only
+`sdd-design` mentioned the contract — `sdd-plan` and `sdd-apply` had zero
+mentions, and `context-packet.md` carried nothing about it. The result was
+author-then-implement-from-memory, with `contract-drift` (when installed)
+catching divergence only after the fact.
+
+- **Guard tightened to three conditions.** `sdd-design`'s authoring guard now
+  reads `impact.public_contract: true` **and** `contract.path_in_loom` **and**
+  `capabilities.http: true` — the third condition stops a CLI-only change from
+  triggering OpenAPI authoring just because `path_in_loom` happens to be
+  configured (this repo's own case). Both skip cases (`http: false`; `http:
+  true` but a non-HTTP public contract) declare the reason in `design.md`'s
+  `## Public contracts / interfaces` — never silent. `playbook.config.yaml` is
+  now read in `sdd-design`'s `## Context`, since the guard depends on it.
+- **`sdd-plan` plans against the contract.** When `contract.path_in_loom`
+  exists and the change touches the API, `sdd-plan` plans tasks against the
+  contract's declared endpoints — reading by path from the hub, never copying
+  it into the repo. If the path is declared but the file doesn't exist, it
+  reports and continues without inventing endpoints (only `sdd-design`
+  creates the contract).
+- **`sdd-apply` reads it per role.** Provider and consumer have different
+  obligations: the provider must fulfill the contract as its spec; the
+  consumer reads it for what's available to call, including error codes to
+  handle. `sdd-apply` states explicitly that declaring `provided_by` does not
+  install `contract-drift` in that repo's CI — it stays a manual template
+  step, so a declared role doesn't imply verified conformity.
+- **Roles live in `contract:`, validated against `repos:`.** See the CLI
+  spec's "Contract roles and consumption (ADR-038, ADR-039)" for the
+  `provided_by`/`consumed_by` schema, the `validate` advisory notice, and the
+  packet's `sources.contract` staleness wiring — this section covers the
+  skill-prose half, that one the CLI/schema half.
+- `test/skill-contract.test.js` carries content assertions for all of the
+  skill-prose wiring above, so a future merge cannot silently disconnect it
+  again.
 
 ## Retry-loop scope and the pwd/cap restoration
 

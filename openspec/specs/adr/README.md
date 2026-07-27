@@ -41,3 +41,5 @@ Architecture Decision Records: they document the context, alternatives, and trad
 | ADR-035 | `src/util/fs-safe.js` es también la frontera de las lecturas derivadas de configuración | accepted | 2026-07-24 | unfulfilled-promises-cleanup |
 | ADR-036 | `playbook install --link` es un segundo modo de instalación soportado, opt-in y dev-only | accepted | 2026-07-24 | unfulfilled-promises-cleanup |
 | ADR-037 | `tasks.md` debe declarar la línea `Regression`, y `packet` avisa cuando falta | accepted | 2026-07-24 | unfulfilled-promises-cleanup |
+| ADR-038 | El contrato canónico declara sus roles provider/consumer y se lee desde el hub, nunca se copia | accepted | 2026-07-27 | contract-first-consumption |
+| ADR-039 | El authoring del contrato canónico se dispara solo sobre superficie HTTP, y la determinación queda registrada por change | accepted | 2026-07-27 | contract-first-consumption |
