@@ -1,5 +1,70 @@
 # Changelog
 
+## 0.9.0 — Contract-first loop, token-saving parity, delivery hardening
+
+Eleven SDD cycles closed since the `0.1.0` unified baseline, all additive and
+backward-compatible: no schema field went from optional to required, no
+existing consumer config or `SKILL.md` invocation stops working. Fourteen new
+ADRs (`ADR-026`–`ADR-039`) recorded the decisions and their rejected
+alternatives; `ADR-020`–`ADR-025` predate this baseline — inherited history
+from the `specloom` predecessor, restored (not decided) in this window.
+
+### Contract-first: authoring → consumption closes the loop
+- `sdd-design` authors the canonical `openapi.yaml` under a three-condition
+  guard (`impact.public_contract` **and** `contract.path_in_loom` **and**
+  `capabilities.http`) — a fourth ADR (`ADR-039`) added the HTTP condition
+  after a CLI-only change was found to trigger OpenAPI authoring for a
+  surface with no endpoints.
+- `contract.provided_by`/`consumed_by` declare provider/consumer roles,
+  validated against `repos:`; `sdd-plan` and `sdd-apply` now actually read the
+  contract by path from the hub — provider as the spec to fulfill, consumer
+  as what's available to call — instead of implementing from memory while a
+  written contract sat unread (`ADR-030`, `ADR-038`).
+- `playbook validate` gained a non-blocking `notices` channel for the
+  `path_in_loom` + `http: false` config inconsistency.
+
+### Token-saving parity completed
+- `context-packet.md` is now actually read by all five designed consumers
+  (`sdd-code-review`, `sdd-security-gate`, `sdd-runtime-gate`, `sdd-commit`,
+  `sdd-verify`) — `sdd-commit` and `sdd-runtime-gate` had 0 mentions of it
+  despite the original design.
+- `playbook spec-index`/`spec-read` (section-first permanent-spec reads) and
+  `playbook changed-files --diff` (diff-first review) are now invoked by the
+  playbooks that were designed to use them but never did.
+- The security thread (`SEC-N`) is closed end-to-end: `sdd-enrich-us` seeds it
+  as a mandatory decision dimension, `sdd-verify` re-runs every negative test
+  against **merged** code rather than trusting the pre-merge report.
+
+### Multi-repo delivery hardening
+- Delivery state aggregates across every impacted repo with "weakest-link"
+  precedence — `merged` only when every repo, hub included, is merged
+  (`ADR-027`); it resolves by the change's **own** branch, never the
+  currently-checked-out one (`ADR-033`).
+- `sdd-bootstrap-project` re-detects sibling repos on every re-run instead of
+  treating a populated `repos:` as "topology already resolved" (`ADR-028`),
+  and invokes detection through a `playbook detect-siblings` CLI wrapper
+  instead of naming an internal function to run by hand (`ADR-029`).
+
+### Retry-loop and CLI-adapter conventions restored
+- The `sdd-apply`/`sdd-verify` `pwd` check and the `sdd-commit` fix→validate
+  retry cap (both originally decided, neither wired) are now actually present
+  in the generated skills, with the "no blind edits past the cap" guard
+  language restored (`ADR-031`).
+- The experimental `cli` runtime adapter's exclusion now carries a stated,
+  reusable criterion instead of being re-justified from scratch in every
+  proposal (`ADR-032`).
+
+### Install integrity and safety
+- `playbook doctor` compares installed skill content against a sha256
+  manifest, not just a version stamp — closes a real drift bug where two
+  divergent installs both reported `0.1.0` (`ADR-034`).
+- `resolveContainedPath`/`resolveConfiguredRepoPath` are now the single
+  boundary for every filesystem read derived from configuration, including
+  the contract path (`ADR-035`).
+- `playbook install --link` (dev-only, opt-in symlink mode) and a required
+  `Regression` line in `tasks.md`, advised by `packet` when missing
+  (`ADR-036`, `ADR-037`).
+
 ## 0.1.0 — Unified baseline
 
 `playbook-ai` merges two sibling SDD frameworks into one methodology: the
