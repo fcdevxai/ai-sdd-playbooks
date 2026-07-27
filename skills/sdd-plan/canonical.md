@@ -33,14 +33,25 @@ missing precondition (e.g. "design.md is required and must be approved first").
 
 Read: `proposal.md` (acceptance criteria, constraints, error cases), `design.md`
 (if present), `openspec/specs/system.md`, `docs/doc_architecture.md` /
-`docs/doc_verification_guide.md`, `docs/security-checklist.md`, and existing
-implementation files in the affected modules.
+`docs/doc_verification_guide.md`, `docs/security-checklist.md`,
+`playbook.config.yaml` (for `contract.path_in_loom`, when the change touches
+the API), and existing implementation files in the affected modules.
 
 ## Behavior
 
 1. Map each acceptance criterion to impacted layers; identify files to create or
    modify; identify only truly-needed setup commands. All commands in `tasks.md`
    must be written to run from the repo root — never assume a task-specific `cd`.
+   **Contract-first planning (conditional).** When `playbook.config.yaml`
+   declares `contract.path_in_loom` and this change touches the API, plan the
+   API tasks against the endpoints declared in the contract instead of
+   inferring them from the proposal alone: read the contract by path from
+   the hub — it is never copied, and it is never synced into this repo, only
+   read where it lives. The resolved path must stay **inside the repo** — if
+   it escapes the project root, stop and report it instead of reading. If
+   `contract.path_in_loom` is declared but that file does not exist, report
+   that and continue planning without inventing endpoints: the contract is
+   created by `sdd-design`, never by this skill.
 2. Write `tasks.md` with `status: ready`, organized into phases of atomic tasks:
 
 ```markdown

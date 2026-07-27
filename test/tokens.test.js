@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { buildPacket, writePacket, validatePacket, packetSourceHashes } from '../src/tokens/packet.js';
+import { validateNamed } from '../src/schema/validate.js';
 import { buildSpecIndex, writeSpecIndex, readSpecSection, discoverSpecFiles } from '../src/tokens/spec-index.js';
 import { resolveRunMetadata, persistRun, formatRunSummary, countPriorRuns, filesInChange, runsDir } from '../src/tokens/run.js';
 import { parseClaudeTranscript, findTranscripts, formatTable, projectSlug } from '../src/tokens/usage-report.js';
@@ -174,6 +175,113 @@ test('playbook packet without a change-id is a usage error', async () => {
   const code = await run(['packet', '--cwd', tmp()], io);
   assert.equal(code, EXIT.USAGE);
   assert.match(err.join('\n'), /requires a <change-id>/);
+});
+
+// --- Task 3.1 (AC-9, contract-first-consumption): sources.contract is optional in the context-packet schema ---
+
+test('AC-9: context-packet schema still requires only proposal + tasks in sources (back-compat)', () => {
+  assert.equal(validateNamed('context-packet', { sources: { proposal: 'a', tasks: 'b' } }).valid, true);
+  assert.equal(validateNamed('context-packet', { sources: {} }).valid, false);
+});
+
+test('AC-9: context-packet schema accepts an optional sources.contract string', () => {
+  assert.equal(validateNamed('context-packet', { sources: { proposal: 'a', tasks: 'b', contract: 'c' } }).valid, true);
+  assert.equal(validateNamed('context-packet', { sources: { proposal: 'a', tasks: 'b', contract: 123 } }).valid, false);
+});
+
+// --- Task 3.2 (AC-9, contract-first-consumption): the packet carries a Contract section ---
+
+const CONTRACT_PORTION = {
+  path_in_loom: 'openspec/specs/contracts/openapi.yaml',
+  provided_by: 'backend',
+  consumed_by: ['frontend', 'mobile'],
+};
+
+test('buildPacket includes a Contract section with path + roles when a contract portion is passed (AC-9)', () => {
+  const { changesDir } = makeChange();
+  const { content } = buildPacket('demo', changesDir, CONTRACT_PORTION);
+  assert.match(content, /## Contract/);
+  assert.match(content, /openspec\/specs\/contracts\/openapi\.yaml/);
+  assert.match(content, /backend/);
+  assert.match(content, /frontend/);
+  assert.match(content, /mobile/);
+});
+
+test('buildPacket omits the Contract section when no contract portion is passed — byte-identical whether the arg is omitted or null (AC-9)', () => {
+  const { changesDir } = makeChange();
+  const withoutArg = buildPacket('demo', changesDir);
+  const withNull = buildPacket('demo', changesDir, null);
+  assert.doesNotMatch(withoutArg.content, /## Contract/);
+  assert.equal(withoutArg.content, withNull.content);
+});
+
+test('the Contract section is not in PACKET_REQUIRED_SECTIONS — a packet without it still validates (AC-9)', () => {
+  const { changesDir } = makeChange();
+  writePacket('demo', changesDir); // no contract param -> no section
+  const result = validatePacket('demo', changesDir);
+  assert.equal(result.ok, true);
+});
+
+test('playbook packet reads contract.path_in_loom/provided_by/consumed_by from playbook.config.yaml and threads it into the packet (AC-9)', async () => {
+  const { cwd } = makeChange();
+  fs.writeFileSync(path.join(cwd, 'playbook.config.yaml'),
+    'version: 2\nmethodology:\n  compatible: ">=0.1.0 <1.0.0"\ncapabilities:\n  http: true\n' +
+    'github:\n  base_branch: main\n  require_pull_request: true\n  require_ci: true\n' +
+    'contract:\n  path_in_loom: openspec/specs/contracts/openapi.yaml\n  provided_by: backend\n  consumed_by: [frontend]\n');
+
+  const { io } = capture();
+  const code = await run(['packet', 'demo', '--cwd', cwd], io);
+  assert.equal(code, EXIT.OK);
+  const content = fs.readFileSync(path.join(cwd, 'openspec', 'changes', 'demo', 'context-packet.md'), 'utf8');
+  assert.match(content, /## Contract/);
+  assert.match(content, /openspec\/specs\/contracts\/openapi\.yaml/);
+  assert.match(content, /backend/);
+  assert.match(content, /frontend/);
+});
+
+test('playbook packet without a contract: block in config produces a packet with no Contract section (AC-9 back-compat)', async () => {
+  const { cwd } = makeChange();
+  const { io } = capture();
+  const code = await run(['packet', 'demo', '--cwd', cwd], io);
+  assert.equal(code, EXIT.OK);
+  const content = fs.readFileSync(path.join(cwd, 'openspec', 'changes', 'demo', 'context-packet.md'), 'utf8');
+  assert.doesNotMatch(content, /## Contract/);
+});
+
+// --- Task 3.3 (AC-9, contract-first-consumption): staleness by contract topology change ---
+
+test('packetSourceHashes includes a contract hash when a contract portion is passed, omits it otherwise (AC-9)', () => {
+  const { changesDir } = makeChange();
+  const withContract = packetSourceHashes('demo', changesDir, CONTRACT_PORTION);
+  assert.equal(typeof withContract.contract, 'string');
+  assert.equal(withContract.contract.length, 64);
+  const withoutContract = packetSourceHashes('demo', changesDir);
+  assert.equal('contract' in withoutContract, false);
+});
+
+test('validatePacket reports the packet obsolete when provided_by/consumed_by/path_in_loom changes (AC-9)', () => {
+  const { changesDir } = makeChange();
+  writePacket('demo', changesDir, CONTRACT_PORTION);
+  assert.equal(validatePacket('demo', changesDir, CONTRACT_PORTION).ok, true);
+
+  assert.equal(validatePacket('demo', changesDir, { ...CONTRACT_PORTION, provided_by: 'other-backend' }).ok, false);
+  assert.equal(validatePacket('demo', changesDir, { ...CONTRACT_PORTION, consumed_by: ['frontend'] }).ok, false);
+  assert.equal(validatePacket('demo', changesDir, { ...CONTRACT_PORTION, path_in_loom: 'openspec/specs/contracts/other.yaml' }).ok, false);
+});
+
+test('validatePacket is unaffected by an unrelated config change when the contract portion itself is unchanged (AC-9)', () => {
+  const { changesDir } = makeChange();
+  writePacket('demo', changesDir, CONTRACT_PORTION);
+  // Simulates e.g. github.base_branch changing elsewhere in playbook.config.yaml —
+  // the contract portion passed in is unaffected, so no staleness from this path.
+  assert.equal(validatePacket('demo', changesDir, CONTRACT_PORTION).ok, true);
+});
+
+test('a packet without sources.contract is never reported stale via the contract path, even if the project now declares one (AC-9)', () => {
+  const { changesDir } = makeChange();
+  writePacket('demo', changesDir); // no contract at build time
+  const result = validatePacket('demo', changesDir, CONTRACT_PORTION); // config now has one
+  assert.equal(result.ok, true);
 });
 
 function makeSpecs() {

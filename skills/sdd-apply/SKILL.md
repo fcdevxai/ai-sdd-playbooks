@@ -44,13 +44,33 @@ guess outside scope.
 Read fully before writing code: `proposal.md`, `tasks.md`, `design.md` (if
 present), `openspec/specs/system.md`, the affected domain spec, the project's
 `docs/doc_architecture.md` / `docs/doc_verification_guide.md`,
-`docs/agent_architecture.md` for how agents operate in this repo, and
-`docs/security-checklist.md` for known sensitive surfaces.
+`docs/agent_architecture.md` for how agents operate in this repo,
+`docs/security-checklist.md` for known sensitive surfaces, and
+`playbook.config.yaml` (for `contract.path_in_loom` and the `provided_by`/
+`consumed_by` roles), when this change touches the API.
 
 ## Behavior
 
 1. Set `tasks.md` `status: in_progress`.
-2. For each task in order:
+2. **Contract-first implementation (conditional).** When
+   `playbook.config.yaml` declares `contract.path_in_loom` and this repo's
+   role is relevant (named in `contract.provided_by` or
+   `contract.consumed_by`), read the contract by path from the hub before
+   implementing any API task — it is never copied, only read where it lives.
+   The resolved path must stay **inside the repo** — if it escapes the
+   project root, stop and report it instead of reading. The obligation
+   differs by role:
+   - **Provider** (`contract.provided_by` names this repo): the contract is
+     the spec the implementation must fulfill — implement exactly the
+     endpoints, request/response shapes, and status codes it declares.
+   - **Consumer** (`contract.consumed_by` names this repo): the contract is
+     the spec of what is available to call — implement against the endpoints
+     it declares, including the error codes the implementation must handle.
+
+   Declaring `contract.provided_by` does not install `contract-drift` in this
+   repo's CI by itself — that stays a manual template step. Conformance is
+   verified by the provider's CI if it is installed, never by this skill.
+3. For each task in order:
    a. Write the test (or failing check) first — **if the task implements a
       `## Security considerations` entry (`SEC-N`) from `proposal.md`, the
       first test must be the negative case** (e.g. unauthorized access is
@@ -72,17 +92,17 @@ present), `openspec/specs/system.md`, the affected domain spec, the project's
    current state and do not mark it `[x]`. This never overrides the rule above —
    a task tied to a security consideration stays unmarked regardless of retry
    count until its negative test passes.
-3. **ADR trigger while resolving a STOP.** If a STOP during implementation is
+4. **ADR trigger while resolving a STOP.** If a STOP during implementation is
    resolved with a decision that is hard to reverse or architecturally
    significant (auth, module structure, contracts, a significant library,
    persistence, deployment, or a cross-cutting convention), record it as
    `openspec/changes/<change-id>/adr-<decision-slug>.md` (`status: proposed`,
    same template as `sdd-new`) before continuing — a chat resolution evaporates;
    the ADR survives the archive.
-4. Closure: run the project quality gates (format, lint/type-check, feature tests,
+5. Closure: run the project quality gates (format, lint/type-check, feature tests,
    regression if risk warrants) from `docs/doc_verification_guide.md`, each
    through `playbook run --change <change-id> --step apply -- <command>`.
-5. Append an **Execution Report** to `tasks.md` (verified ACs → test/evidence,
+6. Append an **Execution Report** to `tasks.md` (verified ACs → test/evidence,
    commands run, result). When every task passes and gates are green, set
    `tasks.md` `status: passed`. If blocked, set `status: blocked` and record why.
 

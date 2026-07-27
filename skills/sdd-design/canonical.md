@@ -5,7 +5,7 @@ description_es: "Producir el diseño técnico (design.md) de un change que lo re
 title_en: "SDD Design — Technical Design"
 title_es: "SDD Design — Diseño Técnico"
 when: "After proposal.md is approved, when design is required (any impact.* true, or design.always)."
-output_file: "design.md (+ the canonical contract at contract.path_in_loom when impact.public_contract: true)"
+output_file: "design.md (+ the canonical contract at contract.path_in_loom, only when impact.public_contract, contract.path_in_loom, and capabilities.http are all true)"
 requires_terminal: false
 lifecycle_stage: design
 produces: [design.md]
@@ -32,33 +32,53 @@ a `design.md` for a change that does not need one.
 ## Context
 
 Read fully: `proposal.md` (objective, impact, security, constraints),
-`openspec/specs/system.md`, the affected domain spec, and `docs/doc_architecture.md`.
+`openspec/specs/system.md`, the affected domain spec, `docs/doc_architecture.md`,
+and `playbook.config.yaml` (for `contract.path_in_loom` and `capabilities.http` —
+both feed the guard in step 2).
 
 ## Behavior
 
 1. Design the solution: layer/module deltas, public contracts (endpoints,
    response shapes, events), data-model changes, and how it fits existing
    architecture.
-2. **Canonical contract authoring (conditional).** When the proposal declares
-   `impact.public_contract: true` **and** `playbook.config.yaml` declares
-   `contract.path_in_loom`, add or update this feature's endpoints in the file
-   that key points at — the hub-owned canonical contract, authored
-   **loom-first**, before the implementing repo builds it. Take the path from
-   `contract.path_in_loom`; never hardcode it. The resolved path must stay
-   **inside the repo** — if it escapes the project root, stop and report it
-   instead of writing. If that file does not exist,
-   create it with the minimal skeleton (`openapi`, `info`, `paths`) plus this
-   feature's endpoints — nothing else creates it, not `playbook init` and not
+2. **Canonical contract authoring (conditional on all three).** Author this
+   feature's endpoints in the hub-owned canonical contract only when **all
+   three** conditions hold: (a) the proposal declares
+   `impact.public_contract: true`; (b) `playbook.config.yaml` declares
+   `contract.path_in_loom`; and (c) `playbook.config.yaml` declares
+   `capabilities.http: true`. "Contract" here means HTTP endpoints — the
+   artifact this step writes is an `openapi.yaml`, so without an HTTP surface
+   there is nothing for it to describe.
+
+   When all three hold, add or update the endpoints in the file
+   `contract.path_in_loom` points at — the hub-owned canonical contract,
+   authored **loom-first**, before the implementing repo builds it. Take the
+   path from `contract.path_in_loom`; never hardcode it. The resolved path
+   must stay **inside the repo** — if it escapes the project root, stop and
+   report it instead of writing. If that file does not exist, create it with
+   the minimal skeleton (`openapi`, `info`, `paths`) plus this feature's
+   endpoints — nothing else creates it, not `playbook init` and not
    bootstrap. The endpoints in the contract and in `design.md`'s
    `## Public contracts / interfaces` must describe the **same set**: a human
    reviews both in one sign-off, so a mismatch is a design defect, not a
    formatting detail. Never put secrets, real tokens, or PII in `example`,
-   `description`, or `servers` — the contract is a versioned artifact shared with
-   every consumer repo, so a leak there is effectively permanent. When
-   `contract.path_in_loom` is absent, **skip this step and say so explicitly**:
-   contract-first is opt-in and there is no default path. `playbook
-   contract-drift` checks an implementation against this contract in the
-   implementing repo's CI — it is a detector, never the authoring mechanism.
+   `description`, or `servers` — the contract is a versioned artifact shared
+   with every consumer repo, so a leak there is effectively permanent.
+   `playbook contract-drift` checks an implementation against this contract
+   in the implementing repo's CI — it is a detector, never the authoring mechanism.
+
+   **Skip, always declared, never silent.** Three cases skip this step, and
+   each names its reason in `design.md`'s `## Public contracts / interfaces` —
+   a skip without that declaration is a design defect, resolved in silence
+   instead of under human sign-off:
+   - `contract.path_in_loom` is absent: **skip this step and say so
+     explicitly** — contract-first is opt-in and there is no default path.
+   - `capabilities.http: false`: the project has no HTTP surface at all, so no
+     change can alter HTTP endpoints.
+   - `capabilities.http: true`, but **this change**'s public contract is not
+     HTTP (CLI, a library, or another non-HTTP surface): determine this
+     **per change, not per project** — a project with both CLI and HTTP
+     still skips authoring for a change that only touches the CLI.
 3. **Security refinement**: carry the proposal's `risk` forward, set
    `threat_model_required`, and list the concrete `controls` (`SEC-00x`). Include
    a threat-model section when `risk: elevated` or `threat_model_required: true`.
@@ -97,3 +117,8 @@ updated: <YYYY-MM-DD>
 - Do not create `design.md` when design is not required.
 - Never write a canonical contract when `contract.path_in_loom` is absent, and
   never hardcode a contract path — contract-first is opt-in per project.
+- Never write a canonical contract when `capabilities.http` is `false` — with
+  no HTTP surface in the project, no change can alter HTTP endpoints.
+- Never write a canonical contract for a change whose public contract is not
+  HTTP, even when `capabilities.http: true` — that determination is
+  per change, not per project, and it must be declared in `design.md`.
