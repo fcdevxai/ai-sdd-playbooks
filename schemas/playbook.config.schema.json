@@ -82,7 +82,9 @@
       "properties": {
         "source_of_truth": { "type": "string" },
         "path_in_loom": { "type": "string" },
-        "drift_check": { "type": "object" }
+        "drift_check": { "type": "object" },
+        "provided_by": { "type": "string" },
+        "consumed_by": { "type": "array", "items": { "type": "string" } }
       }
     },
     "gating": {

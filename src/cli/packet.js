@@ -4,7 +4,8 @@
  * byte-identical file, so it's safe to re-run any time.
  */
 import { EXIT } from './exit.js';
-import { writePacket, defaultChangesDir } from '../tokens/packet.js';
+import { writePacket, defaultChangesDir, contractPortionFromConfig } from '../tokens/packet.js';
+import { loadConfig } from '../config/config.js';
 
 export async function packetCommand(parsed, io) {
   const cwd = parsed.flags.cwd || process.cwd();
@@ -16,7 +17,8 @@ export async function packetCommand(parsed, io) {
 
   let result;
   try {
-    result = writePacket(changeId, defaultChangesDir(cwd));
+    const { config } = loadConfig({ cwd });
+    result = writePacket(changeId, defaultChangesDir(cwd), contractPortionFromConfig(config));
   } catch (err) {
     io.err(`error: ${err.message}`);
     return EXIT.VIOLATION;

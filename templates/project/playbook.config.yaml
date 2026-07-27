@@ -29,13 +29,18 @@ addons:
   confluence: false        # requiere Atlassian MCP en el runtime activo
 
 # Opcional — solo si un backend de este hub expone una API que uno o más
-# frontends consumen. Loom-first: el contrato se autora acá (durante sdd-plan)
+# frontends consumen. Loom-first: el contrato se autora acá (durante sdd-design)
 # antes de que el backend lo implemente; `playbook contract-drift` compara
 # estructuralmente el contrato canónico contra el OpenAPI generado del backend.
+# `provided_by`/`consumed_by` son opcionales y nombran repos declarados en
+# `repos:` más abajo — `sdd-plan`/`sdd-apply` los usan para distinguir la
+# obligación del provider (cumplir el contrato) de la del consumer (llamarlo).
 # Descomentar y ajustar cuando exista un backend real:
 # contract:
 #   source_of_truth: loom-first
 #   path_in_loom: openspec/specs/contracts/openapi.yaml
+#   provided_by: backend            # el repo que expone la API
+#   consumed_by: [frontend]         # los repos que la consumen
 #   drift_check:
 #     ci_template: templates/project/github/workflows/contract-drift-check.yml
 #     runs_in: "el CI del backend — instalar el template ahí, no en este repo"
@@ -45,6 +50,9 @@ addons:
 # agregan el delivery de todos ellos (regla "eslabón más débil": `merged` solo
 # si TODOS lo están — ver ADR multi-repo-delivery-reduction). Un nombre listado
 # en `## Impacted repos` pero ausente de acá cuenta como `unknown` (fail-closed).
+# "Impactado" no es un rol de config: se lee del `## Impacted repos` de la
+# proposal de cada change, no de acá — por eso ningún repo de este bloque
+# declara `role` salvo el hub SDD (`role: sdd`, opcional y único).
 # Descomentar y ajustar cuando el proyecto tenga repos hermanos reales:
 # repos:
 #   loom:                          # el hub SDD (este repo); role: sdd es opcional
@@ -52,12 +60,10 @@ addons:
 #     role: sdd
 #   backend:
 #     path: ../mi-proyecto-backend
-#     role: impacted
 #     verification:
 #       tests: npm test
 #   frontend:
 #     path: ../mi-proyecto-frontend
-#     role: impacted
 #     verification:
 #       tests: npm test
 # gating:

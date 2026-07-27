@@ -9,7 +9,8 @@
       "required": ["proposal", "tasks"],
       "properties": {
         "proposal": { "type": "string" },
-        "tasks": { "type": "string" }
+        "tasks": { "type": "string" },
+        "contract": { "type": "string" }
       }
     }
   }

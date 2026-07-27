@@ -263,6 +263,40 @@ test('sdd-design takes the contract path from config and never hardcodes it (AC-
   assert.match(b, /\*\*Output file:\*\*.*contract\.path_in_loom/, 'output_file names the conditional side-effect');
 });
 
+// --- contract-first-consumption Task 4.1 (AC-1, AC-2, AC-3): three-condition guard, declared skip, playbook.config.yaml in Context ---
+
+test('sdd-design guards contract authoring on three explicit conditions, not two (AC-1)', () => {
+  const b = body('sdd-design');
+  assert.match(b, /impact\.public_contract:\s*true/, 'condition 1: proposal impact flag');
+  assert.match(b, /contract\.path_in_loom/, 'condition 2: contract path declared');
+  assert.match(b, /capabilities\.http:\s*true/, 'condition 3: project has HTTP capability');
+  assert.match(b, /all three/i, 'the guard names itself as requiring all three, not two');
+});
+
+test('sdd-design declares the skip reason in design.md for both new skip cases, never silently (AC-2)', () => {
+  const b = body('sdd-design');
+  assert.match(b, /capabilities\.http:\s*false/, 'names the no-HTTP-project skip case');
+  assert.match(b, /per change, not per project/i, 'the http:true + non-HTTP-change case is a per-change determination');
+  assert.match(b, /## Public contracts \/ interfaces/, 'both skips are declared in this design.md section');
+  assert.match(b, /never silent/i, 'the skip is always declared, never silent');
+});
+
+test('sdd-design reads playbook.config.yaml as part of ## Context (AC-3)', () => {
+  const b = body('sdd-design');
+  const contextSection = b.split(/^## Context/m)[1]?.split(/^## /m)[0];
+  assert.ok(contextSection, 'sdd-design has a ## Context section');
+  assert.match(contextSection, /playbook\.config\.yaml/, 'Context names playbook.config.yaml, the file the guard reads');
+});
+
+test("sdd-design's ## Rules names all three contract-authoring conditions, not just contract.path_in_loom (AC-1, alcanzabilidad)", () => {
+  const b = body('sdd-design');
+  const rules = b.split(/^## Rules/m)[1];
+  assert.ok(rules, 'has a ## Rules section');
+  assert.match(rules, /Never write a canonical contract when `contract\.path_in_loom` is absent/, 'condition 1 kept verbatim (back-compat)');
+  assert.match(rules, /capabilities\.http`?\s*is\s*`?false/i, 'condition 2: no HTTP surface in the project');
+  assert.match(rules, /per change, not per project/i, 'condition 3: per-change HTTP determination');
+});
+
 test("sdd-design keeps the canonical contract and design.md's public contracts in sync (AC-3)", () => {
   const b = body('sdd-design');
   assert.match(b, /Public contracts \/ interfaces/);
@@ -283,10 +317,41 @@ test('sdd-design forbids secrets and PII in the canonical contract (SEC-001, AC-
   assert.match(b, /`example`,\s+`description`, or `servers`/, 'names the fields where a leak would hide');
 });
 
-test("sdd-plan does not author the canonical contract — that is sdd-design's step (AC-1)", () => {
+test("sdd-plan reads the contract to plan against it, but never authors one — that is sdd-design's step (AC-1)", () => {
   const b = body('sdd-plan');
   assert.doesNotMatch(b, /openapi/i, 'contract authoring belongs to the design stage, under human sign-off');
-  assert.doesNotMatch(b, /contract\.path_in_loom/);
+});
+
+// --- contract-first-consumption Task 4.2 (AC-6, AC-8, EC-3): sdd-plan plans against the contract ---
+
+test('sdd-plan plans tasks against the contract endpoints when contract.path_in_loom is declared and the change touches the API (AC-6)', () => {
+  const b = body('sdd-plan');
+  assert.match(b, /contract\.path_in_loom/, 'gated on the project declaring a contract path');
+  assert.match(b, /endpoints? declared in the contract|contract.*endpoints/i, 'plans against the contract endpoints');
+  assert.match(b, /touches? the API/i, 'scoped to a change that touches the API');
+});
+
+test('sdd-plan reads the contract by path from the hub and explicitly states it never copies it (AC-8)', () => {
+  const b = body('sdd-plan');
+  assert.match(b, /by path/i, 'reads the contract by path, not by copy');
+  assert.match(b, /never cop(?:y|ies|ied)|not copied/i, 'explicitly says the contract is never copied — AC-8');
+  assert.doesNotMatch(b, /copy (it |the contract )?(to|into)/i, 'never instructs actually copying the contract anywhere');
+});
+
+test('sdd-plan reports a missing contract file and continues without inventing endpoints (EC-3)', () => {
+  const b = body('sdd-plan');
+  assert.match(b, /does not exist/i, 'names the missing-file case');
+  assert.match(b, /report/i, 'instructs reporting it');
+  assert.match(b, /without inventing|never invent/i, 'never fabricates endpoints in place of the missing contract');
+});
+
+// --- sdd-security-gate finding F-1: contract-read steps must instruct containment, not just reading (SEC-001) ---
+
+test('sdd-plan instructs containment before reading the contract, mirroring sdd-design\'s write-side guard (SEC-001)', () => {
+  const b = body('sdd-plan');
+  assert.match(b, /must stay\s+\*\*inside the repo\*\*/, 'the read target is contained to the project root');
+  assert.match(b, /if\s+it\s+escapes\s+the\s+project\s+root,\s+stop\s+and\s+report\s+it\s+instead\s+of\s+reading/i,
+    'stop-and-report guard, phrased for the read path (sdd-design has the write-side equivalent)');
 });
 
 test('the README names sdd-design as the contract authoring stage (AC-5)', () => {
@@ -362,6 +427,39 @@ test('sdd-apply and sdd-new keep the conventions this change replicates (AC-1, A
   // convention silently goes half-wired again — the exact drift being fixed here.
   assert.match(body('sdd-apply'), /pwd/, 'sdd-apply keeps its cwd check');
   assert.match(body('sdd-new'), /capped at 3 iterations/, 'sdd-new keeps its retry cap');
+});
+
+// --- contract-first-consumption Task 4.3 (AC-7, AC-8, SEC-003): sdd-apply reads the contract per repo role ---
+
+test('sdd-apply reads the contract per repo role: provider must-fulfill vs consumer available-to-call (AC-7)', () => {
+  const b = body('sdd-apply');
+  assert.match(b, /contract\.path_in_loom/, 'gated on the project declaring a contract path');
+  assert.match(b, /provider/i, 'names the provider role');
+  assert.match(b, /consumer/i, 'names the consumer role');
+  assert.match(b, /must fulfill/i, "provider's obligation: the spec to fulfill");
+  assert.match(b, /available to call/i, "consumer's obligation: the spec of what's available to call");
+  assert.match(b, /error codes.*handle/i, 'consumer obligation includes the error codes to handle');
+});
+
+test('sdd-apply reads the contract by path from the hub and explicitly states it never copies it (AC-8)', () => {
+  const b = body('sdd-apply');
+  assert.match(b, /by path/i, 'reads the contract by path, not by copy');
+  assert.match(b, /never cop(?:y|ies|ied)|not copied/i, 'explicitly says the contract is never copied — AC-8');
+});
+
+test('sdd-apply instructs containment before reading the contract, mirroring sdd-design\'s write-side guard (SEC-001)', () => {
+  const b = body('sdd-apply');
+  assert.match(b, /must stay\s+\*\*inside the repo\*\*/, 'the read target is contained to the project root');
+  assert.match(b, /if\s+it\s+escapes\s+the\s+project\s+root,\s+stop\s+and\s+report\s+it\s+instead\s+of\s+reading/i,
+    'stop-and-report guard, phrased for the read path (sdd-design has the write-side equivalent)');
+});
+
+test('sdd-apply states SEC-003: declaring provided_by does not install contract-drift in CI by itself (SEC-003)', () => {
+  const b = body('sdd-apply');
+  assert.match(b, /provided_by/);
+  assert.match(b, /contract-drift/);
+  assert.match(b, /if it is installed/i, 'conformance is verified by the provider CI only if installed');
+  assert.match(b, /does not install/i, 'declaring the role does not itself install the CI check');
 });
 
 test('sdd-plan requires the Regression entry unconditionally and Rules names why (AC-4)', () => {
