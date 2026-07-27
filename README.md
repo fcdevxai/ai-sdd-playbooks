@@ -18,6 +18,15 @@ and a lockfile pinning the compatible methodology range.
 ## Install (global, once)
 
 ```bash
+npm install -g github:lablab-outplacement/lablab-playbook-ai-v2#semver:^X.Y.Z
+```
+
+This repo is private: the command above requires git access configured
+(an SSH key or a PAT with repo scope) — without it, npm's fallback for a
+missing tarball (`codeload` 404 → `git clone`) will fail with a confusing
+auth error instead of a clear one.
+
+```bash
 playbook install                      # install core skills into all targets (default)
 playbook install --runtime claude     # only Claude Code                 (~/.claude/skills)
 playbook install --runtime copilot    # only GitHub Copilot              (~/.agents/skills)

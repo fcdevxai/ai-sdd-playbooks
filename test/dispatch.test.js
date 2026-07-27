@@ -114,3 +114,63 @@ test('parseArgs: a flag where a command is expected is a usage error', () => {
   const p = parseArgs(['--nope']);
   assert.ok(p.error);
 });
+
+// ---------------------------------------------------------------------------
+// Self-extinguishing install notice (AC-6, AC-7, AC-8, SEC-2)
+// ---------------------------------------------------------------------------
+
+function withTargets(claude, agents, fn) {
+  const saved = { c: process.env.PLAYBOOK_CLAUDE_SKILLS_DIR, a: process.env.PLAYBOOK_AGENTS_SKILLS_DIR };
+  process.env.PLAYBOOK_CLAUDE_SKILLS_DIR = claude;
+  process.env.PLAYBOOK_AGENTS_SKILLS_DIR = agents;
+  return Promise.resolve(fn()).finally(() => {
+    if (saved.c === undefined) delete process.env.PLAYBOOK_CLAUDE_SKILLS_DIR; else process.env.PLAYBOOK_CLAUDE_SKILLS_DIR = saved.c;
+    if (saved.a === undefined) delete process.env.PLAYBOOK_AGENTS_SKILLS_DIR; else process.env.PLAYBOOK_AGENTS_SKILLS_DIR = saved.a;
+  });
+}
+
+test('no target installed + command "status" → the install notice appears before the command output (AC-6, AC-8)', async () => {
+  const claude = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-c-'));
+  const agents = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-a-'));
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-w-'));
+  await withTargets(claude, agents, async () => {
+    const { io, out } = capture();
+    await run(['status', '--cwd', cwd], io);
+    assert.match(out[0], /playbook install/);
+  });
+});
+
+test('no target installed + command "install" → the notice does not appear (AC-7)', async () => {
+  const claude = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-c-'));
+  const agents = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-a-'));
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-w-'));
+  await withTargets(claude, agents, async () => {
+    const { io, out } = capture();
+    await run(['install', '--cwd', cwd], io);
+    assert.doesNotMatch(out.join('\n'), /run `playbook install`/);
+  });
+});
+
+test('no target installed + --json → the notice does not appear (SEC-2)', async () => {
+  const claude = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-c-'));
+  const agents = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-a-'));
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-w-'));
+  await withTargets(claude, agents, async () => {
+    const { io, out } = capture();
+    await run(['doctor', '--json', '--cwd', cwd], io);
+    assert.equal(out.length, 1); // exactly one io.out call: the JSON payload, no notice line prepended
+    assert.doesNotThrow(() => JSON.parse(out[0]));
+  });
+});
+
+test('at least one target installed + command "status" → the notice does not appear (AC-8)', async () => {
+  const claude = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-c-'));
+  fs.writeFileSync(path.join(claude, '.playbook-version'), '0.1.0\n');
+  const agents = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-a-'));
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-w-'));
+  await withTargets(claude, agents, async () => {
+    const { io, out } = capture();
+    await run(['status', '--cwd', cwd], io);
+    assert.doesNotMatch(out.join('\n'), /run `playbook install`/);
+  });
+});
