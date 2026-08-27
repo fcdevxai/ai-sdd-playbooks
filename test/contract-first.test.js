@@ -95,7 +95,7 @@ test('AC-4: the contract-drift-check.yml template exists, is valid YAML, and doc
   const raw = fs.readFileSync(tplPath, 'utf8');
   assert.doesNotThrow(() => yaml.load(raw));
   assert.match(raw, /backend/i);
-  assert.match(raw, /playbook-ai contract-drift/);
+  assert.match(raw, /playbook contract-drift/);
 });
 
 // --- EC-1: missing contract.path_in_loom → clear, actionable error (not a stack trace) ---
