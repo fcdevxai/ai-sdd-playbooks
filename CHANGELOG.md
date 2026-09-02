@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.9.2 — `worker` runtime adapter promoted to supported
+
+The `worker` runtime-gate adapter moves from `experimental` (permanently
+`blocked: ADAPTER_NOT_IMPLEMENTED` whenever relevant, regardless of evidence
+quality) to `supported`, with no declared per-project dependency — the same
+model `http` already uses. Reported from a real consumer project hitting the
+structural deadlock: with `worker: true` relevant, the runtime gate could
+never reach `passed`, even with `browser`/`http` fully passed and real tests
+covering the worker.
+
+- `sdd-runtime-gate` documents a 7-point real-evidence checklist for `worker`
+  (real trigger, real consumer processing, observable side effect,
+  retry/dead-letter path, idempotency when relevant, evidence citing `AC-N`)
+  and explicit `failed`/`blocked` criteria, mirroring `browser`/`http`.
+- **SEC-001**: evidence-gathering must never fire a real irreversible external
+  effect (a real payment, email/SMS, or third-party call) — use the project's
+  own test/sandbox double, or the finding is `blocked`, never a fabricated
+  `passed`.
+- `cli` is unaffected — ADR-032's criterion stands exactly as written.
+- Purely additive: no new `playbook.config.yaml` field, no schema change, no
+  new reason code. A project that never declares `worker: true` sees no
+  behavior change at all.
+
 ## 0.9.0 — Contract-first loop, token-saving parity, delivery hardening
 
 Eleven SDD cycles closed since the `0.1.0` unified baseline, all additive and

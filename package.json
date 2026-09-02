@@ -1,6 +1,6 @@
 {
   "name": "playbook-ai",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Spec-Driven Development methodology: global Agent Skills + the `playbook` CLI for Claude Code, GitHub Copilot, and Codex. Unifies the deterministic lifecycle engine (formerly ai-sdd-playbooks) with multi-repo orchestration, ADRs, and token-efficiency tooling (formerly specloom).",
   "private": true,
   "type": "module",
