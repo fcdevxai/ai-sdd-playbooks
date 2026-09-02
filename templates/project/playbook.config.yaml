@@ -9,7 +9,7 @@ capabilities:           # marca las que tu proyecto realmente tiene (activa sdd-
   browser: false        # tiene una UI web; requiere Playwright MCP en el runtime activo
   http: false           # tiene una superficie HTTP/REST
   cli: false             # tiene una superficie de línea de comandos (adapter experimental)
-  worker: false          # tiene workers/colas en background (adapter experimental)
+  worker: false          # tiene workers/colas en background (adapter supported)
 design:
   always: false         # fuerza sdd-design sin importar el impact declarado
 security:

@@ -55,7 +55,8 @@ detection, semantic doc analysis, and refactoring — but it is
    Present the proposed `capabilities:` block with the **signal** behind each
    `true` (e.g. "browser: found `react`"). If a capability can't be inferred,
    leave it `false` and say so. Reminder: `http: true` alone is not `elevated`;
-   `cli`/`worker` are experimental adapters that block when enabled.
+   `cli` is an experimental adapter that blocks when enabled; `worker` is
+   supported.
 
 3. **Propose sibling repos for multi-repo topology (`repos:`).** Run the
    sibling detector via its command: `playbook detect-siblings --json` (use

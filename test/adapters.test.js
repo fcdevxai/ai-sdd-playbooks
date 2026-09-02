@@ -2,11 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ADAPTERS, REASON_CODES, planRuntimeAdapters, gateStatusFromAdapters } from '../src/adapters/index.js';
 
-test('adapter support levels: browser/http supported, cli/worker experimental (C-06)', () => {
+test('adapter support levels: browser/http/worker supported, cli experimental (C-06)', () => {
   assert.equal(ADAPTERS.browser.support, 'supported');
   assert.equal(ADAPTERS.http.support, 'supported');
   assert.equal(ADAPTERS.cli.support, 'experimental');
-  assert.equal(ADAPTERS.worker.support, 'experimental');
+  assert.equal(ADAPTERS.worker.support, 'supported');
   assert.equal(ADAPTERS.browser.dependency, 'playwright-mcp');
 });
 
@@ -18,11 +18,16 @@ test('planRuntimeAdapters: capability false → not_applicable; supported → pe
   assert.deepEqual(plan.worker, { status: 'not_applicable' });
 });
 
-test('planRuntimeAdapters: experimental adapter with capability true → blocked (never passed)', () => {
-  const plan = planRuntimeAdapters({ worker: true, cli: true });
-  assert.equal(plan.worker.status, 'blocked');
-  assert.equal(plan.worker.reason_code, REASON_CODES.ADAPTER_NOT_IMPLEMENTED);
+test('planRuntimeAdapters: experimental cli with capability true → blocked (never passed)', () => {
+  const plan = planRuntimeAdapters({ worker: false, cli: true });
   assert.equal(plan.cli.status, 'blocked');
+  assert.equal(plan.cli.reason_code, REASON_CODES.ADAPTER_NOT_IMPLEMENTED);
+});
+
+test('planRuntimeAdapters: supported worker with capability true → pending', () => {
+  const plan = planRuntimeAdapters({ worker: true, cli: false });
+  assert.deepEqual(plan.worker, { status: 'pending' });
+  assert.deepEqual(plan.cli, { status: 'not_applicable' });
 });
 
 test('gateStatusFromAdapters aggregates correctly', () => {

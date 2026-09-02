@@ -13,6 +13,14 @@ function body(name) {
   return fs.readFileSync(path.join(SKILLS_DIR, name, 'SKILL.md'), 'utf8');
 }
 
+function headingSection(markdown, heading) {
+  const start = markdown.indexOf(heading);
+  assert.notEqual(start, -1, `${heading} exists`);
+  const rest = markdown.slice(start);
+  const next = rest.slice(heading.length).search(/^#{1,3} /m);
+  return next === -1 ? rest : rest.slice(0, heading.length + next);
+}
+
 test('lintSkillFrontmatter accepts a valid contract and rejects bad fields', () => {
   assert.equal(lintSkillFrontmatter({ name: 'sdd-x', description: 'ok', version: '0.1.0' }).valid, true);
   assert.equal(lintSkillFrontmatter({ name: 'Sdd X', description: 'ok', version: '0.1.0' }).valid, false);
@@ -177,6 +185,31 @@ test('sdd-runtime-gate absorbs the UX/UI checklist into the browser adapter', ()
   assert.match(b, /loading, empty, error, and\s*\n?success states|loading.*empty.*error/i);
   assert.match(b, /accessibility/i);
   assert.match(b, /responsive/i);
+});
+
+test('sdd-runtime-gate documents worker as supported with real evidence and SEC-001 (AC-4, SEC-001)', () => {
+  const worker = headingSection(body('sdd-runtime-gate'), '### `worker` (supported)');
+  assert.match(worker, /real job trigger/i);
+  assert.match(worker, /real consumer processing/i);
+  assert.match(worker, /observable side effect/i);
+  assert.match(worker, /retry\/dead-letter path/i);
+  assert.match(worker, /idempotency \(when relevant\)/i);
+  assert.match(worker, /SEC-001/);
+  assert.match(worker, /never[\s\S]*external irreversible\s*\n?\s*real effect/i);
+  assert.match(worker, /AC-N/);
+});
+
+test('sdd-runtime-gate references SEC-001 from the top-level Rules section (SEC-001 reachability)', () => {
+  const rules = headingSection(body('sdd-runtime-gate'), '## Rules');
+  assert.match(rules, /SEC-001/);
+});
+
+test('sdd-runtime-gate no longer classifies worker as experimental or ADAPTER_NOT_IMPLEMENTED (AC-4)', () => {
+  const offending = body('sdd-runtime-gate')
+    .split('\n')
+    .filter((line) => /worker/i.test(line) && /(experimental|ADAPTER_NOT_IMPLEMENTED)/i.test(line));
+
+  assert.deepEqual(offending, []);
 });
 
 test('sdd-new proposes runtime_relevant_capabilities from signals, never a silent guess', () => {
