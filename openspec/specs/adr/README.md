@@ -44,3 +44,4 @@ Architecture Decision Records: they document the context, alternatives, and trad
 | ADR-038 | El contrato canónico declara sus roles provider/consumer y se lee desde el hub, nunca se copia | accepted | 2026-07-27 | contract-first-consumption |
 | ADR-039 | El authoring del contrato canónico se dispara solo sobre superficie HTTP, y la determinación queda registrada por change | accepted | 2026-07-27 | contract-first-consumption |
 | ADR-040 | El paquete no declara ningún lifecycle script de npm — el postinstall se elimina | accepted | 2026-07-27 | remove-postinstall-lifecycle-script |
+| ADR-041 | The `worker` runtime adapter drives evidence generically, with no declared per-project dependency | accepted | 2026-09-01 | runtime-gate-worker-supported |

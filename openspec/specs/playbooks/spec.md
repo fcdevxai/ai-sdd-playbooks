@@ -1,7 +1,7 @@
 ---
 status: implemented
 owner: bernardo
-last_updated: 2026-07-27
+last_updated: 2026-09-02
 ---
 
 # Playbooks and Agent Skill Metadata
@@ -414,5 +414,49 @@ a formality. So the exclusion stands, and the criterion is now written down:
   plus a recorded invocation cannot give — an interactive flow, or behavior across a
   real multi-repo topology — the harness gets implemented under its own change, rather
   than blocking that one.
-- `worker` needs no criterion: `capabilities.worker: false`, so its adapter is
-  `not_applicable` for the ordinary reason.
+- `worker` needs no criterion **in this repository**: `capabilities.worker: false`,
+  so its adapter is `not_applicable` for the ordinary reason. Its support level
+  for *consumer* projects is decided separately below — it is no longer
+  experimental like `cli`.
+
+## The `worker` runtime adapter is supported, with no declared dependency
+
+Decided in change `runtime-gate-worker-supported` (see **ADR-041** for the
+alternatives and the accepted risks). Until this change, `worker` was
+**experimental** like `cli`: whenever a consumer project declared
+`worker: true` and a change declared it relevant, the adapter `block`ed with
+`ADAPTER_NOT_IMPLEMENTED` unconditionally — it could never emit `passed`,
+regardless of evidence quality. A real consumer project
+(`liacopilot/playbook-sdd`, change `lia-early-warning-detection`) hit exactly
+that deadlock: `browser`/`http` fully passed, real tests covering the worker,
+and the runtime gate still structurally unable to reach `passed`.
+
+`worker` is promoted to **supported**, using the same no-declared-dependency
+model `http` already uses (not the declared-MCP model `browser` uses via
+`playwright-mcp`): no queue/worker runtime is universal enough to name as a
+single dependency the way Playwright covers browsers, and naming one would
+exclude most real projects.
+
+- **No new project-side configuration.** `playbook.config.yaml` gains no new
+  field. The agent running `sdd-runtime-gate` inspects the project's own
+  code/tests to find how it actually enqueues and processes jobs, and drives
+  that mechanism for real.
+- **Real-evidence checklist**, analogous to `http`'s: a real trigger, real
+  processing by the real consumer, an observed side effect matching intent, a
+  verified retry/dead-letter path, and (when the proposal marks it relevant)
+  idempotency under duplicate delivery. `blocked` keeps the existing reason
+  codes (`DEPENDENCY_UNAVAILABLE` / `INSUFFICIENT_EVIDENCE`) — no new one was
+  introduced.
+- **Safety rule (SEC-001).** Evidence-gathering must never fire a real
+  irreversible external effect (a real payment, a real email/SMS, a real
+  third-party call). The project's own test/sandbox double for that effect
+  must be used; with none available, the finding is `blocked`, never a
+  fabricated `passed`. Referenced from both `sdd-runtime-gate`'s top-level
+  `## Rules` and its detailed `worker` section, so the rule survives even if a
+  reader only reaches the section that renders first.
+- **`playbook-ai` cannot dogfood this adapter** (`capabilities.worker: false`
+  here, honestly — see the bullet above). Verified instead through unit tests
+  of the pure planning functions and content checks on the generated skill
+  text; the first real exercise of the adapter happens in a consumer project.
+- **`cli` is unaffected.** ADR-032's criterion stands exactly as written —
+  this decision does not reopen it.
