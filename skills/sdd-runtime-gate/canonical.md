@@ -56,7 +56,7 @@ For each adapter (`browser`, `http`, `cli`, `worker`):
 | capability `true`, relevant, supported, real evidence gathered | `passed` / `failed` |
 | capability `true`, relevant, supported, required dependency absent | `blocked` (`DEPENDENCY_UNAVAILABLE`) |
 | capability `true`, relevant, supported, evidence insufficient | `blocked` (`INSUFFICIENT_EVIDENCE`) |
-| capability `true`, relevant, **experimental** (`cli`, `worker`) | `blocked` (`ADAPTER_NOT_IMPLEMENTED`) |
+| capability `true`, relevant, **experimental** (`cli`) | `blocked` (`ADAPTER_NOT_IMPLEMENTED`) |
 
 ### `browser` (supported) — full UX/UI checklist
 
@@ -91,10 +91,51 @@ responsive/accessibility break in the critical flow) → adapter `status: failed
 
 Exercise routes, auth/authz, contracts, persistence, failure paths.
 
-### `cli` / `worker` (experimental)
+### `worker` (supported)
 
-When their capability is `true` and relevant, they `block`
-(`ADAPTER_NOT_IMPLEMENTED`) — they never emit `passed`.
+Exercise the real worker path with evidence from the project’s existing safe
+test or sandbox mechanism. Cover:
+
+1. **Real job trigger** — enqueue, publish, schedule, or otherwise trigger the
+   job through the same project path production would use, pointed at a safe
+   test/sandbox target.
+2. **Real consumer processing** — observe that the intended worker/consumer
+   process actually receives and handles the job; do not replace this with a
+   direct unit-call of the handler unless the project’s worker runtime itself
+   exposes that as its real test harness.
+3. **Observable side effect** — confirm the expected persisted state, emitted
+   event, file, notification double, or other side effect exists and matches
+   the acceptance criterion.
+4. **Retry/dead-letter path** — verify the failure path is bounded and
+   observable: retry, dead-letter, poison queue, failed-job record, or the
+   project’s equivalent. A swallowed error or unbounded retry loop is a
+   failure.
+5. **Idempotency (when relevant)** — for jobs that can be retried or delivered
+   more than once, verify duplicate delivery does not duplicate the protected
+   side effect.
+6. **SEC-001** — never obtain evidence by triggering an external irreversible
+   real effect (real payment, email/SMS to a real recipient, real third-party
+   call). Use the project’s existing test double or sandbox for that effect. If
+   no safe route exists, record the finding as `blocked` with
+   `DEPENDENCY_UNAVAILABLE`; never force the effect and never fabricate
+   `passed`.
+7. **Evidence** — record the trigger command/action, the worker process/log or
+   queue observation, the observed side effect, and the retry/dead-letter
+   evidence. Findings that validate an acceptance criterion cite its `AC-N` ID.
+
+A worker finding is `failed` when a job is silently lost, the expected side
+effect is absent or incorrect, the retry/dead-letter policy is not respected,
+idempotency fails where relevant, or an external irreversible real effect was
+actually triggered while gathering evidence.
+
+Use `blocked` with `DEPENDENCY_UNAVAILABLE` when the project offers no real way
+to trigger or observe its worker safely. Use `blocked` with
+`INSUFFICIENT_EVIDENCE` when the collected evidence is partial or ambiguous.
+
+### `cli` (experimental)
+
+When its capability is `true` and relevant, it `blocks`
+(`ADAPTER_NOT_IMPLEMENTED`) — it never emits `passed`.
 
 ## Runtime tool dependency
 
@@ -104,6 +145,11 @@ Claude. Before evaluating `browser`, confirm Playwright MCP is registered in the
 active session (e.g. `/mcp`; Codex can also use `codex mcp list`). If it is
 absent, record `DEPENDENCY_UNAVAILABLE` and include the active runtime in the
 finding when known.
+
+The `worker` adapter has no declared MCP or runtime-tool dependency. Absence of
+a worker-specific tool is not, by itself, `DEPENDENCY_UNAVAILABLE`; that reason
+code applies only when the project has no real safe way to trigger or observe
+its worker.
 
 ## Gate status
 
@@ -136,7 +182,8 @@ adapters:
 
 - Never fabricate `passed`; missing evidence or dependency → `blocked` with a `reason_code`.
 - A `false` capability is `not_applicable` and does not block.
-- Experimental adapters (`cli`, `worker`) block when their capability is `true` **and relevant to this change**.
+- Experimental adapters (`cli`) block when their capability is `true` **and relevant to this change**.
 - A capability the proposal explicitly marks irrelevant to this change is `not_applicable`, not `blocked` — even if experimental.
 - The gate `status` must equal the aggregate of the per-adapter statuses.
 - This gate does not replace product/design ownership decisions for the `browser` adapter's findings.
+- **SEC-001**: never obtain `worker` evidence by triggering an external irreversible real effect — see the `worker` adapter section below.

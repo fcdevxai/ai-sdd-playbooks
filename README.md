@@ -130,7 +130,7 @@ capabilities:
   browser: true    # web UI → Playwright-driven runtime checks
   http: true       # REST surface → API runtime checks
   cli: false       # experimental adapter
-  worker: false    # experimental adapter
+  worker: false    # supported adapter
 ```
 
 Backend-only projects (`browser: false`) never invoke Playwright. Set these by
