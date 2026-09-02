@@ -1,6 +1,6 @@
 ---
 schema: adr
-status: proposed
+status: accepted
 date: "2026-09-01"
 ticket: runtime-gate-worker-supported
 ---
