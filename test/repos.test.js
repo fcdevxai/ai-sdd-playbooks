@@ -61,6 +61,17 @@ test('classifyRepoFiles applies project protected_paths on top of the built-in d
   assert.deepEqual(result.candidateFiles, []);
 });
 
+test('classifyRepoFiles allows only an exact canonical contract through the permanent-spec guard', () => {
+  const result = classifyRepoFiles({
+    declared: ['openspec/specs/contracts/openapi.yaml', 'openspec/specs/system.md', '.env'],
+    changed: ['openspec/specs/contracts/openapi.yaml', 'openspec/specs/system.md', '.env'],
+    protectedPaths: [],
+    allowedPermanentSpecs: ['openspec/specs/contracts/openapi.yaml', '.env'],
+  });
+  assert.deepEqual(result.candidateFiles, ['openspec/specs/contracts/openapi.yaml']);
+  assert.deepEqual(result.protectedStaged, ['.env', 'openspec/specs/system.md']);
+});
+
 test('PROTECTED_PATHS_BUILTIN always includes secrets/specs/build outputs', () => {
   assert.ok(PROTECTED_PATHS_BUILTIN.includes('.env'));
   assert.ok(PROTECTED_PATHS_BUILTIN.includes('openspec/specs/**'));
@@ -304,6 +315,31 @@ test('buildRepoPlan: two-repo fixture produces sdd + backend entries with candid
   assert.equal(backend.role, 'sibling');
   assert.equal(backend.baseResolved, true);
   assert.equal(backend.baseBranch, 'main');
+});
+
+test('buildRepoPlan: configured canonical contract is a candidate in the SDD repo', () => {
+  const { loomDir } = makeMultiRepoFixture();
+  git(loomDir, ['switch', '-c', 'demo']);
+  const configPath = path.join(loomDir, 'playbook.config.yaml');
+  fs.writeFileSync(configPath, `${fs.readFileSync(configPath, 'utf8')}
+contract:
+  source_of_truth: loom-first
+  path_in_loom: openspec/specs/contracts/openapi.yaml
+`);
+  const proposalPath = path.join(loomDir, 'openspec', 'changes', 'demo', 'proposal.md');
+  fs.writeFileSync(
+    proposalPath,
+    fs.readFileSync(proposalPath, 'utf8') + '- loom: openspec/specs/contracts/openapi.yaml\n',
+  );
+  const contractPath = path.join(loomDir, 'openspec', 'specs', 'contracts', 'openapi.yaml');
+  fs.mkdirSync(path.dirname(contractPath), { recursive: true });
+  fs.writeFileSync(contractPath, 'openapi: 3.1.0\n');
+
+  const plan = buildRepoPlan('demo', { cwd: loomDir });
+  const loom = plan.repos.find((r) => r.name === 'loom');
+  assert.ok(loom.candidateFiles.includes('openspec/specs/contracts/openapi.yaml'));
+  assert.deepEqual(loom.protectedStaged, []);
+  assert.equal(loom.blocker, null);
 });
 
 test('buildRepoPlan: undeclared-but-changed files surface as undeclared_files_modified', () => {

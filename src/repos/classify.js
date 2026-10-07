@@ -66,15 +66,24 @@ function matchProtected(filePath, patterns) {
  * candidateFiles). The built-in denylist plus `protectedPaths` is fail-safe: a
  * protected path never remains a candidate.
  */
-export function classifyRepoFiles({ declared = [], changed = [], protectedPaths = [] } = {}) {
+export function classifyRepoFiles({
+  declared = [],
+  changed = [],
+  protectedPaths = [],
+  allowedPermanentSpecs = [],
+} = {}) {
   const patterns = [...PROTECTED_PATHS_BUILTIN, ...protectedPaths];
   const changedSet = new Set(changed);
   const declaredSet = new Set(declared);
+  const allowedPermanentSpecSet = new Set(allowedPermanentSpecs);
   const candidateFiles = [];
   const protectedStaged = [];
   for (const file of declared) {
     if (!changedSet.has(file)) continue;
-    if (matchProtected(file, patterns)) protectedStaged.push(file);
+    const protectedPattern = matchProtected(file, patterns);
+    const isConfiguredCanonicalContract =
+      protectedPattern === 'openspec/specs/**' && allowedPermanentSpecSet.has(file);
+    if (protectedPattern && !isConfiguredCanonicalContract) protectedStaged.push(file);
     else candidateFiles.push(file);
   }
   const unique = (arr) => [...new Set(arr)].sort();
