@@ -33,7 +33,16 @@ function verificationDescriptors(repoConfig) {
 }
 
 /** Builds one read-only plan entry for a single repo. No git mutation, no writes. */
-function buildRepoEntry({ name, sddRepoName, repoPath, repoConfig, declared, slug, cwd }) {
+function buildRepoEntry({
+  name,
+  sddRepoName,
+  repoPath,
+  repoConfig,
+  declared,
+  slug,
+  cwd,
+  allowedPermanentSpecs = [],
+}) {
   const role = sddRepoRoleName(name, sddRepoName);
   const gitState = readRepoGitState({ repoPath, targetBranch: slug });
   const entry = {
@@ -84,6 +93,7 @@ function buildRepoEntry({ name, sddRepoName, repoPath, repoConfig, declared, slu
     declared,
     changed,
     protectedPaths: Array.isArray(repoConfig?.protected_paths) ? repoConfig.protected_paths : [],
+    allowedPermanentSpecs,
   });
   Object.assign(entry, classified);
 
@@ -129,6 +139,10 @@ export function buildRepoPlan(slug, { cwd = process.cwd(), changesDir = defaultC
 
   const impacted = readImpactedRepos(slug, changesDir);
   const names = [sddRepo.name, ...impacted.filter((n) => n !== sddRepo.name)];
+  const canonicalContractPath =
+    typeof config?.contract?.path_in_loom === 'string' && config.contract.path_in_loom.trim() !== ''
+      ? config.contract.path_in_loom.trim()
+      : null;
 
   const repos = names.map((name) => {
     const isSdd = name === sddRepo.name;
@@ -146,7 +160,16 @@ export function buildRepoPlan(slug, { cwd = process.cwd(), changesDir = defaultC
       // a missing directory surfaces as the repo_declared_but_missing blocker.
       repoPath = resolveConfiguredRepoPath(name, { cwd, requireDirectory: false });
     }
-    return buildRepoEntry({ name, sddRepoName: sddRepo.name, repoPath, repoConfig, declared: filesMap[name] || [], slug, cwd });
+    return buildRepoEntry({
+      name,
+      sddRepoName: sddRepo.name,
+      repoPath,
+      repoConfig,
+      declared: filesMap[name] || [],
+      slug,
+      cwd,
+      allowedPermanentSpecs: isSdd && canonicalContractPath ? [canonicalContractPath] : [],
+    });
   });
 
   return { schemaVersion: REPO_PLAN_SCHEMA_VERSION, slug, sddRepo: sddRepo.name, repos };
