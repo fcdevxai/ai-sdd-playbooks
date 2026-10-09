@@ -41,40 +41,56 @@ export function assertNoGrafts(root) {
   }
 }
 
-/** True only when `sha` names a commit object itself (a tag or tree with that id is not a commit). */
+/** Git runner over a repository root, `(args) => string`, with the recorded-history environment. */
+function rootRunner(root) {
+  return (args) => git(root, args);
+}
+
+/**
+ * True only when `sha` names a commit object itself (a tag or tree with that id is not a commit).
+ * `runGit` is an injected `(args) => string` Git runner, as in `src/github/`.
+ */
+export function commitExistsWith(runGit, sha) {
+  try {
+    return String(runGit(['cat-file', '-t', sha])).trim() === 'commit';
+  } catch {
+    return false;
+  }
+}
+
+function isShallowWith(runGit) {
+  try {
+    return String(runGit(['rev-parse', '--is-shallow-repository'])).trim() === 'true';
+  } catch {
+    return false;
+  }
+}
+
 function commitExists(root, sha) {
-  try {
-    return git(root, ['cat-file', '-t', sha]) === 'commit';
-  } catch {
-    return false;
-  }
+  return commitExistsWith(rootRunner(root), sha);
 }
-
-function isShallow(root) {
-  try {
-    return git(root, ['rev-parse', '--is-shallow-repository']) === 'true';
-  } catch {
-    return false;
-  }
-}
-
-
 
 /**
  * Three-valued ancestry (design Amendment R5, rule 2): 'yes', 'no' or 'unknown'. In a
  * repository that is not shallow, an absent commit belongs to no history there, so the
  * answer is 'no'; 'unknown' exists only when a shallow history cannot decide it.
+ * The single decision behind both evidence binding (`ancestry`) and post-merge delivery
+ * (`src/github/index.js`), over an injected Git runner.
  */
-export function ancestry(root, ancestor, descendant) {
-  const shallow = isShallow(root);
-  if (!commitExists(root, ancestor) || !commitExists(root, descendant)) return shallow ? 'unknown' : 'no';
+export function ancestryWith(runGit, ancestor, descendant) {
+  const shallow = isShallowWith(runGit);
+  if (!commitExistsWith(runGit, ancestor) || !commitExistsWith(runGit, descendant)) return shallow ? 'unknown' : 'no';
   try {
-    execFileSync('git', ['merge-base', '--is-ancestor', ancestor, descendant], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'], env: GIT_ENV });
+    runGit(['merge-base', '--is-ancestor', ancestor, descendant]);
     return 'yes';
   } catch (error) {
     if (error.status !== 1) throw new Error(`cannot examine Git ancestry from ${ancestor} to ${descendant}`);
     return shallow ? 'unknown' : 'no';
   }
+}
+
+export function ancestry(root, ancestor, descendant) {
+  return ancestryWith(rootRunner(root), ancestor, descendant);
 }
 
 /** Require ancestry: HistoryUnavailableError only when undecidable, otherwise a definitive failure. */
