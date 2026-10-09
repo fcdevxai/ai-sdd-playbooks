@@ -74,10 +74,11 @@ without approval.
 | `validate` | Validate artifacts/config against JSON Schemas (`--ci` for pipelines) |
 | `sync` | Reconcile `playbook.lock` with the installed methodology version |
 | `adr promote <change-id>` | Promote accepted/rejected ADR drafts to numbered records |
-| `packet <change-id>` | (Re)generate `context-packet.md` from proposal + tasks |
+| `packet <change-id> [--stage <stage> --agent <agent>]` | (Re)generate `context-packet.md` and the source-bound `handoff-manifest.json` |
 | `spec-read <file#anchor>` | Read one section of a permanent spec |
 | `spec-index` | Rebuild the local structural index of permanent specs |
-| `run -- <cmd>` | Run a verification command with compacted output + telemetry |
+| `run [--change --step --repo --agent] -- <cmd>` | Run a command with lossless capture, an execution receipt and a compact summary |
+| `evidence seal\|bind\|retain <change-id>` | Seal a gate report to its receipts, bind identical content across a commit, or retain closure proof |
 | `repo-plan <change-id>` | Read-only multi-repo plan (requires `repos:` in config) |
 | `commit-plan <change-id>` | Read-only PR-payload plan per impacted repo |
 | `prepare-repos <change-id>` | Create/switch the change branch per impacted repo (branches only) |
@@ -204,8 +205,10 @@ how to generate this backend's OpenAPI document).
   considerations, files touched, verification commands). Gates/commit/verify
   read this instead of both full sources.
 - **`playbook run`** — every verification command goes through here: a
-  one-line summary on success, exit code + last 40 lines on failure, with the
-  full output always on disk at `.playbook/runs/<run-id>/full.log`.
+  bounded summary (counts, warnings, skips, failure tail) while the lossless
+  `stdout.raw`/`stderr.raw`/`full.log` and an `execution-receipt.json` stay on
+  disk at `.specloom/runs/<run-id>/`. Gates cite those receipts when sealed
+  (see ADR-043).
 - **`playbook spec-read`/`spec-index`** — section-first reads over permanent
   specs, backed by a structural index that stores headings, never bodies.
 

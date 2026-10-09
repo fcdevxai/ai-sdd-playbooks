@@ -45,3 +45,5 @@ Architecture Decision Records: they document the context, alternatives, and trad
 | ADR-039 | El authoring del contrato canónico se dispara solo sobre superficie HTTP, y la determinación queda registrada por change | accepted | 2026-07-27 | contract-first-consumption |
 | ADR-040 | El paquete no declara ningún lifecycle script de npm — el postinstall se elimina | accepted | 2026-07-27 | remove-postinstall-lifecycle-script |
 | ADR-041 | The `worker` runtime adapter drives evidence generically, with no declared per-project dependency | accepted | 2026-09-01 | runtime-gate-worker-supported |
+| ADR-042 | A change that modifies the lifecycle gate itself is delivered outside that gate (bootstrap exception) | accepted | 2026-10-08 | harness-trust-restoration |
+| ADR-043 | Lifecycle gates require source-bound evidence, under an honest-error threat model | accepted | 2026-10-08 | harness-trust-restoration |

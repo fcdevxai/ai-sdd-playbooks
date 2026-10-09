@@ -1,7 +1,7 @@
 ---
 status: implemented
 owner: bernardo
-last_updated: 2026-07-27
+last_updated: 2026-10-08
 ---
 
 # CLI Consumer-Root Behavior
@@ -131,20 +131,42 @@ of the contract, and `context-packet.md` carried nothing about it.
 - Policy (structurally enforced by `test/postinstall.test.js`): `package.json`'s `scripts` object must never contain a `postinstall` key, and `scripts/postinstall.cjs` must not exist. Reintroducing either requires a new ADR superseding ADR-040 — the test fails loudly otherwise.
 - The post-update signal moved to two channels outside npm's install-time execution model:
   - **README** (`## Install (global, once)`) documents the real acquisition command (`npm install -g github:...#semver:^X.Y.Z`) plus the private-repo/git-access note, ahead of the existing `playbook install` commands.
-  - **CLI** — `run()` in `src/cli/dispatch.js`, immediately before dispatching to the resolved command handler: when the invoked command is not `install`, no global `--json` flag is set, no command-specific flag also produces machine-readable output (currently only `validate --ci`), and `anyTargetInstalled()` (`src/install/targets.js`) reports no target has a `.playbook-version` stamp, it prints one line naming the installed version and the `playbook install` reminder via `io.out`, then continues to the handler unchanged. The condition re-evaluates on every invocation — self-extinguishing once any target is installed, no new persisted marker.
+  - **CLI** — `run()` in `src/cli/dispatch.js`, immediately before dispatching to the resolved command handler: when the invoked command is not `install`, no global `--json` flag is set, no command-specific flag also produces machine-readable output or exact streams (currently `validate --ci`, and `run --raw`, whose streams carry only the child's bytes), and `anyTargetInstalled()` (`src/install/targets.js`) reports no target has a `.playbook-version` stamp, it prints one line naming the installed version and the `playbook install` reminder via `io.out`, then continues to the handler unchanged. The condition re-evaluates on every invocation — self-extinguishing once any target is installed, no new persisted marker.
 - With `--ignore-scripts` there is no change in behavior: there is no lifecycle script left for the flag to skip.
 
 ## Run telemetry and compaction (`loom run`)
 
-- `loom run [--change <slug>] [--step <name>] [--harness claude-code|codex] -- <command...>` executes the command with its stdout/stderr buffered silently (no live streaming) and prints a **compacted summary** once it exits: a one-line success message (`✓ passed (N lines) — log: <path>`) on exit code 0, or the exit code plus the last 40 lines (`MAX_FAILURE_SUMMARY_LINES`) of combined output on a non-zero exit. This replaces the full-passthrough behavior of the first version. See ADR-007 (superseded) and ADR-009 (current).
-- The compacted summary only changes what is printed to the terminal/agent — it never affects what is persisted: `full.log`/`usage.json` always receive the complete, untruncated output and the same schema as before.
-- The command runs via `spawn` **without a shell** — no shell interpretation of the passed command, so `loom run -- <cmd>` is equivalent to running `<cmd>` directly. The child's exit code is propagated unchanged; a failing command still fails `loom run` and is still recorded.
-- Each invocation writes `<consumerRoot>/.specloom/runs/<run-id>/` (`runsDir`): `full.log` (the raw combined output) and `usage.json` (`timestamp`, `command`, `changeId`, `step`, `harness`, `exitCode`, `rawOutputLines`, `retryCount`, `filesInChange`). `<run-id>` is unique per invocation; the schema and directory layout are a stable convention downstream tooling depends on. See ADR-008.
+- `playbook run [--change <id>] [--step <name>] [--harness <name>] [--repo <name>] [--agent <agent>] [--provider <provider>] [--model <model>] [--container <name>] [--raw] -- <command...>` executes the command through a file-backed capture (`src/tokens/capture.js`, ADR-043). The child runs via `spawn` with an argument array and no shell. Stdout and stderr are drained as binary chunks into separate lossless files (`stdout.raw`, `stderr.raw`) plus a combined `full.log` in arrival order; the separate streams and their byte counts and hashes are authoritative.
+- NORMAL mode prints a bounded summary: child status, recognized test and assertion counts, warning and skipped/incomplete presence, and a diagnostic tail for failures, including unrecognized formats. Output that matches no known runner is reported as unclassified, never assigned invented counts. RAW mode (`--raw`) forwards each child stream byte-for-byte and adds nothing to it; `--raw` and `--json` are mutually exclusive.
+- Exit status: a normal child exit is returned unchanged (for example 7); 127 means the executable was not found, 126 that it is not executable, and `128 + signal number` that the child was terminated by a signal. When the raw evidence cannot be persisted completely, the command fails with an explicit evidence (environment) error that still reports the child's own exit; an incomplete capture never produces a successful receipt.
+- `--agent`, `--provider` and `--model` are caller declarations recorded with their provenance; absent values are `unknown` and produce identity issues. A configured model is never recorded as an observed runtime identity.
+- `--repo <name>` resolves the execution directory through `config.yaml` `repos`; the evidence stays in the invoking root.
+- The compacted summary only changes what is printed to the terminal/agent — it never affects what is persisted.
+- Each invocation writes `<consumerRoot>/.specloom/runs/<run-id>/` (`runsDir`, mode 0700, files 0600): `stdout.raw`, `stderr.raw`, `full.log`, a schema-validated `execution-receipt.json` (change, stage, repository/branch/SHA and source snapshot before and after the run, governed artifact hashes, actor and provenance, argv, an allowlisted environment, timestamps, exit/signal/spawn and capture status, summary, and raw file paths, sizes and SHA-256) and `usage.json` (`timestamp`, `command`, `changeId`, `step`, `harness`, `exitCode`, `rawOutputLines`, `retryCount`, `filesInChange`). `<run-id>` is unique per invocation; the schema and directory layout are a stable convention downstream tooling depends on. See ADR-008.
 - Metadata resolution (`resolveRunMetadata`): explicit flags win; otherwise `changeId` falls back to the current git branch (`git symbolic-ref --short HEAD`, fail-soft to `"unknown"`), `step` to `"manual"`, `harness` to `"unknown"`.
 - `retryCount` (`countPriorRuns`) is derived by scanning prior `.specloom/runs/*/usage.json` for the exact `{changeId, step, command}` triple — stateless across processes. `filesInChange` guards its `changeId` with the same `isSafeSlug` check as every other slug consumer that turns a slug into a **path**, so it can never `readdir` outside the changes directory. (`resolveDelivery` turns a slug into a **branch name and a `gh` argument** instead, so it applies a stricter variant — see "Delivery resolves by the change's own branch", ADR-033.)
 - `.specloom/` is git-ignored: run telemetry (which may capture whatever a command prints, including secrets) never leaves the local machine. There is no automatic secret redaction — an accepted, documented risk (see `docs/security-checklist.md`). Compaction reduces this exposure in practice (less of `full.log`'s content reaches the agent's context by default) but does not change the underlying risk on disk.
 - `framework/scripts/report-usage.js` is a standalone read-only reporter: it summarizes input/output/cache tokens per Claude Code session transcript (`~/.claude/projects/*/*.jsonl`) and detects the invoked `sdd-*` skill from the `Launching skill:` marker. The Codex adapter (`parseCodexSession`) is a documented stub pending session-format verification.
 - `sdd-apply` and `sdd-verify` canonical playbooks (and their generated commands/skills) route their verification, quality-gate, and regression commands through `loom run --change <ticket-slug> --step <apply|verify> -- <command>`, so the compacted summary — not raw command output — is what normally reaches an agent during those flows.
+
+## Source-bound handoff (`playbook packet --stage`)
+
+- `playbook packet <change-id> --stage <stage> --agent <agent> [--provider <p>] [--model <m>]` writes, besides `context-packet.md`, a derived `handoff-manifest.json` and an immutable stage copy `handoff-manifest-<stage>-<sha256>.json`. The manifest references the requirement, specs, design, the task plan (full hash and normative hash), contracts, architecture, required skills and tools, runtime coverage and non-runtime criteria, risks, blockers, producer identity and, per configured repository, branch, commit and governed-content digest. References carry repository, contained relative path and byte hash; contents are not copied (ADR-043).
+- The normative task-plan hash excludes only execution bookkeeping (completion checkboxes and appended Execution Reports); task text, commands, criteria and mappings stay governed. A change to any governed reference makes the handoff stale.
+
+## Evidence seal, bind and retain (`playbook evidence`)
+
+- `playbook evidence seal <change-id> <report> --receipt <path>...` adds a `source_binding` to a gate report from the current stage manifest and the cited execution receipts. A report without a valid `source_binding` is not a cleared gate.
+- `playbook evidence bind <change-id> <report>` writes an immutable, versioned binding when a later commit carries identical governed content (an evidence-only commit or the identical implementation commit). Changed content, a partial commit, unverifiable ancestry or a failed report is rejected and the gate must be rerun.
+- `playbook evidence retain <change-id> --raw-destination <absolute-path>` validates archive eligibility and publishes a closure index with the verified sources, gate reports, receipts and raw evidence under `openspec/archive/<change-id>/` before the change folder is removed; existing different closure contents are never overwritten.
+
+## Lifecycle eligibility (`validate`, `status`, `next`, preconditions)
+
+- One eligibility evaluator (`src/lifecycle/eligibility.js`) serves `validate`, `status`, `next` and stage preconditions: a gate counts only when its report status is cleared, its schema and stage match, its `source_binding` and receipts validate, its governed content is fresh, and its runtime coverage is complete. A scalar `status: passed` alone never advances the lifecycle.
+- Runtime coverage requires every AC, EC and SEC to be either mapped in `handoff.runtime_coverage` or declared in `handoff.non_runtime` with a rationale, and every enabled capability of every impacted repository to have an adapter entry that is `passed` with related receipts or `not_applicable` with a validated exclusion.
+- The `sdd-commit` precondition is met only when `next` routes to `sdd-commit`: an unavailable GitHub context, an open pull request or any other delivery route makes it unmet, with the route as the reason.
+- Verification requires live unanimous merged delivery of every impacted repository; archive requires a valid closure index. `validate --ci` reports checks that need private receipts, unavailable siblings or missing history as `local-only`, never as passed.
+- Threat model and accepted limits: these checks protect against honest mistakes (stale evidence, skipped steps, missing adapters, accidental escaping paths). They do not defend against deliberate forgery by an actor with write access to the repository or the evidence stores, nor against concurrent filesystem races during a run (ADR-043).
 
 ## Multi-repo execution (`loom run --repo`)
 
@@ -345,6 +367,7 @@ Added in change `wire-token-and-security-policy`.
 
 ## Validation
 
+- Evidence capture, receipts, handoff manifests, seals, bindings, eligibility, runtime coverage and closure retention are covered by `test/evidence-*.test.js`, `test/handoff*.test.js`, `test/receipt.test.js`, `test/seal.test.js`, `test/source-snapshot.test.js`, `test/runtime-coverage.test.js`, `test/closure-retention.test.js` and `test/remediation-*.test.js`.
 - Installed-consumer behavior is covered by `framework/cli/test/installed-consumer.test.js`.
 - `loom run` telemetry (metadata resolution, `retryCount` scanning, traversal-safe `filesInChange`, CLI passthrough on a simulated install) and the usage reporter are covered by `framework/cli/test/run.test.js` and `framework/cli/test/report-usage.test.js`.
 - `loom spec-read`, `loom run --repo`, `loom changed-files`, and JSON output behavior are covered by `framework/cli/test/spec-read.test.js`, `framework/cli/test/run-repo.test.js`, `framework/cli/test/changed-files.test.js`, and `framework/cli/test/json-output.test.js`.
