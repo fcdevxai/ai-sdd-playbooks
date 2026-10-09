@@ -20,7 +20,7 @@
  * delivery stays derived on every call.
  */
 import { execFileSync } from 'node:child_process';
-import { localGitState, currentBranch, isGitRepo, baseBranch } from './repository.js';
+import { localGitState, currentBranch, isGitRepo, baseBranch, evidenceOnlyDirty } from './repository.js';
 import { githubContext } from './auth.js';
 import { prForBranch } from './pull-request.js';
 import { checksState } from './checks.js';
@@ -54,7 +54,7 @@ function isSafeBranchSlug(slug) {
   );
 }
 
-export function resolveDelivery({ cwd, runGit, runGh, slug } = {}) {
+export function resolveDelivery({ cwd, runGit, runGh, slug, allowEvidenceDirty = false } = {}) {
   // Before any runner is instantiated: a malformed slug must never reach git or gh.
   if (slug !== undefined && !isSafeBranchSlug(slug)) {
     return { provider: 'github', state: 'unknown', blocked_reason: 'INVALID_CHANGE_SLUG' };
@@ -65,7 +65,8 @@ export function resolveDelivery({ cwd, runGit, runGh, slug } = {}) {
 
   const local = localGitState(git);
   if (local === null) return { provider: 'github', state: 'unknown', blocked_reason: 'GIT_UNAVAILABLE' };
-  if (local === 'uncommitted') return { provider: 'github', state: 'uncommitted' };
+  const dirtyEvidence = local === 'uncommitted' && allowEvidenceDirty && evidenceOnlyDirty(git, slug);
+  if (local === 'uncommitted' && !dirtyEvidence) return { provider: 'github', state: 'uncommitted' };
 
   // local committed → the remaining states require GitHub
   const ctx = githubContext(gh);
@@ -73,8 +74,15 @@ export function resolveDelivery({ cwd, runGit, runGh, slug } = {}) {
 
   const branch = slug || currentBranch(git);
   const pr = prForBranch(branch, gh);
-  if (!pr) return { provider: 'github', state: 'committed' };
-  if (pr.state === 'MERGED') return { provider: 'github', state: 'merged' };
+  if (!pr) return { provider: 'github', state: dirtyEvidence ? 'uncommitted' : 'committed' };
+  if (pr.state === 'MERGED') {
+    if (dirtyEvidence) {
+      let head;
+      try { head = git(['rev-parse', 'HEAD']).trim(); } catch { head = null; }
+      if (!head || head !== pr.headRefOid) return { provider: 'github', state: 'unknown', blocked_reason: 'MERGED_HEAD_IDENTITY_UNPROVEN' };
+    }
+    return { provider: 'github', state: 'merged' };
+  }
   if (pr.state === 'OPEN') {
     const c = checksState(branch, gh);
     if (c === 'failed') return { provider: 'github', state: 'ci_failed' };

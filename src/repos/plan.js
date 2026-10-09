@@ -7,7 +7,7 @@
  * never a destructive checkout, never touches a git-unsafe repo. Every git
  * call goes through execFileSync('git', argv) with no shell.
  */
-import matter from 'gray-matter';
+import matter from '../util/frontmatter.js';
 import { execFileSync } from 'node:child_process';
 import { parseMarkdownHeadings, headingSection } from '../util/markdown.js';
 import { assertSafeSlug } from './slug.js';

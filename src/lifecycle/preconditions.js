@@ -27,6 +27,17 @@ export const SKILL_PRECONDITIONS = {
       'tasks.md': { status: 'ready' },
     },
   },
+  'sdd-commit': { artifacts: {
+    'code-review-report.md': { status: 'passed' },
+    'security-report.md': { status: ['passed', 'not_applicable'] },
+    'runtime-gate-report.md': { status: ['passed', 'not_applicable'] },
+  } },
+  'sdd-verify': { artifacts: {
+    'code-review-report.md': { status: 'passed' },
+    'security-report.md': { status: ['passed', 'not_applicable'] },
+    'runtime-gate-report.md': { status: ['passed', 'not_applicable'] },
+  } },
+  'sdd-archive': { artifacts: { 'verification-report.md': { status: 'passed' } } },
 };
 
 function asList(v) {

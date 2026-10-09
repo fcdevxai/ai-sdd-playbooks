@@ -7,7 +7,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import matter from 'gray-matter';
+import matter from '../util/frontmatter.js';
 import { execFileSync } from 'node:child_process';
 import { extractLabeledTokens, headingSection } from '../util/markdown.js';
 import { assertSafeSlug } from './slug.js';

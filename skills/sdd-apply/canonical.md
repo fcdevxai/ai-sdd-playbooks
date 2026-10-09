@@ -44,7 +44,11 @@ present), `openspec/specs/system.md`, the affected domain spec, the project's
 
 ## Behavior
 
-1. Set `tasks.md` `status: in_progress`.
+1. Set `tasks.md` `status: in_progress`, then run `playbook packet <change-id>
+   --stage sdd-apply --agent <agent>` from the SDD Hub. Read the handoff
+   manifest before executing tasks. If new untracked implementation files are
+   added, declare only those paths under `tasks.md` `handoff.source_paths.<repo>`
+   and regenerate the handoff before using their test receipts as gate evidence.
 2. **Contract-first implementation (conditional).** When
    `playbook.config.yaml` declares `contract.path_in_loom` and this repo's
    role is relevant (named in `contract.provided_by` or
@@ -73,7 +77,8 @@ present), `openspec/specs/system.md`, the affected domain spec, the project's
    d. Before running the verification command, check `pwd` — never assume the
       cwd inherited from a previous task or step.
    e. Run the task-level verification command from `docs/doc_verification_guide.md`
-      through `playbook run --change <change-id> --step apply -- <command>` —
+      through `playbook run --change <change-id> --step apply --agent <agent>
+      [--repo <repo>] -- <command>` —
       it prints a compacted summary (one line on success; exit code + last 40
       lines on failure) while the full output always lands at
       `.specloom/runs/<run-id>/full.log`, so a failure's raw output never
@@ -94,9 +99,11 @@ present), `openspec/specs/system.md`, the affected domain spec, the project's
    the ADR survives the archive.
 5. Closure: run the project quality gates (format, lint/type-check, feature tests,
    regression if risk warrants) from `docs/doc_verification_guide.md`, each
-   through `playbook run --change <change-id> --step apply -- <command>`.
+   through `playbook run --change <change-id> --step apply --agent <agent>
+   [--repo <repo>] -- <command>`.
 6. Append an **Execution Report** to `tasks.md` (verified ACs → test/evidence,
-   commands run, result). When every task passes and gates are green, set
+   commands run, receipt paths, raw references and result). When every task
+   passes and gates are green, set
    `tasks.md` `status: passed`. If blocked, set `status: blocked` and record why.
 
 ## Output

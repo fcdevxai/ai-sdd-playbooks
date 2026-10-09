@@ -11,7 +11,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import matter from 'gray-matter';
+import matter from '../util/frontmatter.js';
 import { parseMarkdownHeadings } from '../util/markdown.js';
 
 export function defaultSpecIndexPath(cwd = process.cwd()) {

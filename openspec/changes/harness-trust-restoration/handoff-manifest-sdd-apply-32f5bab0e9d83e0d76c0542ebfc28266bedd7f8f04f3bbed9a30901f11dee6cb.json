@@ -1,0 +1,324 @@
+{
+  "schema": "handoff-manifest",
+  "schema_version": 1,
+  "change_id": "harness-trust-restoration",
+  "stage": "sdd-apply",
+  "requirement": {
+    "repository": "loom",
+    "path": "openspec/changes/harness-trust-restoration/proposal.md",
+    "hash": "a87862bde32cc386e4cc7ade48971a00e6bdaab1b0448631d0cd085d63a93fce"
+  },
+  "spec": [
+    {
+      "repository": "loom",
+      "path": "openspec/specs/system.md",
+      "hash": "ee6f5149d4b46eabc5cb367181d1c64e5fea62b89f62b5ce7f6108f6812438fe"
+    },
+    {
+      "repository": "loom",
+      "path": "openspec/specs/playbooks/spec.md",
+      "hash": "498f75b4ee2e30c0e7c610d0a4a41d0e148bc7f848c6210da4aa54cc21db5439"
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-1",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-2",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-3",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-4",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-5",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-6",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-7",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-8",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-9",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-10",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-11",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#acceptance-criteria"
+    }
+  ],
+  "error_cases": [
+    {
+      "id": "EC-1",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#error-cases"
+    },
+    {
+      "id": "EC-2",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#error-cases"
+    },
+    {
+      "id": "EC-3",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#error-cases"
+    },
+    {
+      "id": "EC-4",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#error-cases"
+    },
+    {
+      "id": "EC-5",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#error-cases"
+    },
+    {
+      "id": "EC-6",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#error-cases"
+    }
+  ],
+  "security_criteria": [
+    {
+      "id": "SEC-1",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#security-considerations"
+    },
+    {
+      "id": "SEC-2",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#security-considerations"
+    },
+    {
+      "id": "SEC-3",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#security-considerations"
+    },
+    {
+      "id": "SEC-4",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#security-considerations"
+    },
+    {
+      "id": "SEC-5",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#security-considerations"
+    },
+    {
+      "id": "SEC-6",
+      "reference": "openspec/changes/harness-trust-restoration/proposal.md#security-considerations"
+    }
+  ],
+  "repositories": [
+    {
+      "name": "loom",
+      "branch": "harness-trust-restoration",
+      "commit_sha": "27044053983fea54e5d08350fc62b19f2a33739d",
+      "source_hash": "0dd35214991e660a20138f5b60e96377cecc5b0d3f1b634a183cc87341ca091d",
+      "inventory_count": 281,
+      "tree_hash": "65f52cadf721b59021679fa9cd1e2edc7273ed5994d40e83331aca4b2a0eeca8"
+    }
+  ],
+  "context_repositories": [],
+  "design": {
+    "repository": "loom",
+    "path": "openspec/changes/harness-trust-restoration/design.md",
+    "hash": "1cebf2f4c5a2d172b6e2cf45f660b4548baafb8b7c4464251a917d16a0057cb1"
+  },
+  "tasks": {
+    "repository": "loom",
+    "path": "openspec/changes/harness-trust-restoration/tasks.md",
+    "hash": "ceaa0d1f8f281ee4d78d81f49f038f9c66477065902091a8d334e5ddbf06f972",
+    "normative_hash": "8f647e8570272495e29567ecfb95f2515c268e1e0c413b8937e167b62a5e15e6"
+  },
+  "contracts": [
+    {
+      "repository": "loom",
+      "path": "openspec/specs/contracts/openapi.yaml",
+      "content_hash": "18a5d47d03953801479346fe7779ac169469c18fd63c05f65585561693460a4f"
+    }
+  ],
+  "architecture": [
+    {
+      "repository": "loom",
+      "path": "docs/doc_architecture.md",
+      "hash": "aa74cf1460f20968b09b30c7c3083dd35459982a3a9c6457f3365fd79ab6354e"
+    },
+    {
+      "repository": "loom",
+      "path": "docs/agent_architecture.md",
+      "hash": "bf35dba558b8a7a390b8dbe46551ec1bd5dfcb0d234aef7accad9a602e0d9440"
+    },
+    {
+      "repository": "loom",
+      "path": "openspec/changes/harness-trust-restoration/session-handoff.md",
+      "hash": "e5639990cb01e5d1352a8084d67fd0300daa88a0be39f7110a4e4c94aa483ac0"
+    },
+    {
+      "repository": "loom",
+      "path": "openspec/changes/harness-trust-restoration/tasks-history-pre-d1.md",
+      "hash": "fcff272b82c8f03545cfaf288556e8c51278cf8d57f02eb27c68ca272a7f734a"
+    }
+  ],
+  "required_skills": [
+    {
+      "name": "sdd-plan",
+      "repository": "loom",
+      "path": "skills/sdd-plan/SKILL.md",
+      "hash": "ef0c723b099855a6cb9645e55257e31f9bc07bbdfd2dfd2dd2c315466f0bedb0"
+    },
+    {
+      "name": "sdd-apply",
+      "repository": "loom",
+      "path": "skills/sdd-apply/SKILL.md",
+      "hash": "d2fa91cfe8994e8743919ad374e35629213b4c7c12ccdf88209c8363ce0a87bc"
+    },
+    {
+      "name": "sdd-runtime-gate",
+      "repository": "loom",
+      "path": "skills/sdd-runtime-gate/SKILL.md",
+      "hash": "4d5b35959740861065d28bce566440ff90ff6dbc66159677764038bc0b1403e6"
+    },
+    {
+      "name": "sdd-archive",
+      "repository": "loom",
+      "path": "skills/sdd-archive/SKILL.md",
+      "hash": "d1a02ebd4f66eed213b09ac187490f2f69b5db07f6db2985d7f0c86a1c998a72"
+    }
+  ],
+  "required_tools": [
+    {
+      "name": "playbook",
+      "context": "loom",
+      "purpose": "lifecycle-and-evidence"
+    },
+    {
+      "name": "Node.js",
+      "context": "loom",
+      "purpose": "methodology-regressions"
+    }
+  ],
+  "runtime_coverage": [
+    {
+      "criterion": "AC-1",
+      "repositories": [
+        "loom"
+      ],
+      "capabilities": [
+        "cli"
+      ]
+    },
+    {
+      "criterion": "AC-2",
+      "repositories": [
+        "loom"
+      ],
+      "capabilities": [
+        "cli"
+      ]
+    },
+    {
+      "criterion": "AC-3",
+      "repositories": [
+        "loom"
+      ],
+      "capabilities": [
+        "cli"
+      ]
+    },
+    {
+      "criterion": "AC-4",
+      "repositories": [
+        "loom"
+      ],
+      "capabilities": [
+        "cli"
+      ]
+    },
+    {
+      "criterion": "AC-5",
+      "repositories": [
+        "loom"
+      ],
+      "capabilities": [
+        "cli"
+      ]
+    },
+    {
+      "criterion": "AC-6",
+      "repositories": [
+        "loom"
+      ],
+      "capabilities": [
+        "cli"
+      ]
+    },
+    {
+      "criterion": "AC-7",
+      "repositories": [
+        "loom"
+      ],
+      "capabilities": [
+        "cli"
+      ]
+    },
+    {
+      "criterion": "AC-8",
+      "repositories": [
+        "loom"
+      ],
+      "capabilities": [
+        "cli"
+      ]
+    },
+    {
+      "criterion": "AC-9",
+      "repositories": [
+        "loom"
+      ],
+      "capabilities": [
+        "cli"
+      ]
+    },
+    {
+      "criterion": "AC-10",
+      "repositories": [
+        "loom"
+      ],
+      "capabilities": [
+        "cli"
+      ]
+    },
+    {
+      "criterion": "AC-11",
+      "repositories": [
+        "loom"
+      ],
+      "capabilities": [
+        "cli"
+      ]
+    }
+  ],
+  "unresolved_risks": [
+    "The generic cli runtime adapter remains experimental; this unmerged change cannot claim a passed runtime gate.",
+    "LIA consumer Hub ownership correction is applied; native catalogs/vendor preservation are observed. Actual skill activation and official update provenance remain unproven. U.D1.1–U.D1.2 remain implemented with no additional generic code change."
+  ],
+  "blockers": [],
+  "producer": {
+    "agent": "codex",
+    "provider": "openai",
+    "model": "gpt-6",
+    "provenance": "caller_declared"
+  },
+  "identity_issues": [],
+  "created_at": "2026-10-09T00:04:41.952Z"
+}

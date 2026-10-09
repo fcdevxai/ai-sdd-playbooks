@@ -6,12 +6,12 @@
  * locally — it never queries remote CI.
  */
 import fs from 'node:fs';
-import { spawnSync } from 'node:child_process';
 import { splitCommand } from './command.js';
 import { loadConfig } from '../config/config.js';
 import { readImpactedRepos, defaultChangesDir } from './impacted.js';
 import { resolveConfiguredRepoPath, normalizeVerificationCommands } from './config.js';
 import { persistRun } from '../tokens/run.js';
+import { captureRunSync } from '../tokens/capture.js';
 
 export { splitCommand };
 
@@ -46,7 +46,7 @@ export function normalizeGateCheckPlan({ slug, cwd = process.cwd(), changesDir =
   return { applicable: true, reason: null, repos, impactedRepos };
 }
 
-export function runGateCheck({ slug, cwd = process.cwd(), changesDir = defaultChangesDir(cwd) } = {}) {
+export function runGateCheck({ slug, cwd = process.cwd(), changesDir = defaultChangesDir(cwd), agent = 'unknown', provider = 'unknown', model = 'unknown' } = {}) {
   const plan = normalizeGateCheckPlan({ slug, cwd, changesDir });
   const results = [];
   const failures = [];
@@ -61,35 +61,25 @@ export function runGateCheck({ slug, cwd = process.cwd(), changesDir = defaultCh
     }
     for (const commandConfig of repo.commands) {
       const command = commandConfig.command;
-      let exitCode = 0;
-      let output = '';
+      let result;
       try {
         const [cmd, ...cmdArgs] = splitCommand(command);
-        const child = spawnSync(cmd, cmdArgs, { cwd: repo.path, encoding: 'utf8', shell: false });
-        output = `${child.stdout || ''}${child.stderr || ''}`;
-        if (child.error) {
-          exitCode = child.error.code === 'ENOENT' ? 127 : 1;
-          output += `${child.error.message}\n`;
-        } else {
-          exitCode = child.status === null ? (child.signal ? 128 : 1) : child.status;
-        }
+        result = captureRunSync({
+          argv: [cmd, ...cmdArgs], cwd: repo.path, evidenceCwd: cwd,
+          changeId: slug, step: 'gate-check', harness: 'unknown', repoName: repo.name,
+          agent, provider, model,
+          metadata: { gateCheck: { repo: repo.name, repoPath: repo.path, verification: commandConfig.name } },
+        });
       } catch (err) {
-        exitCode = 1;
-        output = `${err.message}\n`;
+        result = { exitCode: 1, ...persistRun({
+          command, changeId: slug, step: 'gate-check', harness: 'unknown',
+          exitCode: 1, output: `${err.message}\n`, cwd,
+          metadata: { gateCheck: { repo: repo.name, repoPath: repo.path, verification: commandConfig.name } },
+        }) };
       }
-      const telemetry = persistRun({
-        command,
-        changeId: slug,
-        step: 'gate-check',
-        harness: 'unknown',
-        exitCode,
-        output,
-        cwd,
-        metadata: { gateCheck: { repo: repo.name, repoPath: repo.path, verification: commandConfig.name } },
-      });
-      const result = { repo: repo.name, path: repo.path, verification: commandConfig.name, command, exitCode, ...telemetry };
-      results.push(result);
-      if (exitCode !== 0) failures.push(result);
+      const reported = { repo: repo.name, path: repo.path, verification: commandConfig.name, command, ...result };
+      results.push(reported);
+      if (result.exitCode !== 0 || result.captureError) failures.push(reported);
     }
   }
 

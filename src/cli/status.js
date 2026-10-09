@@ -15,6 +15,7 @@ import { computeState } from '../lifecycle/engine.js';
 import { SECURITY_DISCLAIMER } from '../security/classify.js';
 import { gitRunner, currentBranch } from '../github/index.js';
 import { resolveMultiRepoDelivery } from '../repos/delivery.js';
+import { inspectEvidence } from '../lifecycle/eligibility.js';
 
 function resolveChangeDir(cwd, changeId) {
   const dirs = findChangeDirs(cwd);
@@ -38,9 +39,19 @@ function prepare(cwd, changeId) {
   const change = loadChange(resolved.dir);
   // Delivery: live from local Git + GitHub (or unknown), aggregated across
   // impacted repos when the proposal declares them. Never persisted (C-10).
-  const delivery = resolveMultiRepoDelivery({ cwd, slug: change.changeId });
-  const result = computeState(config, lock, change.artifacts, delivery);
+  let delivery;
+  try {
+    delivery = resolveMultiRepoDelivery({ cwd, slug: change.changeId });
+  } catch {
+    delivery = { state: 'unknown', per_repo: [] };
+  }
+  const evidence = inspectEvidence(change.changeId, { cwd, config, artifacts: change.artifacts, delivery });
+  const result = computeState(config, lock, change.artifacts, delivery, evidence);
+  // An artifact that cannot be read safely (unsafe file or non-data front matter) blocks progress.
+  const unreadable = Object.values(change.artifacts).filter((artifact) => artifact.readError).map((artifact) => artifact.readError);
+  if (unreadable.length) result.next = { action: 'blocked', reason: `unreadable artifact: ${unreadable.join('; ')}` };
   result.delivery.per_repo = delivery.per_repo;
+  result.evidence = evidence;
   return { change, result };
 }
 

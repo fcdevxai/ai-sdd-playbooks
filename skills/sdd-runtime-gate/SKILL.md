@@ -31,8 +31,18 @@ requires:
 ## Purpose
 
 One capability-driven runtime gate that replaces separate UX and E2E gates.
-Applicability comes from `capabilities:` in `playbook.config.yaml`. An
+Applicability comes from `capabilities:` and, for multi-repo projects, explicit
+`repos.<name>.capabilities` in `playbook.config.yaml`, combined with the
+criterion/repository mappings in `tasks.md`'s `handoff.runtime_coverage`. An
 incomplete adapter **blocks** — it must never fabricate a `passed`.
+
+Generate a fresh stage handoff from the SDD Hub with `playbook packet
+<change-id> --stage sdd-runtime-gate --agent <agent>` before collecting
+evidence. Use `playbook run --change <change-id> --step runtime --repo <repo>
+--agent <agent> -- <command>` for executable checks and retain the resulting
+receipt and raw output. MCP-only observations need an independently retained
+raw record captured into a source-bound execution receipt; if that cannot be
+done without fabricating evidence, mark the adapter `blocked`.
 
 ## Context
 
@@ -58,7 +68,13 @@ the spec and report why.
 - Never fabricate `passed`; missing evidence or dependency → `blocked` with a `reason_code`.
 - A `false` capability is `not_applicable` and does not block.
 - Experimental adapters (`cli`) block when their capability is `true` **and relevant to this change**.
-- A capability the proposal explicitly marks irrelevant to this change is `not_applicable`, not `blocked` — even if experimental.
+- A capability the proposal explicitly marks irrelevant to this change is
+  `not_applicable` only with an explicit reason, an approving `authority`
+  reference that the handoff already governs (spec, architecture, contract,
+  design or requirement; same repository, path and hash), `covered_criteria`
+  listing every criterion that maps that adapter (at least one), and a valid
+  substitute receipt.
+  The CLI rejects an exclusion missing any of these.
 - The gate `status` must equal the aggregate of the per-adapter statuses.
 - This gate does not replace product/design ownership decisions for the `browser` adapter's findings.
 - **SEC-001**: never obtain `worker` evidence by triggering an external irreversible real effect — see the `worker` adapter section below.
@@ -66,9 +82,18 @@ the spec and report why.
 ## Adapter selection
 
 Read `proposal.md`'s `runtime_relevant_capabilities` if present. A project
-capability `true` but **excluded** from that list is `not_applicable` /
-`NOT_RELEVANT_TO_CHANGE` for this change. If the field is absent, every
-enabled capability is relevant (no narrowing).
+capability `true` but excluded from that list still requires an explicit
+`not_applicable` / `NOT_RELEVANT_TO_CHANGE` adapter entry, a specific reason,
+and a valid substitute execution receipt. Omission is never an exclusion.
+If the field is absent, every enabled capability is relevant unless an
+explicitly documented, evidence-backed exclusion is approved for the change.
+The CLI validates every declared `AC-N`, `EC-N` and `SEC-N`: a criterion in
+`handoff.runtime_coverage` needs coverage rows across its repositories, and a
+criterion in `handoff.non_runtime` needs a written rationale and no coverage row.
+Every enabled capability of every impacted repository is a required adapter
+entry (`passed` or a validated exclusion). Each excluded criterion/repository
+pair still needs a coverage row that cites its substitute receipt; unrelated or
+missing receipts fail.
 
 For each adapter (`browser`, `http`, `cli`, `worker`):
 
@@ -185,15 +210,26 @@ adapter is `failed`.
 ```markdown
 ---
 schema: runtime-gate-report
-schema_version: 1
+schema_version: 2
 change_id: <change-id>
 status: <passed|failed|blocked|not_applicable>
 updated: <YYYY-MM-DD>
 adapters:
-  browser: { status: passed }
-  http: { status: passed }
-  cli: { status: not_applicable }
-  worker: { status: not_applicable }
+  http:
+    status: passed
+    receipts:
+      - { repository: api, path: .specloom/runs/<run>/execution-receipt.json, sha256: <hash> }
+  worker:
+    status: not_applicable
+    reason_code: NOT_RELEVANT_TO_CHANGE
+    exclusion:
+      reason: <specific reason>
+      authority: { repository: <repo>, path: <governed canonical reference>, hash: <sha256> }
+      covered_criteria: [AC-1]
+      substitute_receipts:
+        - { repository: api, path: .specloom/runs/<run>/execution-receipt.json, sha256: <hash> }
+coverage:
+  - { criterion: AC-1, repository: api, adapter: http, receipt: { repository: api, path: .specloom/runs/<run>/execution-receipt.json, sha256: <hash> } }
 ---
 # Runtime Gate Report — <Feature name>
 
@@ -203,7 +239,14 @@ adapters:
 - Findings: <issues, if any>
 ```
 
+Include every applicable configured adapter and every mapped criterion/repo
+pair. `playbook evidence seal <change-id> runtime-gate-report.md --receipt
+<path>` adds `source_binding` from the observed handoff and receipts; pass all
+relevant `--receipt` flags. Run `playbook validate <change-id>` afterward.
+Source/contract changes require a rerun; evidence-only commits require
+`playbook evidence bind`.
+
 ---
 
 **Output file:** runtime-gate-report.md
-**Requires terminal:** no
+**Requires terminal:** yes

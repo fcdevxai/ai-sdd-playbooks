@@ -17,14 +17,14 @@ function statusOf(index, name) {
   return index[name] && index[name].frontmatter && index[name].frontmatter.status;
 }
 
-export function computeLifecycle(config, artifactIndex) {
+export function computeLifecycle(config, artifactIndex, deliveryStatus = { state: 'unknown' }, evidence = null) {
   const proposal = artifactIndex['proposal.md'];
   if (!proposal) return { state: 'none', design_required: false, reached: {} };
 
   const proposalFm = proposal.frontmatter || {};
   const designRequired = computeDesignRequired(proposalFm, config);
 
-  if (proposalFm.status === 'archived') {
+  if (evidence?.closure?.ok === true && deliveryStatus.state === 'merged') {
     return { state: 'archived', design_required: designRequired, reached: {} };
   }
 
@@ -37,12 +37,16 @@ export function computeLifecycle(config, artifactIndex) {
   reached.planned = reached.designed && ['ready', 'in_progress', 'passed'].includes(s('tasks.md'));
   reached.implementing = reached.planned && ['in_progress', 'passed'].includes(s('tasks.md'));
   reached.implemented = reached.planned && s('tasks.md') === 'passed';
-  reached.reviewed = reached.implemented && s('code-review-report.md') === 'passed';
+  const eligible = (name) => !evidence || evidence.gates[name]?.ok === true;
+  reached.reviewed = reached.implemented && s('code-review-report.md') === 'passed' && eligible('code-review-report.md');
   reached.security_cleared = reached.reviewed
-    && ['passed', 'not_applicable'].includes(s('security-report.md'));
+    && ['passed', 'not_applicable'].includes(s('security-report.md')) && eligible('security-report.md');
   reached.runtime_cleared = reached.security_cleared
-    && ['passed', 'not_applicable'].includes(s('runtime-gate-report.md'));
-  reached.verified = reached.runtime_cleared && s('verification-report.md') === 'passed';
+    && ['passed', 'not_applicable'].includes(s('runtime-gate-report.md')) && eligible('runtime-gate-report.md');
+  reached.verified = reached.runtime_cleared && s('verification-report.md') === 'passed'
+    && deliveryStatus.state === 'merged'
+    && (!deliveryStatus.per_repo || deliveryStatus.per_repo.every((row) => row.state === 'merged'))
+    && eligible('verification-report.md');
 
   let state = 'none';
   for (const stage of LIFECYCLE_ORDER) {
@@ -79,14 +83,18 @@ function computeNext(lifecycle, deliveryState, exception) {
 }
 
 // eslint-disable-next-line no-unused-vars -- `lock` is part of the design signature (doctor uses it)
-export function computeState(config, lock, artifactIndex, deliveryStatus = { state: 'unknown' }) {
-  const lifecycle = computeLifecycle(config, artifactIndex);
+export function computeState(config, lock, artifactIndex, deliveryStatus = { state: 'unknown' }, evidence = null) {
+  const lifecycle = computeLifecycle(config, artifactIndex, deliveryStatus, evidence);
   const exception = findException(artifactIndex);
 
   const delivery = { provider: 'github', state: (deliveryStatus && deliveryStatus.state) || 'unknown' };
   if (deliveryStatus && deliveryStatus.blocked_reason) delivery.blocked_reason = deliveryStatus.blocked_reason;
 
-  const next = computeNext(lifecycle, delivery.state, exception);
+  const next = evidence?.issues?.length
+    ? { action: 'blocked', reason: `EVIDENCE_INVALID: ${evidence.issues.join('; ')}` }
+    : artifactIndex['proposal.md']?.frontmatter?.status === 'archived' && lifecycle.state !== 'archived'
+      ? { action: 'blocked', reason: 'ARCHIVE_CLOSURE_INVALID' }
+      : computeNext(lifecycle, delivery.state, exception);
 
   const result = {
     lifecycle: { state: lifecycle.state, design_required: lifecycle.design_required },

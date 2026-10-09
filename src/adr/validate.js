@@ -5,7 +5,7 @@
  * file name. Pure with respect to the caller: takes a path, reads it once.
  */
 import fs from 'node:fs';
-import matter from 'gray-matter';
+import matter from '../util/frontmatter.js';
 import { splitSections, splitSubSections, isEmpty } from '../util/markdown.js';
 
 export const ADR_STATUSES = ['proposed', 'accepted', 'superseded', 'rejected'];

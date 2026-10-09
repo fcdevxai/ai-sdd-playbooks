@@ -67,19 +67,20 @@ export function resolveMultiRepoDelivery({
   const impacted = readImpactedRepos(slug, changesDir);
 
   if (impacted.length === 0) {
-    const hub = resolveOne({ cwd, slug });
+    const hub = resolveOne({ cwd, slug, allowEvidenceDirty: true });
     return { state: hub.state, per_repo: [{ repo: resolveSddRepo({ cwd }).name, path: cwd, state: hub.state, blocked_reason: hub.blocked_reason }] };
   }
 
   const hubName = resolveSddRepo({ cwd }).name;
-  const targets = [{ repo: hubName, path: cwd }, ...impacted.map((repo) => ({ repo, path: resolvePathOrNull(repo, cwd) }))];
+  const targets = [{ repo: hubName, path: cwd },
+    ...impacted.filter((repo) => repo !== hubName).map((repo) => ({ repo, path: resolvePathOrNull(repo, cwd) }))];
 
   const perRepo = targets.map((target) => {
     if (target.path === null) {
       return { repo: target.repo, path: null, state: 'unknown', blocked_reason: `REPO_PATH_UNRESOLVED @${target.repo}` };
     }
     // Every impacted repo carries the change's branch too (`prepare-repos` creates it).
-    const resolved = resolveOne({ cwd: target.path, slug });
+    const resolved = resolveOne({ cwd: target.path, slug, allowEvidenceDirty: target.repo === hubName });
     return { repo: target.repo, path: target.path, state: resolved.state, blocked_reason: resolved.blocked_reason };
   });
 

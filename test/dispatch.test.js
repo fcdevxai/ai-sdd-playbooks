@@ -19,10 +19,10 @@ test('exit-code map matches design §1.4', () => {
   assert.deepEqual(EXIT, { OK: 0, VIOLATION: 1, BLOCKED: 2, USAGE: 3, ENVIRONMENT: 4 });
 });
 
-test('the command surface is exactly these twenty commands', () => {
+test('the command surface includes the evidence operation', () => {
   assert.deepEqual(COMMAND_NAMES, [
     'install', 'init', 'doctor', 'status', 'next', 'validate', 'sync', 'adr',
-    'packet', 'spec-read', 'spec-index', 'run', 'usage-report',
+    'packet', 'spec-read', 'spec-index', 'run', 'evidence', 'usage-report',
     'repo-plan', 'commit-plan', 'prepare-repos', 'gate-check', 'changed-files', 'detect-siblings', 'contract-drift',
   ]);
 });
@@ -214,5 +214,19 @@ test('at least one target installed + command "status" → the notice does not a
     const { io, out } = capture();
     await run(['status', '--cwd', cwd], io);
     assert.doesNotMatch(out.join('\n'), /run `playbook install`/);
+  });
+});
+
+test('no target installed + `run --raw` → no install notice; RAW output carries only child bytes (closure C7)', async () => {
+  const claude = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-c-'));
+  const agents = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-a-'));
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-w-'));
+  await withTargets(claude, agents, async () => {
+    const raw = capture();
+    await run(['run', '--raw', '--cwd', cwd, '--', process.execPath, '-e', ''], raw.io);
+    assert.deepEqual(raw.out, []);
+    const normal = capture();
+    await run(['run', '--cwd', cwd, '--', process.execPath, '-e', ''], normal.io);
+    assert.match(normal.out[0], /run `playbook install`/);
   });
 });

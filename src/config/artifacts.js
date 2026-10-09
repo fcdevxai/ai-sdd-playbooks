@@ -6,7 +6,8 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import matter from 'gray-matter';
+import matter from '../util/frontmatter.js';
+import { unsafeEvidenceReason } from '../util/fs-safe.js';
 
 export const ARTIFACT_FILES = [
   'proposal.md',
@@ -49,10 +50,22 @@ export function readFrontmatter(filePath) {
 /** Load the artifacts present in a single change folder. */
 export function loadChange(changeDir) {
   const artifacts = {};
+  // Containment root: the project that holds openspec/changes/<id> (design Amendment R5, rule 4).
+  const parent = path.dirname(changeDir);
+  const root = path.basename(parent) === 'changes' && path.basename(path.dirname(parent)) === 'openspec'
+    ? path.dirname(path.dirname(parent)) : changeDir;
   for (const name of ARTIFACT_FILES) {
     const p = path.join(changeDir, name);
-    if (fs.existsSync(p)) {
+    if (!fs.lstatSync(p, { throwIfNoEntry: false })) continue;
+    const unsafe = unsafeEvidenceReason(root, path.relative(root, p));
+    if (unsafe) {
+      artifacts[name] = { path: p, frontmatter: {}, readError: `${name} is not a contained regular file (${unsafe})` };
+      continue;
+    }
+    try {
       artifacts[name] = { path: p, frontmatter: readFrontmatter(p) };
+    } catch (error) {
+      artifacts[name] = { path: p, frontmatter: {}, readError: `${name}: ${error.message}` };
     }
   }
   return { changeId: path.basename(changeDir), dir: changeDir, artifacts };
@@ -65,7 +78,8 @@ export function findChangeDirs(cwd) {
   return fs
     .readdirSync(base)
     .map((d) => path.join(base, d))
-    .filter((p) => fs.statSync(p).isDirectory());
+    // Only real directories: a symbolic link (dangling or not) is never followed (design Amendment R5, rule 4).
+    .filter((p) => fs.lstatSync(p).isDirectory());
 }
 
 // Canonical home is src/lifecycle/impact.js; re-exported here for existing callers.

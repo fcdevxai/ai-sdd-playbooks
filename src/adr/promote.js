@@ -12,7 +12,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import matter from 'gray-matter';
+import matter from '../util/frontmatter.js';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { readFrontmatter } from './validate.js';
 

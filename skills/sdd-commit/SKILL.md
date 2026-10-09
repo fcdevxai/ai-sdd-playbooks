@@ -17,6 +17,13 @@ lifecycle_stage: commit
 produces: []
 requires:
   artifacts:
+    code-review-report.md:
+      status:
+        - passed
+    security-report.md:
+      status:
+        - passed
+        - not_applicable
     runtime-gate-report.md:
       status:
         - passed
@@ -58,7 +65,7 @@ the spec and report why.
    here means the PR would be rejected anyway. If it reports issues, fix only what
    is safely fixable and re-run it — **don't reason about the reports
    yourself**. **Only a derived artifact may be fixed:** regenerate a stale
-   `context-packet.md` with `playbook packet <change-id>`. **Never edit
+   `context-packet.md` with `playbook packet <change-id> --stage sdd-commit --agent <agent>`. **Never edit
    `proposal.md`, `design.md`, `tasks.md`, an `adr-*.md` draft, or a gate report
    (`code-review-report.md`, `security-report.md`, `runtime-gate-report.md`) to
    make `validate` pass** — the first two carry a human `status: approved`, the
@@ -81,7 +88,36 @@ the spec and report why.
 4. **Detect the base branch** for the SDD repo from `github.base_branch` in
    `playbook.config.yaml`, or from GitHub's default branch. **Never hardcode
    `main`/`master`.**
-5. Create the commit (Conventional Commits; reference the change-id).
+5. Create the commit (Conventional Commits; reference the change-id). Commit only
+   this change's owned files; unrelated work stays out of the commit.
+5a. **Rebind the gates to the commit.** The gates were sealed against the
+   pre-commit HEAD. The saved handoff stays fresh by content when the committed
+   tree is identical, but each gate report still needs an explicit binding.
+   Regenerate the derived packet with an explicit stage and identity:
+   `playbook packet <change-id> --stage sdd-commit --agent <agent>` (add
+   `--provider` and `--model` when observed), then run
+   `playbook evidence bind <change-id> <report>` for each of
+   `code-review-report.md`, `security-report.md` and `runtime-gate-report.md`.
+   The CLI accepts the bind only when the governed content recorded in the
+   committed tree is identical to the snapshot the gate approved, for every
+   linked repository, and the original receipts are valid. Bindings are
+   immutable files named by report, repository and destination SHA: commit them
+   with the change. Repeating `bind` is idempotent, and a later commit with
+   identical governed content is covered by the ancestral binding, so no further
+   evidence commit is ever required. If `bind` rejects (changed content, a partial
+   commit, an unverifiable ancestry, or a report sealed before this rule), do not
+   edit a report: stop and rerun the gate's stage skill on the committed SHA. A
+   bind is never verification and never permits archiving unmerged work.
+   In CI, `playbook validate --ci` judges only what a clean checkout can prove;
+   checks that need private receipts, sibling repositories or full Git history are
+   listed as `local-only`. They are not passed, and a green CI run grants no gate
+   eligibility, delivery, verify or archive. Local `validate`, `status`, `next` and
+   preconditions stay strict. Pull-request CI checks out the exact head commit with
+   full history (the project workflow does): every content rule applies and only
+   the branch identity is local-only; evidence is never judged on a differently
+   named branch. Commit, bind and seal only on the change branch: the CLI refuses a
+   detached HEAD. Merge with a merge commit; squash or
+   rebase merges break the lineage and require rerunning the gates.
 6. Push the branch — **only if the user authorized remote actions**. If GitHub
    context is unavailable (`playbook status` shows delivery `unknown`), stop and
    say so.
@@ -108,7 +144,10 @@ the spec and report why.
 
 ## Preconditions (self-check)
 
-1. Local lifecycle preconditions met (proposal approved, gates cleared).
+1. `playbook validate <change-id> --precondition sdd-commit` passes: the
+   code-review, security and runtime gates and their source-bound receipts are
+   fresh, not merely marked `passed` in frontmatter. It uses the same evaluator
+   as `playbook next`, so the two never disagree.
 2. `playbook validate` passes — or its only remaining failure is a derived
    artifact this stage may regenerate, which step 1 handles under its capped loop.
 3. Security and runtime gates are `passed` or legitimately `not_applicable`.

@@ -5,8 +5,9 @@ import { validateArtifactFrontmatter, validateNamed } from '../src/schema/valida
 import { validateVerificationBody } from '../src/schema/body-rules.js';
 
 const EXPECTED_SCHEMAS = [
-  'adr', 'code-review-report', 'context-packet', 'design', 'proposal', 'runtime-gate-report',
-  'playbook.config', 'playbook.lock', 'security-report', 'tasks', 'verification-report',
+  'adr', 'closure-index', 'code-review-report', 'context-packet', 'design', 'evidence-binding',
+  'execution-receipt', 'handoff-manifest', 'proposal', 'runtime-gate-report',
+  'playbook.config', 'playbook.lock', 'security-report', 'source-binding', 'tasks', 'verification-report',
 ];
 
 function validProposal(overrides = {}) {
@@ -85,6 +86,15 @@ test('tasks: draft and ready are legal (C-07)', () => {
   assert.equal(validateArtifactFrontmatter({ ...base, status: 'draft' }).valid, true);
   assert.equal(validateArtifactFrontmatter({ ...base, status: 'ready' }).valid, true);
   assert.equal(validateArtifactFrontmatter({ ...base, status: 'approved' }).valid, false);
+});
+
+test('tasks: partial handoff declaration is rejected before packet generation', () => {
+  const base = { schema: 'tasks', schema_version: 1, change_id: 'demo', status: 'in_progress' };
+  assert.equal(validateArtifactFrontmatter({ ...base, handoff: { specs: [] } }).valid, false);
+  assert.equal(validateArtifactFrontmatter({ ...base, handoff: {
+    specs: [], architecture: [], contracts: [], required_skills: [], required_tools: [],
+    runtime_coverage: [], unresolved_risks: [], blockers: [],
+  } }).valid, true);
 });
 
 test('runtime-gate-report: adapter "blocked" is legal (C-06)', () => {

@@ -4,9 +4,10 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import matter from 'gray-matter';
+import matter from '../util/frontmatter.js';
 import { headingSection } from '../util/markdown.js';
 import { assertSafeSlug } from './slug.js';
+import { readEvidenceFile } from '../util/fs-safe.js';
 
 export function defaultChangesDir(cwd = process.cwd()) {
   return path.join(cwd, 'openspec', 'changes');
@@ -15,10 +16,12 @@ export function defaultChangesDir(cwd = process.cwd()) {
 export function readProposalBody(slug, changesDir) {
   assertSafeSlug(slug);
   const proposalPath = path.join(changesDir, slug, 'proposal.md');
-  if (!fs.existsSync(proposalPath)) {
+  if (!fs.lstatSync(proposalPath, { throwIfNoEntry: false })) {
     throw new Error(`proposal.md not found for "${slug}" at ${proposalPath}`);
   }
-  return fs.readFileSync(proposalPath, 'utf8');
+  // Contained read (design Amendment R5, rule 4): the project root holds openspec/changes.
+  const root = path.resolve(changesDir, '..', '..');
+  return readEvidenceFile(root, path.relative(root, proposalPath), 'utf8');
 }
 
 export function extractImpactedRepos(content) {

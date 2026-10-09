@@ -66,6 +66,13 @@ to build it, then `playbook spec-read openspec/specs/<file>#<anchor>`. If
 
 ## Behavior
 
+Generate the stage handoff from the SDD Hub with `playbook packet <change-id>
+--stage sdd-security-gate --agent <agent>` before assessing the change. Capture
+the applicable security checks through `playbook run --change <change-id>
+--step security --repo <repo> --agent <agent> -- <command>`; keep the private
+raw output and its execution receipt. A `not_applicable` decision still needs
+an observed source-bound receipt supporting its scope assessment.
+
 ### 1. Determine applicability
 
 Before running the full checklist, decide if this feature touches a
@@ -114,7 +121,7 @@ you raise it, justify why. Confirm a threat model exists when
 ```markdown
 ---
 schema: security-report
-schema_version: 1
+schema_version: 2
 change_id: <change-id>
 status: <passed|failed|blocked|not_applicable>   # blocking finding → blocked; low risk/no surface → not_applicable
 risk: <low|standard|elevated>
@@ -175,10 +182,16 @@ updated: <YYYY-MM-DD>
 | id | severity | blocking | location | remediation |
 ```
 
+For a `passed` or `not_applicable` report, run `playbook evidence seal
+<change-id> security-report.md --receipt <path>` and `playbook validate
+<change-id>`. Include every relevant receipt. A scalar status cannot clear the
+gate. After an evidence-only commit, use `playbook evidence bind`; source or
+contract changes require a fresh review.
+
 Findings that validate a `SEC-N` consideration cite its ID instead of repeating
 the consideration text.
 
 ---
 
 **Output file:** security-report.md
-**Requires terminal:** no
+**Requires terminal:** yes

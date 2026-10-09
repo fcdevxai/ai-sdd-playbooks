@@ -3,8 +3,8 @@ import { run, EXIT } from '../src/cli/dispatch.js';
 
 try {
   const code = await run(process.argv.slice(2));
-  process.exit(code);
+  process.exitCode = code;
 } catch (err) {
   console.error(err?.stack || err?.message || String(err));
-  process.exit(EXIT.ENVIRONMENT);
+  process.exitCode = EXIT.ENVIRONMENT;
 }

@@ -39,13 +39,23 @@ evidence in the current codebase and detect regressions. Produce a schema-valid
 > is unanimous by construction, but re-check it: no impacted repo may be
 > unmerged.
 
+Run `playbook validate <change-id> --precondition sdd-verify` first. If the
+CLI does not confirm a fresh runtime gate and unanimous merged delivery, stop.
+Run it on the base branch after the merge: there the pre-merge gates are judged
+as delivered, at the commit their evidence covers, and their comparison with the
+base branch's current content is reported as not applicable after delivery,
+never as passed. That comparison is this skill's job: verify the merged code.
+Then generate `playbook packet <change-id> --stage sdd-verify --agent <agent>`
+from the SDD Hub. Preserve this stage's manifest and its source hashes.
+
 ## Context
 
 If `context-packet.md` exists, read it instead of `proposal.md`+`tasks.md` in
 full for acceptance criteria and verification commands (verbatim copies). If
 it doesn't exist, fall back to reading both in full. Also read
 `docs/doc_verification_guide.md` (project verification commands), and run
-commands through `playbook run --change <change-id> --step verify -- <command>`
+commands through `playbook run --change <change-id> --step verify --repo <repo>
+--agent <agent> -- <command>`
 for the same compacted-summary + full-log behavior `sdd-apply` uses. Acceptance
 criteria and verification commands come from the packet (or the full
 `proposal.md`/`tasks.md`), never from `spec-read` — that command is confined to
@@ -77,7 +87,7 @@ full-read the spec and report why.
 ```markdown
 ---
 schema: verification-report
-schema_version: 1
+schema_version: 2
 change_id: <change-id>
 status: passed   # passed | failed
 updated: <YYYY-MM-DD>
@@ -114,6 +124,13 @@ updated: <YYYY-MM-DD>
 
 **Result**: <summary>
 ```
+
+For a passing report, seal it with `playbook evidence seal <change-id>
+verification-report.md --receipt <path>` for each relevant receipt, then run
+`playbook validate <change-id>` and `playbook next <change-id>`. Sealing
+re-checks live unanimous delivery. A changed SHA requires an explicit
+evidence-only binding; changed source, contract or normative tasks require
+fresh verification.
 
 `playbook validate` requires `## Acceptance criteria`, `## Security
 considerations`, and `## Regression` in the report body — a report that drops the

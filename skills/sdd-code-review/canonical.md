@@ -6,7 +6,7 @@ title_en: "SDD Code Review — Pre-PR Technical Review"
 title_es: "SDD Code Review — Revisión Técnica pre-PR"
 when: "After sdd-apply sets tasks.md status: passed. Before sdd-security-gate."
 output_file: "code-review-report.md"
-requires_terminal: false
+requires_terminal: true
 lifecycle_stage: code-review
 produces: [code-review-report.md]
 requires:
@@ -48,6 +48,15 @@ the spec and report why.
 
 ## Behavior
 
+Before reviewing, generate a fresh handoff from the SDD Hub with
+`playbook packet <change-id> --stage sdd-code-review --agent <agent>`; declare
+provider/model only when observed or known. Read its stage manifest and stop if
+`playbook validate <change-id>` reports stale references. Capture at least one
+actual review/quality command through `playbook run --change <change-id> --step
+review --repo <repo> --agent <agent> -- <command>` so the report has an
+execution receipt and retained raw output. Use one run per affected repository
+when commands differ.
+
 ### 1. Checklist
 
 - **Spec coverage**: every acceptance criterion (`AC-N`) has ≥1 passing
@@ -62,7 +71,7 @@ the spec and report why.
 ```markdown
 ---
 schema: code-review-report
-schema_version: 1
+schema_version: 2
 change_id: <change-id>
 status: passed   # passed | failed
 updated: <YYYY-MM-DD>
@@ -80,6 +89,13 @@ updated: <YYYY-MM-DD>
 - **Problem**: <why it violates spec/scope/convention>
 - **Suggested fix**: <how to correct>
 ```
+
+After writing a passing report, run `playbook evidence seal <change-id>
+code-review-report.md --receipt <path>` with every relevant receipt. Then run
+`playbook validate <change-id>`. A report without a valid `source_binding` is
+not a cleared gate. If a later evidence-only commit changes a repository SHA,
+use `playbook evidence bind <change-id> code-review-report.md`; a source change
+requires rerunning the gate.
 
 ## Rules
 
