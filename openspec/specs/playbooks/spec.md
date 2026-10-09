@@ -1,7 +1,7 @@
 ---
 status: implemented
 owner: bernardo
-last_updated: 2026-09-02
+last_updated: 2026-10-08
 ---
 
 # Playbooks and Agent Skill Metadata
@@ -460,3 +460,28 @@ exclude most real projects.
   text; the first real exercise of the adapter happens in a consumer project.
 - **`cli` is unaffected.** ADR-032's criterion stands exactly as written —
   this decision does not reopen it.
+
+## Source-bound evidence in the stage playbooks
+
+Decided in change `harness-trust-restoration` (see **ADR-043** for the threat
+model and accepted limits, and **ADR-042** for how that change itself was
+delivered). Stage playbooks no longer treat a report's scalar `status` as
+sufficient evidence:
+
+- **Handoff first.** `sdd-plan`, `sdd-apply`, `sdd-code-review`,
+  `sdd-security-gate`, `sdd-runtime-gate`, `sdd-commit` and `sdd-verify`
+  generate a fresh stage handoff with `playbook packet
+  <change-id> --stage <stage> --agent <agent>` and read its manifest before
+  acting. Provider and model are declared only when observed or known.
+- **Commands through the runner.** Verification and quality commands run
+  through `playbook run --change <change-id> --step <step> --agent <agent>
+  [--repo <repo>] -- <command>`, so every gate cites execution receipts with
+  retained raw output.
+- **Criteria are declared once.** `sdd-plan` declares every `AC-N`, `EC-N` and
+  `SEC-N` either in `handoff.runtime_coverage` or in `handoff.non_runtime`
+  with a rationale; the runtime gate blocks otherwise.
+- **Gates are sealed.** A passing gate report is sealed with `playbook
+  evidence seal`; an evidence-only or identical implementation commit is
+  bound with `playbook evidence bind`; a source change reruns the gate.
+- **Closure is retained.** `sdd-archive` runs `playbook evidence retain`
+  before spec/ADR promotion and before the change folder is removed.

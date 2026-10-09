@@ -106,12 +106,16 @@ export async function gateCheckCommand(parsed, io) {
   const changeId = positional(parsed.rest);
   if (!changeId) { io.err('error: playbook gate-check requires a <change-id>'); return EXIT.USAGE; }
   try {
-    const result = runGateCheck({ slug: changeId, cwd });
+    const result = runGateCheck({ slug: changeId, cwd,
+      agent: flagValue(parsed.rest, '--agent') || 'unknown',
+      provider: flagValue(parsed.rest, '--provider') || 'unknown',
+      model: flagValue(parsed.rest, '--model') || 'unknown' });
     if (parsed.flags.json) io.out(JSON.stringify(result, null, 2));
     else if (!result.plan.applicable) io.out(`gate-check not applicable: ${result.plan.reason}`);
     else {
       for (const r of result.results) {
-        io.out(`  ${r.repo} — ${r.verification || 'error'}: ${r.exitCode === 0 ? '✓' : `✗ exit ${r.exitCode}`}`);
+        const mark = r.exitCode === 0 && !r.captureError ? '✓' : r.exitCode === 0 ? '✗ evidence capture failed' : `✗ exit ${r.exitCode}`;
+        io.out(`  ${r.repo} — ${r.verification || 'error'}: ${mark}`);
       }
     }
     return result.ok ? EXIT.OK : EXIT.VIOLATION;

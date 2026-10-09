@@ -81,6 +81,69 @@ export function resolveContainedPath(root, candidate) {
   return absCandidate;
 }
 
+/**
+ * Why an evidence file cannot be read safely, or null when `relative` is a regular file
+ * that is not a symbolic link and resolves inside `root` (design Amendment R5, rule 4).
+ * Nothing is read; `lstat` never follows the final component.
+ */
+export function unsafeEvidenceReason(root, relative) {
+  if (typeof relative !== 'string' && !Buffer.isBuffer(relative)) return 'not a contained relative path';
+  const bytes = Buffer.isBuffer(relative) ? relative : Buffer.from(relative);
+  if (!bytes.length || bytes[0] === 47 || bytes[0] === 92 || bytes.includes(0)) return 'not a contained relative path';
+  const segments = [];
+  let start = 0;
+  for (let i = 0; i <= bytes.length; i++) {
+    if (i !== bytes.length && bytes[i] !== 47 && bytes[i] !== 92) continue;
+    const segment = bytes.subarray(start, i);
+    if (!segment.length || segment.equals(Buffer.from('..')) || segment.equals(Buffer.from('.'))) return 'not a contained relative path';
+    segments.push(segment);
+    start = i + 1;
+  }
+  // Walk raw components before looking up the final file: no index/display decoding or parent
+  // symlink may redirect an evidence read, even when the link stays inside the repository.
+  let file = Buffer.from(path.resolve(root));
+  for (let i = 0; i < segments.length; i++) {
+    file = Buffer.concat([file, Buffer.from(path.sep), segments[i]]);
+    const stat = fs.lstatSync(file, { throwIfNoEntry: false });
+    if (!stat) return 'missing';
+    if (stat.isSymbolicLink()) return 'symbolic link';
+    if (i === segments.length - 1 ? !stat.isFile() : !stat.isDirectory()) return 'not a regular file';
+  }
+  return null;
+}
+
+/**
+ * Read a governed reference. Inside a change directory (`openspec/changes/`) the evidence rule
+ * applies: a regular file that is not a symbolic link. Elsewhere a contained path may resolve
+ * through a symbolic link that stays inside the root (for example native skill-directory aliases).
+ */
+export function readReference(root, relative) {
+  if (typeof relative !== 'string' || relative === '' || path.isAbsolute(relative)) throw new Error(`invalid reference path: ${relative}`);
+  if (path.posix.normalize(relative.split(path.sep).join('/')).startsWith('openspec/changes/')) return readEvidenceFile(root, relative);
+  const file = resolveContainedPath(root, relative);
+  if (!fs.existsSync(file) || !fs.statSync(file).isFile()) throw new Error(`missing reference: ${relative}`);
+  return fs.readFileSync(file);
+}
+
+/**
+ * Write an evidence file only when its path is contained and is either absent or an existing
+ * regular file (never through a symbolic link or onto a directory). Design Amendment R5, rule 4.
+ */
+export function writeEvidenceFile(root, relative, content) {
+  const reason = unsafeEvidenceReason(root, relative);
+  if (reason && reason !== 'missing') throw new Error(`${relative}: refusing to write; not a contained regular file (${reason})`);
+  if (reason === 'missing') resolveContainedPath(root, path.dirname(relative));
+  fs.writeFileSync(path.join(root, relative), content, reason === 'missing' ? { flag: 'wx' } : undefined);
+}
+
+/** Read an evidence file only when it is a contained regular file; otherwise refuse before reading. */
+export function readEvidenceFile(root, relative, encoding) {
+  const reason = unsafeEvidenceReason(root, relative);
+  if (reason) throw new Error(`${relative}: not a contained regular file (${reason})`);
+  const file = Buffer.isBuffer(relative) ? Buffer.concat([Buffer.from(path.resolve(root) + path.sep), relative]) : path.join(root, relative);
+  return fs.readFileSync(file, encoding);
+}
+
 export function ensureDir(dir) {
   const existed = fs.existsSync(dir);
   if (!existed) fs.mkdirSync(dir, { recursive: true });

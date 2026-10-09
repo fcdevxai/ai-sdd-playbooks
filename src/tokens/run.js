@@ -50,6 +50,7 @@ export function resolveRunMetadata({ change, step, harness, cwd = process.cwd() 
       branch = execFileSync('git', ['symbolic-ref', '--short', 'HEAD'], {
         cwd,
         encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
       }).trim();
     } catch {
       branch = '';
@@ -117,19 +118,22 @@ export function persistRun({
   harness,
   exitCode,
   output,
+  runDir: existingRunDir,
+  rawOutputLines: capturedLines,
   cwd = process.cwd(),
   metadata = {},
 }) {
   const dir = runsDir(cwd);
   const runId = `${Date.now()}-${randomUUID().slice(0, 8)}`;
-  const runDir = path.join(dir, runId);
-  fs.mkdirSync(runDir, { recursive: true });
+  const runDir = existingRunDir || path.join(dir, runId);
+  fs.mkdirSync(runDir, { recursive: true, mode: 0o700 });
 
   const retryCount = countPriorRuns(dir, { changeId, step, command });
-  const rawOutputLines = output === '' ? 0 : output.replace(/\n$/, '').split('\n').length;
+  const rawOutputLines = capturedLines ?? (output === '' ? 0 : output.replace(/\n$/, '').split('\n').length);
   const logPath = path.join(runDir, 'full.log');
 
-  fs.writeFileSync(logPath, output);
+  if (output !== undefined) fs.writeFileSync(logPath, output, { mode: 0o600 });
+  else if (!fs.existsSync(logPath)) throw new Error(`raw evidence missing: ${logPath}`);
   fs.writeFileSync(
     path.join(runDir, 'usage.json'),
     JSON.stringify(
@@ -148,6 +152,7 @@ export function persistRun({
       null,
       2,
     ) + '\n',
+    { mode: 0o600 },
   );
 
   return { logPath, rawOutputLines };

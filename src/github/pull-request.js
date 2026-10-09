@@ -4,9 +4,9 @@
  */
 export function prForBranch(branch, runGh) {
   try {
-    const out = runGh(['pr', 'view', branch, '--json', 'state,number']);
+    const out = runGh(['pr', 'view', branch, '--json', 'state,number,headRefOid']);
     const data = JSON.parse(out);
-    return { state: data.state, number: data.number };
+    return { state: data.state, number: data.number, headRefOid: data.headRefOid || null };
   } catch {
     return null; // no PR for this branch
   }

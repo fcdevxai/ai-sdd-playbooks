@@ -134,10 +134,26 @@ test('merged + verification passed → verified → sdd-archive', () => {
   assert.deepEqual(r.next, { action: 'run_skill', skill: 'sdd-archive' });
 });
 
-test('proposal archived → archived → done', () => {
+test('archived marker alone cannot close an unmerged or unretained change', () => {
   const r = state({ proposal: 'archived', impact: IMPACT_NONE });
-  assert.equal(r.lifecycle.state, 'archived');
-  assert.equal(r.next.action, 'done');
+  assert.notEqual(r.lifecycle.state, 'archived');
+  assert.equal(r.next.action, 'blocked');
+  const eligible = computeState(CFG, null, index({ proposal: 'approved', impact: IMPACT_NONE }),
+    { state: 'merged', per_repo: [{ repo: 'hub', state: 'merged' }] },
+    { gates: {}, issues: [], closure: { ok: true } });
+  assert.equal(eligible.lifecycle.state, 'archived');
+  assert.equal(eligible.next.action, 'done');
+});
+
+test('verification passed cannot advance while delivery remains open or conflicting', () => {
+  for (const delivery of [
+    { state: 'pr_open', per_repo: [{ repo: 'hub', state: 'pr_open' }] },
+    { state: 'merged', per_repo: [{ repo: 'hub', state: 'merged' }, { repo: 'service', state: 'pr_open' }] },
+  ]) {
+    const result = state({ ...RUNTIME_CLEARED, verify: 'passed' }, delivery);
+    assert.notEqual(result.lifecycle.state, 'verified');
+    assert.notEqual(result.next.skill, 'sdd-archive');
+  }
 });
 
 test('exception view: tasks blocked → remediate sdd-apply (§3.5)', () => {

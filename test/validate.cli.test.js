@@ -166,13 +166,14 @@ test('validate: a verification-report.md with an empty "## Security consideratio
   assert.match(err.join('\n'), /empty content in "## Security considerations"/);
 });
 
-test('validate: a complete verification-report.md exits 0 (AC-4)', async () => {
+test('validate: a structurally complete verification report without closure evidence fails closed', async () => {
   const dir = makeRepo();
   writeChange(dir, 'proposal.md', VALID_PROPOSAL);
   writeChange(dir, 'verification-report.md', VALID_VERIFICATION);
-  const { io } = capture();
+  const { io, err } = capture();
   const code = await run(['validate', '--cwd', dir], io);
-  assert.equal(code, EXIT.OK);
+  assert.equal(code, EXIT.VIOLATION);
+  assert.match(err.join('\n'), /verification-report\.md#evidence/);
 });
 
 test('validate: a present context-packet.md missing a required section is a violation', async () => {
@@ -247,11 +248,12 @@ adapters:
 ---
 `;
 
-test('validate: runtime-gate status consistent with adapters passes (C-06)', async () => {
+test('validate: runtime status agreement alone cannot replace execution evidence', async () => {
   const dir = makeRepo();
   writeChange(dir, 'runtime-gate-report.md', RUNTIME_REPORT('passed', 'passed'));
-  const { io } = capture();
-  assert.equal(await run(['validate', '--cwd', dir], io), EXIT.OK);
+  const { io, err } = capture();
+  assert.equal(await run(['validate', '--cwd', dir], io), EXIT.VIOLATION);
+  assert.match(err.join('\n'), /runtime-gate-report\.md#evidence/);
 });
 
 test('validate: runtime-gate status disagreeing with adapters is a violation (C-06/C-12)', async () => {
@@ -301,7 +303,7 @@ adapters:
   assert.match(err.join('\n'), /worker.*excludes it.*not_applicable/s);
 });
 
-test('validate: excluded capability correctly reported not_applicable is valid', async () => {
+test('validate: declared exclusion still requires a valid source-bound substitute', async () => {
   const dir = makeRepo();
   fs.writeFileSync(path.join(dir, 'playbook.config.yaml'), CONFIG_WORKER_TRUE);
   writeChange(dir, 'proposal.md', PROPOSAL_EXCLUDING_WORKER); // excludes worker
@@ -315,8 +317,9 @@ adapters:
   worker: { status: not_applicable }
 ---
 `);
-  const { io } = capture();
-  assert.equal(await run(['validate', '--cwd', dir], io), EXIT.OK);
+  const { io, err } = capture();
+  assert.equal(await run(['validate', '--cwd', dir], io), EXIT.VIOLATION);
+  assert.match(err.join('\n'), /runtime-gate-report\.md#evidence/);
 });
 
 test('validate: a proposal without runtime_relevant_capabilities triggers no new check (AC-08)', async () => {

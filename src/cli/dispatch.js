@@ -23,6 +23,7 @@ import { adrCommand } from './adr.js';
 import { packetCommand } from './packet.js';
 import { specReadCommand, specIndexCommand } from './spec.js';
 import { runCommand } from './run.js';
+import { evidenceCommand } from './evidence.js';
 import { usageReportCommand } from './usage.js';
 import {
   repoPlanCommand, commitPlanCommand, prepareReposCommand, gateCheckCommand, changedFilesCommand, contractDriftCommand, detectSiblingsCommand,
@@ -47,6 +48,7 @@ export const COMMAND_NAMES = [
   'spec-read',
   'spec-index',
   'run',
+  'evidence',
   'usage-report',
   'repo-plan',
   'commit-plan',
@@ -70,6 +72,7 @@ const COMMAND_SUMMARIES = {
   'spec-read': 'Read one section of a permanent spec: <file.md#anchor>.',
   'spec-index': 'Rebuild the local structural index of permanent specs.',
   run: 'Run a verification command with compacted output + telemetry.',
+  evidence: 'Seal source-bound reports, bind evidence-only commits, or retain closure proof.',
   'usage-report': 'Offline token accounting from local Claude Code transcripts.',
   'repo-plan': 'Read-only multi-repo plan for a change (requires repos: in config).',
   'commit-plan': 'Read-only PR-payload plan per impacted repo.',
@@ -96,7 +99,10 @@ export function parseArgs(argv) {
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
-    if (arg === '--help' || arg === '-h') {
+    if (arg === '--') {
+      remaining.push(...argv.slice(i));
+      break;
+    } else if (arg === '--help' || arg === '-h') {
       help = true;
     } else if (arg === '--version' || arg === '-v') {
       version = true;
@@ -158,6 +164,7 @@ const HANDLERS = {
   'spec-read': specReadCommand,
   'spec-index': specIndexCommand,
   run: runCommand,
+  evidence: evidenceCommand,
   'usage-report': usageReportCommand,
   'repo-plan': repoPlanCommand,
   'commit-plan': commitPlanCommand,
@@ -200,7 +207,11 @@ export async function run(argv, io = { out: console.log, err: console.error }) {
     return EXIT.USAGE;
   }
 
-  if (parsed.command !== 'install' && !parsed.flags.json && !parsed.rest.includes('--ci') && !anyTargetInstalled()) {
+  // RAW `run` forwards child bytes unchanged; the notice would corrupt that stream.
+  const delimiter = parsed.rest.indexOf('--');
+  const rawRun = parsed.command === 'run'
+    && (delimiter === -1 ? parsed.rest : parsed.rest.slice(0, delimiter)).includes('--raw');
+  if (parsed.command !== 'install' && !rawRun && !parsed.flags.json && !parsed.rest.includes('--ci') && !anyTargetInstalled()) {
     io.out(`playbook-ai ${readPackageVersion()} — skills not installed for any target, run \`playbook install\`.`);
   }
 

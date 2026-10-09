@@ -8,12 +8,16 @@
  *   - a cheap cross-check that needs no engine (change_id matches folder),
  *   - `--precondition <skill>` evaluates a skill's precondition contract,
  *   - `--ci` / `--json` emit machine-readable output; exit 1 on any violation.
+ *     `--ci` judges only what a clean checkout can prove. Checks needing private
+ *     receipts, sibling repositories or unavailable Git history are listed under
+ *     `local_only` with their reason: they are never passed, never not-applicable,
+ *     and `--ci` never satisfies a `--precondition` (that is always evaluated strictly).
  *
  * It never matches verdict phrases/emojis and never writes a file (C-12).
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import matter from 'gray-matter';
+import matter from '../util/frontmatter.js';
 import { EXIT } from './exit.js';
 import { validateArtifactFrontmatter, validateNamed } from '../schema/validate.js';
 import { validateProposalBody, validateDesignBody, validateVerificationBody } from '../schema/body-rules.js';
@@ -25,7 +29,13 @@ import { evaluatePreconditions, SKILL_PRECONDITIONS } from '../lifecycle/precond
 import { listAdrFiles } from '../adr/promote.js';
 import { validateADR } from '../adr/validate.js';
 import { validatePacket, contractPortionFromConfig } from '../tokens/packet.js';
+import { validateHandoffManifest } from '../tokens/handoff.js';
 import { resolveConfiguredRepoPath } from '../repos/config.js';
+import { inspectEvidence } from '../lifecycle/eligibility.js';
+import { gateReportIssues, REPORT_SCHEMAS } from '../lifecycle/report-validation.js';
+import { computeState } from '../lifecycle/engine.js';
+import { resolveMultiRepoDelivery } from '../repos/delivery.js';
+import { readEvidenceFile } from '../util/fs-safe.js';
 
 function parseValidateArgs(rest) {
   let ci = false;
@@ -46,7 +56,7 @@ export async function validateCommand(parsed, io) {
   const json = parsed.flags.json || ci;
 
   if (precondition) return runPrecondition({ cwd, precondition, changeId, json, io });
-  return runValidate({ cwd, changeId, json, io });
+  return runValidate({ cwd, changeId, json, io, ci });
 }
 
 // Artifacts whose BODY (not just frontmatter) carries required sections.
@@ -98,20 +108,42 @@ function contractRoleErrors(config, cwd) {
   return errors;
 }
 
-function runValidate({ cwd, changeId, json, io }) {
+/** Split evidence notes by kind into the result-row fields `local_only` and `after_delivery`. */
+function notesOf(entries) {
+  const localOnly = entries.filter((entry) => entry.kind !== 'after-delivery');
+  const afterDelivery = entries.filter((entry) => entry.kind === 'after-delivery');
+  return { ...(localOnly.length ? { local_only: localOnly } : {}), ...(afterDelivery.length ? { after_delivery: afterDelivery } : {}) };
+}
+
+function runValidate({ cwd, changeId, json, io, ci = false }) {
   const dirs = findChangeDirs(cwd);
   const targets = changeId ? dirs.filter((d) => path.basename(d) === changeId) : dirs;
   const results = [];
+  // A change entry that is not a real directory (symbolic link, dangling or not) is never followed.
+  const changesRoot = path.join(cwd, 'openspec', 'changes');
+  for (const name of fs.existsSync(changesRoot) ? fs.readdirSync(changesRoot) : []) {
+    if (changeId && name !== changeId) continue;
+    if (fs.lstatSync(path.join(changesRoot, name)).isSymbolicLink()) {
+      results.push({ file: path.relative(cwd, path.join(changesRoot, name)), valid: false, errors: ['change entry is a symbolic link; it is never followed'] });
+    }
+  }
   const { config } = loadConfig({ cwd });
   const notices = configNotices(config);
 
   for (const dir of targets) {
     const change = loadChange(dir);
-    const proposalFm = change.artifacts['proposal.md'] && change.artifacts['proposal.md'].frontmatter;
+    const proposalReadable = change.artifacts['proposal.md'] && !change.artifacts['proposal.md'].readError;
+    const proposalFm = proposalReadable ? change.artifacts['proposal.md'].frontmatter : null;
     const relevant = proposalFm && proposalFm.runtime_relevant_capabilities;
     for (const [name, a] of Object.entries(change.artifacts)) {
+      if (a.readError) {
+        results.push({ file: path.relative(cwd, a.path), valid: false, errors: [a.readError] });
+        continue;
+      }
       const r = validateArtifactFrontmatter(a.frontmatter);
-      const errors = r.skipped ? [] : [...r.errors];
+      const errors = REPORT_SCHEMAS[name]
+        ? gateReportIssues(change.changeId, name, a.frontmatter)
+        : r.skipped ? [] : [...r.errors];
 
       if (!r.skipped && a.frontmatter.change_id && a.frontmatter.change_id !== change.changeId) {
         errors.push(`change_id '${a.frontmatter.change_id}' does not match folder '${change.changeId}'`);
@@ -136,12 +168,12 @@ function runValidate({ cwd, changeId, json, io }) {
 
       const bodyValidator = BODY_VALIDATORS[name];
       if (bodyValidator) {
-        const body = matter(fs.readFileSync(a.path, 'utf8')).content;
+        const body = matter(readEvidenceFile(cwd, path.relative(cwd, a.path), 'utf8')).content;
         const bodyResult = bodyValidator(body);
         errors.push(...bodyResult.issues);
       }
 
-      if (r.skipped && !bodyValidator) continue;
+      if (r.skipped && !bodyValidator && !REPORT_SCHEMAS[name]) continue;
       results.push({ file: path.relative(cwd, a.path), valid: errors.length === 0, errors });
     }
 
@@ -151,13 +183,16 @@ function runValidate({ cwd, changeId, json, io }) {
     const changesDir = path.join(cwd, 'openspec', 'changes');
     for (const file of listAdrFiles(change.changeId, changesDir)) {
       const adrPath = path.join(dir, file);
-      const parsed = matter(fs.readFileSync(adrPath, 'utf8'));
-      const frontmatterResult = validateArtifactFrontmatter(parsed.data);
-      const structuralResult = validateADR(adrPath);
-      const errors = [
-        ...(frontmatterResult.skipped ? [] : frontmatterResult.errors),
-        ...structuralResult.issues,
-      ];
+      let errors;
+      try {
+        // Contained read first (design Amendment R5, rule 4); validateADR then reads the same safe file.
+        const parsed = matter(readEvidenceFile(cwd, path.relative(cwd, adrPath), 'utf8'));
+        const frontmatterResult = validateArtifactFrontmatter(parsed.data);
+        const structuralResult = validateADR(adrPath);
+        errors = [...(frontmatterResult.skipped ? [] : frontmatterResult.errors), ...structuralResult.issues];
+      } catch (error) {
+        errors = [error.message];
+      }
       results.push({ file: path.relative(cwd, adrPath), valid: errors.length === 0, errors });
     }
 
@@ -165,15 +200,49 @@ function runValidate({ cwd, changeId, json, io }) {
     // (its name never changes, but its presence does) — same split as ADRs:
     // ajv on `schema: context-packet` frontmatter + structural/staleness check.
     const packetPath = path.join(dir, 'context-packet.md');
-    if (fs.existsSync(packetPath)) {
-      const parsed = matter(fs.readFileSync(packetPath, 'utf8'));
-      const frontmatterResult = validateArtifactFrontmatter({ schema: 'context-packet', ...parsed.data });
-      const structuralResult = validatePacket(change.changeId, changesDir, contractPortionFromConfig(config));
-      const errors = [
-        ...(frontmatterResult.skipped ? [] : frontmatterResult.errors),
-        ...structuralResult.issues,
-      ];
-      results.push({ file: path.relative(cwd, packetPath), valid: errors.length === 0, errors });
+    if (fs.lstatSync(packetPath, { throwIfNoEntry: false })) {
+      let parsed;
+      try {
+        parsed = matter(readEvidenceFile(cwd, path.relative(cwd, packetPath), 'utf8'));
+      } catch (error) {
+        results.push({ file: path.relative(cwd, packetPath), valid: false, errors: [error.message] });
+        parsed = null;
+      }
+      if (parsed) {
+        const frontmatterResult = validateArtifactFrontmatter({ schema: 'context-packet', ...parsed.data });
+        const structuralResult = validatePacket(change.changeId, changesDir, contractPortionFromConfig(config));
+        const errors = [
+          ...(frontmatterResult.skipped ? [] : frontmatterResult.errors),
+          ...structuralResult.issues,
+        ];
+        results.push({ file: path.relative(cwd, packetPath), valid: errors.length === 0, errors });
+      }
+    }
+    const manifestPath = path.join(dir, 'handoff-manifest.json');
+    const declaredHandoff = !!change.artifacts['tasks.md']?.frontmatter?.handoff;
+    if (declaredHandoff || fs.lstatSync(manifestPath, { throwIfNoEntry: false })) {
+      const result = declaredHandoff
+        ? validateHandoffManifest(change.changeId, { cwd, allowCommittedDescendants: true, portable: ci })
+        : { ok: false, issues: ['handoff-manifest.json has no tasks.md handoff declaration'] };
+      results.push({ file: path.relative(cwd, manifestPath), valid: result.ok, errors: result.issues, ...notesOf(result.localOnly || []) });
+    }
+    // An unreadable proposal is already reported above; delivery is then unknown, never a crash.
+    let delivery = { state: 'unknown', per_repo: [] };
+    if (proposalFm) {
+      try {
+        delivery = resolveMultiRepoDelivery({ cwd, slug: change.changeId });
+      } catch {
+        delivery = { state: 'unknown', per_repo: [] };
+      }
+    }
+    const evidence = inspectEvidence(change.changeId, { cwd, config, artifacts: change.artifacts, delivery, ci });
+    for (const [name, gate] of Object.entries(evidence.gates)) {
+      const notes = [...evidence.localOnly, ...evidence.afterDelivery].filter((entry) => entry.file === name);
+      results.push({ file: path.relative(cwd, path.join(dir, name)) + '#evidence', valid: gate.ok, errors: gate.issues, ...notesOf(notes) });
+    }
+    if (change.artifacts['proposal.md']?.frontmatter?.status === 'archived') {
+      results.push({ file: path.relative(cwd, dir) + '#closure', valid: evidence.closure.ok,
+        errors: evidence.closure.ok ? [] : ['archived proposal has no valid retained post-merge closure'] });
     }
   }
 
@@ -192,9 +261,14 @@ function runValidate({ cwd, changeId, json, io }) {
 
   const failures = results.filter((r) => !r.valid);
 
+  // Checks a clean checkout cannot prove (local-only) and comparisons that do not apply on the base
+  // branch after delivery are reported separately; neither is ever counted as passed.
+  const collect = (key) => results.flatMap((r) => (r[key] || []).map((entry) => ({ ...entry, file: entry.file || r.file })));
+  const localOnly = collect('local_only');
+  const afterDelivery = collect('after_delivery');
   if (json) {
     io.out(JSON.stringify(
-      { command: 'validate', cwd, checked: results.length, failed: failures.length, results, notices },
+      { command: 'validate', cwd, checked: results.length, failed: failures.length, results, notices, local_only: localOnly, after_delivery: afterDelivery },
       null, 2,
     ));
   } else if (results.length === 0) {
@@ -202,7 +276,11 @@ function runValidate({ cwd, changeId, json, io }) {
     for (const n of notices) io.out(`  note: ${n}`);
   } else {
     for (const r of results) {
-      if (r.valid) io.out(`  ✓ ${r.file}`);
+      if (r.valid && (r.local_only?.length || r.after_delivery?.length)) {
+        io.out(`  ~ ${r.file} (partially checked)`);
+        for (const entry of r.local_only || []) io.out(`      local-only: ${entry.check}: ${entry.reason}`);
+        for (const entry of r.after_delivery || []) io.out(`      after delivery: ${entry.check}: ${entry.reason}`);
+      } else if (r.valid) io.out(`  ✓ ${r.file}`);
       else {
         io.err(`  ✗ ${r.file}`);
         for (const e of r.errors) io.err(`      ${e}`);
@@ -245,6 +323,38 @@ function runPrecondition({ cwd, precondition, changeId, json, io }) {
   };
 
   const res = evaluatePreconditions(requires, ctx);
+  if (['sdd-commit', 'sdd-verify', 'sdd-archive'].includes(precondition)) {
+    const { config } = loadConfig({ cwd });
+    let delivery = { state: 'unknown', per_repo: [] };
+    try {
+      delivery = resolveMultiRepoDelivery({ cwd, slug: change.changeId });
+    } catch (error) {
+      res.missing.push(`delivery cannot be resolved: ${error.message}`);
+    }
+    const evidence = inspectEvidence(change.changeId, { cwd, config, artifacts: change.artifacts, delivery });
+    // One evaluator for `next` and the precondition: the lifecycle state it computes
+    // (which already requires every earlier gate to be eligible) and its evidence issues.
+    const computed = computeState(config, null, change.artifacts, delivery, evidence);
+    const required = precondition === 'sdd-archive' ? 'verified' : 'runtime_cleared';
+    if (computed.lifecycle.state !== required) {
+      res.missing.push(`lifecycle state is '${computed.lifecycle.state}', ${precondition} requires '${required}' (next: ${computed.next.skill || computed.next.action})`);
+    } else if (precondition === 'sdd-commit' && computed.next.skill !== 'sdd-commit') {
+      // Same delivery routing as `next`: an unavailable GitHub context or an open PR is not a commit step.
+      res.missing.push(`next routes to ${computed.next.skill || computed.next.action}${computed.next.reason ? ` (${computed.next.reason})` : ''}, not sdd-commit`);
+    }
+    for (const issue of evidence.issues) res.missing.push(`evidence: ${issue}`);
+    const requiredGate = precondition === 'sdd-archive' ? 'verification-report.md' : 'runtime-gate-report.md';
+    if (!evidence.gates[requiredGate]?.ok) res.missing.push(`${requiredGate} evidence is not source-bound and valid`);
+    if (['sdd-verify', 'sdd-archive'].includes(precondition) && delivery.state !== 'merged') {
+      res.missing.push(`unanimous merged delivery required; observed ${delivery.state}`);
+    }
+    for (const row of delivery.per_repo || []) {
+      if (['sdd-verify', 'sdd-archive'].includes(precondition) && row.state !== 'merged') {
+        res.missing.push(`${row.repo} delivery is ${row.state}, expected merged`);
+      }
+    }
+    res.met = res.missing.length === 0;
+  }
 
   if (json) {
     io.out(JSON.stringify(

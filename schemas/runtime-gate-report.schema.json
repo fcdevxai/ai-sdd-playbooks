@@ -19,9 +19,25 @@
         "properties": {
           "status": { "enum": ["passed", "failed", "blocked", "not_applicable"] },
           "reason_code": { "type": "string" },
-          "findings": { "type": "array" }
+          "findings": { "type": "array" },
+          "receipts": { "type": "array", "items": { "$ref": "https://playbook-ai.dev/schemas/source-binding.schema.json#/$defs/receipt" } },
+          "exclusion": { "type": "object", "required": ["reason", "authority", "covered_criteria", "substitute_receipts"], "properties": {
+            "authority": { "type": "object", "required": ["repository", "path", "hash"], "properties": {
+              "repository": { "type": "string", "minLength": 1 }, "path": { "type": "string", "minLength": 1 },
+              "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } },
+            "covered_criteria": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+            "reason": { "type": "string", "minLength": 1 },
+            "substitute_receipts": { "type": "array", "minItems": 1, "items": { "$ref": "https://playbook-ai.dev/schemas/source-binding.schema.json#/$defs/receipt" } }
+          } }
         }
       }
-    }
+    },
+    "coverage": { "type": "array", "items": { "type": "object", "required": ["criterion", "repository", "adapter", "receipt"], "properties": {
+      "criterion": { "type": "string", "minLength": 1 },
+      "repository": { "type": "string", "minLength": 1 },
+      "adapter": { "enum": ["browser", "http", "cli", "worker"] },
+      "receipt": { "$ref": "https://playbook-ai.dev/schemas/source-binding.schema.json#/$defs/receipt" }
+    } } },
+    "source_binding": { "$ref": "https://playbook-ai.dev/schemas/source-binding.schema.json" }
   }
 }

@@ -9,7 +9,16 @@ jobs:
   playbook-validate:
     runs-on: ubuntu-latest
     steps:
+      # Full history: content freshness and evidence bindings verify ancestry from the
+      # commit a gate was sealed on. A shallow clone reports those checks as local-only.
+      # Pull requests check out the exact head commit (never a branch name, which a fork can
+      # reuse, and never GitHub's synthetic merge commit, which changes whenever the base moves);
+      # every content rule applies and only branch identity is reported local-only. Pushes keep
+      # their branch, so the base branch after a merge is evaluated as delivered.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -17,7 +26,7 @@ jobs:
       # pertenece a un proyecto de terceros no relacionado, así que `npx` traería
       # el paquete equivocado en silencio. Se instala desde el repo público real.
       - name: Instalar playbook CLI
-        run: npm install -g github:fcdevxai/ai-sdd-playbooks#semver:^0.9.0
+        run: npm install -g github:fcdevxai/ai-sdd-playbooks#semver:^0.10.0
       # Valida artefactos, config, lock, estado legal del lifecycle, gates, adapters.
       # Solo checks estructurados — sin matchear verdicts/encabezados/emojis, sin mutar.
       - name: playbook validate --ci

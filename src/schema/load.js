@@ -21,10 +21,13 @@ export function loadValidators(schemaDir = SCHEMA_DIR) {
     .filter((f) => f.endsWith('.schema.json'))
     .sort();
 
-  for (const file of files) {
-    const key = file.replace(/\.schema\.json$/, '');
-    const schema = JSON.parse(fs.readFileSync(path.join(schemaDir, file), 'utf8'));
-    validators[key] = ajv.compile(schema);
+  const schemas = files.map((file) => ({
+    key: file.replace(/\.schema\.json$/, ''),
+    schema: JSON.parse(fs.readFileSync(path.join(schemaDir, file), 'utf8')),
+  }));
+  for (const { schema } of schemas) ajv.addSchema(schema);
+  for (const { key, schema } of schemas) {
+    validators[key] = ajv.getSchema(schema.$id);
   }
 
   return { ajv, validators, keys: Object.keys(validators) };

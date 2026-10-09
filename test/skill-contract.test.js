@@ -249,6 +249,22 @@ test('sdd-apply / sdd-plan SKILL.md requires match the precondition table (no dr
   assert.deepEqual(readSkillFrontmatter(path.join(SKILLS_DIR, 'sdd-plan')).requires, SKILL_PRECONDITIONS['sdd-plan']);
 });
 
+test('gate and archive skills use the source-bound CLI protocol from canonical generated skills', () => {
+  for (const [name, stage, report] of [
+    ['sdd-code-review', 'sdd-code-review', 'code-review-report.md'],
+    ['sdd-security-gate', 'sdd-security-gate', 'security-report.md'],
+    ['sdd-runtime-gate', 'sdd-runtime-gate', 'runtime-gate-report.md'],
+    ['sdd-verify', 'sdd-verify', 'verification-report.md'],
+  ]) {
+    assert.match(body(name), new RegExp(`playbook packet[\\s\\S]*--stage ${stage}`));
+    assert.match(body(name), new RegExp(`playbook evidence seal[\\s\\S]*${report.replaceAll('.', '\\.')} `));
+    assert.match(body(name), /schema_version: 2/);
+  }
+  assert.match(body('sdd-archive'), /playbook evidence retain/);
+  assert.match(body('sdd-archive'), /--precondition sdd-archive/);
+  assert.doesNotMatch(body('sdd-archive'), /Set the change's `proposal\.status: archived`/);
+});
+
 test('sdd-commit and sdd-runtime-gate read the context-packet instead of full proposal/tasks (AC-1, EC-1)', () => {
   for (const name of ['sdd-commit', 'sdd-runtime-gate']) {
     const b = body(name);
@@ -511,4 +527,25 @@ test('sdd-new proposes a complete impact block + security (C-03/C-04)', () => {
   }
   assert.match(b, /security:/);
   assert.match(b, /risk:/);
+});
+
+test('sdd-commit rebind guidance uses explicit packet arguments and explains bindings and CI (Amendment R2)', () => {
+  const b = body('sdd-commit');
+  assert.match(b, /playbook packet <change-id> --stage sdd-commit --agent <agent>/, 'the packet command carries stage and identity');
+  assert.doesNotMatch(b, /`playbook packet <change-id>`/, 'the bare command that exits 1 is gone');
+  assert.match(b, /playbook evidence bind <change-id> <report>/);
+  assert.match(b, /ancestral binding/i, 'a later identical commit needs no new evidence commit');
+  assert.match(b, /idempotent/i);
+  assert.match(b, /local-only/i, 'CI limits are named');
+  assert.match(b, /never verification/i);
+});
+
+test('sdd-commit and sdd-verify describe checkout context and delivered evaluation (Amendment R5)', () => {
+  const commit = body('sdd-commit');
+  assert.match(commit, /exact\s+head\s+commit/i);
+  assert.match(commit, /refuses\s+a\s+detached\s+HEAD/i);
+  assert.match(commit, /merge\s+commit/i);
+  const verify = body('sdd-verify');
+  assert.match(verify, /judged\s+as delivered/i);
+  assert.match(verify, /not\s+applicable\s+after\s+delivery/i);
 });

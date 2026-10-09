@@ -16,10 +16,10 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import matter from 'gray-matter';
+import matter from '../util/frontmatter.js';
 import { createHash } from 'node:crypto';
 import { parseMarkdownHeadings, headingSection, splitSections, isEmpty, extractLabeledTokens } from '../util/markdown.js';
-import { resolveContainedPath } from '../util/fs-safe.js';
+import { readEvidenceFile, readReference, resolveContainedPath, writeEvidenceFile } from '../util/fs-safe.js';
 
 export const PACKET_REQUIRED_SECTIONS = [
   'Ticket',
@@ -50,26 +50,38 @@ const FILES_LABEL_RE = /\*\*Files\*\*:\s*(.+)/i;
 const COMMAND_LABEL_RE = /\*\*(?:Format|Lint\/type-check|Feature tests|Regression)\*\*:\s*(.+)/i;
 const REGRESSION_LABEL_RE = /\*\*Regression\*\*:\s*(.+)/i;
 
+/** Contained read of a change file (design Amendment R5, rule 4); the project root holds openspec/changes. */
+function readChangeFile(changesDir, slug, file) {
+  const root = path.resolve(changesDir, '..', '..');
+  return readEvidenceFile(root, path.relative(root, path.join(changesDir, slug, file)));
+}
+
 /**
  * sha256 hex digests of a change's packet source files, computed over their
  * raw bytes. Stamped into `sources` frontmatter when generating a packet, and
  * recomputed/compared when checking staleness.
  *
- * `contract` (optional) is the config's contract portion (see
- * `contractPortionFromConfig`) — when present, its digest is hashed over the
- * portion's JSON, not a file's bytes (there is no file: the "source" is
- * `playbook.config.yaml`, and only the contract-relevant keys count, so an
- * unrelated config change like `github.base_branch` never affects this hash).
+ * `contract` (optional) includes both the relevant topology from config and
+ * the contract file's actual bytes. A topology-only hash cannot establish
+ * whether the API contract changed while its path stayed fixed.
  * Omitted or null, the returned object carries no `contract` key at all —
  * this is what keeps a no-contract packet's `sources` shape unchanged.
  */
 export function packetSourceHashes(slug, changesDir = defaultChangesDir(), contract = null) {
   if (!isSafeSlug(slug)) throw new Error(`Invalid change slug: "${slug}"`);
   const dir = path.join(changesDir, slug);
-  const hashOf = (file) => createHash('sha256').update(fs.readFileSync(path.join(dir, file))).digest('hex');
+  const hashOf = (file) => createHash('sha256').update(readChangeFile(changesDir, slug, file)).digest('hex');
   const hashes = { proposal: hashOf('proposal.md'), tasks: hashOf('tasks.md') };
   if (contract && contract.path_in_loom) {
     hashes.contract = createHash('sha256').update(JSON.stringify(contract)).digest('hex');
+    const root = path.resolve(changesDir, '..', '..');
+    let content;
+    try {
+      content = readReference(root, contract.path_in_loom);
+    } catch (error) {
+      throw new Error(/not a contained regular file/.test(error.message) ? error.message : `contract source missing: ${contract.path_in_loom}`);
+    }
+    hashes.contract_content = createHash('sha256').update(content).digest('hex');
   }
   return hashes;
 }
@@ -138,9 +150,9 @@ export function buildPacket(slug, changesDir = defaultChangesDir(), contract = n
     throw new Error(`tasks.md not found for "${slug}" — the packet derives from both sources`);
   }
 
-  const proposalRaw = fs.readFileSync(proposalPath, 'utf8');
+  const proposalRaw = readChangeFile(changesDir, slug, 'proposal.md').toString('utf8');
   const proposalBody = matter(proposalRaw).content;
-  const tasksRaw = fs.readFileSync(tasksPath, 'utf8');
+  const tasksRaw = readChangeFile(changesDir, slug, 'tasks.md').toString('utf8');
 
   const verbatim = {};
   for (const name of ['Acceptance criteria', 'Constraints and non-goals', 'Security considerations']) {
@@ -184,6 +196,9 @@ export function buildPacket(slug, changesDir = defaultChangesDir(), contract = n
   // and every caller's), so the project root is two segments up.
   const contractBlock = contractSection(contract, path.resolve(changesDir, '..', '..'));
   if (contractBlock) sections.push(contractBlock);
+  if (matter(tasksRaw).data.handoff) {
+    sections.push(`## Handoff manifest\n\n- openspec/changes/${slug}/handoff-manifest.json`);
+  }
   sections.push(`## Full sources\n\n- openspec/changes/${slug}/proposal.md\n- openspec/changes/${slug}/tasks.md`);
 
   const body = sections.join('\n\n') + '\n';
@@ -204,7 +219,8 @@ export function writePacket(slug, changesDir = defaultChangesDir(), contract = n
   if (!isSafeSlug(slug)) throw new Error(`Invalid change slug: "${slug}"`);
   const { content, warnings } = buildPacket(slug, changesDir, contract);
   const packetPath = path.join(changesDir, slug, 'context-packet.md');
-  fs.writeFileSync(packetPath, content);
+  const root = path.resolve(changesDir, '..', '..');
+  writeEvidenceFile(root, path.relative(root, packetPath), content);
   return { path: packetPath, warnings };
 }
 
@@ -224,9 +240,14 @@ export function validatePacket(slug, changesDir = defaultChangesDir(), contract 
     return { ok: false, issues: [`invalid change slug: "${slug}"`] };
   }
   const packetPath = path.join(changesDir, slug, 'context-packet.md');
-  if (!fs.existsSync(packetPath)) return { ok: true, issues: [] };
+  if (!fs.lstatSync(packetPath, { throwIfNoEntry: false })) return { ok: true, issues: [] };
 
-  const parsed = matter(fs.readFileSync(packetPath, 'utf8'));
+  let parsed;
+  try {
+    parsed = matter(readChangeFile(changesDir, slug, 'context-packet.md').toString('utf8'));
+  } catch (error) {
+    return { ok: false, issues: [`context-packet.md: ${error.message}`] };
+  }
   const sections = splitSections(parsed.content);
   const issues = [];
   for (const required of PACKET_REQUIRED_SECTIONS) {
@@ -236,18 +257,32 @@ export function validatePacket(slug, changesDir = defaultChangesDir(), contract 
     }
     if (isEmpty(sections[required])) issues.push(`context-packet.md: empty content in "## ${required}"`);
   }
+  const tasksPath = path.join(changesDir, slug, 'tasks.md');
+  let tasksHandoff = false;
+  try {
+    tasksHandoff = fs.existsSync(tasksPath) && !!matter(readChangeFile(changesDir, slug, 'tasks.md').toString('utf8')).data.handoff;
+  } catch (error) {
+    issues.push(`tasks.md: ${error.message}`);
+  }
+  if (tasksHandoff && !('Handoff manifest' in sections)) {
+    issues.push('context-packet.md: missing section: "## Handoff manifest"');
+  }
 
   // Hash-staleness: only CLI-generated packets carry `sources` frontmatter.
   // Legacy hand-written packets (no `sources`) are never reported stale.
   const sources = parsed.data.sources;
   if (sources && typeof sources === 'object') {
     const proposalPath = path.join(changesDir, slug, 'proposal.md');
-    const tasksPath = path.join(changesDir, slug, 'tasks.md');
     if (fs.existsSync(proposalPath) && fs.existsSync(tasksPath)) {
-      const current = packetSourceHashes(slug, changesDir, contract);
-      const contractStale = 'contract' in sources && current.contract !== sources.contract;
-      if (current.proposal !== sources.proposal || current.tasks !== sources.tasks || contractStale) {
-        issues.push(`context-packet.md stale — re-run \`playbook packet ${slug}\``);
+      try {
+        const current = packetSourceHashes(slug, changesDir, contract);
+        const contractStale = 'contract' in sources && current.contract !== sources.contract;
+        const contentStale = 'contract_content' in sources && current.contract_content !== sources.contract_content;
+        if (current.proposal !== sources.proposal || current.tasks !== sources.tasks || contractStale || contentStale) {
+          issues.push(`context-packet.md stale — re-run \`playbook packet ${slug}\``);
+        }
+      } catch (err) {
+        issues.push(`context-packet.md source unavailable: ${err.message}`);
       }
     }
   }

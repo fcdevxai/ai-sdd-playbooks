@@ -443,7 +443,10 @@ test('SEC-001/EC-1: a contract.path_in_loom that escapes via a symlink is reject
 });
 
 test('SEC-001: a relative, contained contract.path_in_loom still resolves and builds the Contract section (regression)', () => {
-  const { changesDir } = makePacketChange();
+  const { cwd, changesDir } = makePacketChange();
+  const contract = path.join(cwd, 'openspec/specs/contracts/openapi.yaml');
+  fs.mkdirSync(path.dirname(contract), { recursive: true });
+  fs.writeFileSync(contract, 'openapi: 3.1.0\n');
   const { content } = buildPacket('demo', changesDir, { path_in_loom: 'openspec/specs/contracts/openapi.yaml' });
   assert.match(content, /## Contract/);
   assert.match(content, /openspec\/specs\/contracts\/openapi\.yaml/);

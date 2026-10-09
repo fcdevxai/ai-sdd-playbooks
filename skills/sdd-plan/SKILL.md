@@ -68,6 +68,16 @@ schema_version: 1
 change_id: <change-id>
 status: ready
 updated: <YYYY-MM-DD>
+handoff:
+  specs: [{repository: <sdd-repo>, path: openspec/specs/<domain>/spec.md}]
+  architecture: [{repository: <repo>, path: docs/doc_architecture.md}]
+  contracts: []
+  required_skills: [{name: <skill>, repository: <repo-or-methodology>, path: <canonical-skill-path>}]
+  required_tools: [{name: playbook, context: <sdd-repo>, purpose: lifecycle}]
+  runtime_coverage: [{criterion: AC-1, repositories: [<repo>], capabilities: [http]}]
+  non_runtime: [{criterion: EC-1, rationale: <why this criterion has no runtime surface>}]
+  unresolved_risks: []
+  blockers: []
 ---
 # Tasks — <Feature name>
 
@@ -109,15 +119,27 @@ missing precondition (e.g. "design.md is required and must be approved first").
 - **Regression**: `<command>`
 ```
 
-3. Generate the context packet: run `playbook packet <change-id>`. It derives
+3. Declare `handoff` metadata for every affected repository and every `AC-N`,
+   `EC-N` and `SEC-N`. References identify canonical files by repository and
+   relative path; do not copy their contents. Each criterion appears exactly
+   once: in `runtime_coverage` (its repositories and applicable adapters) or in
+   `non_runtime` with a written rationale — never both, never neither; the CLI
+   blocks the runtime gate otherwise. Use explicit, evidence-backed exclusions at
+   runtime for enabled adapters without a runnable product surface. Include required skills and
+   tools, unresolved risks and blockers even when their arrays are empty. As
+   new untracked source files are created, declare them under
+   `handoff.source_paths.<repo>` before generating gate evidence; never inventory
+   arbitrary untracked files or secrets automatically.
+4. Generate the context packet and first handoff: run `playbook packet
+   <change-id> --stage sdd-plan --agent <agent>`. It derives
    `context-packet.md` from `proposal.md` + `tasks.md` (verbatim acceptance
    criteria, constraints, security considerations, files touched, verification
    commands) so later gates read one compact file instead of both sources in
    full. Deterministic — safe to re-run any time `tasks.md` changes.
-4. Report the total task count and tell the user to run `playbook next` (it will
+5. Report the total task count and tell the user to run `playbook next` (it will
    route to `sdd-apply`).
 
 ---
 
 **Output file:** tasks.md, context-packet.md
-**Requires terminal:** no
+**Requires terminal:** yes

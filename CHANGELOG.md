@@ -1,5 +1,58 @@
 # Changelog
 
+## 0.10.0 — Source-bound evidence for every lifecycle gate
+
+Lifecycle gates no longer advance on a report's scalar `status`. Every gate now
+cites execution receipts with retained raw output, is sealed to the stage
+handoff it judged, and stays eligible only while its governed source is
+unchanged. Decided in change `harness-trust-restoration`; see ADR-043 for the
+threat model and accepted limits, and ADR-042 for how this change itself was
+delivered.
+
+- **`playbook run`** captures stdout and stderr losslessly (`stdout.raw`,
+  `stderr.raw`, `full.log`), writes a schema-validated `execution-receipt.json`,
+  preserves the child exit (127/126/`128 + signal` for spawn and signal
+  failures) and prints a bounded summary. New flags: `--repo`, `--agent`,
+  `--provider`, `--model`, `--container`, `--raw`.
+- **`playbook packet --stage <stage> --agent <agent>`** writes a source-bound
+  `handoff-manifest.json` plus an immutable copy per stage.
+- **`playbook evidence seal|bind|retain`** seal a gate report to its receipts,
+  bind identical content across a later commit, and retain closure proof before
+  archive.
+- **One eligibility evaluator** behind `validate`, `status`, `next` and stage
+  preconditions. Verification needs unanimous merged delivery; archive needs a
+  valid closure index.
+- **Runtime coverage** requires every AC, EC and SEC to be mapped in
+  `handoff.runtime_coverage` or declared in `handoff.non_runtime`, and an
+  adapter entry for every enabled capability of every impacted repository.
+- The consumer CI template checks out the pull request's exact head commit with
+  full history and installs `semver:^0.10.0`.
+- `playbook run --raw` never prints the install notice, so RAW streams carry only
+  the child's bytes even where no skills are installed (for example a CI runner).
+- `playbook validate --precondition sdd-commit` is met only when `next` routes to
+  `sdd-commit`; an unavailable GitHub context no longer passes it.
+
+### Migrating a consumer from 0.9.x
+
+1. Install 0.10.0 explicitly; projects pinned to `^0.9.0` or `v0.9.x` are not
+   moved by this release.
+2. Update `.github/workflows/playbook-validation.yml` from the template:
+   `fetch-depth: 0`, checkout of the pull request head SHA, and the new version.
+3. Run `playbook sync` so `playbook.lock` records the installed version.
+4. For changes still in progress: let `sdd-plan` add the `handoff` block to
+   `tasks.md`, declaring every AC, EC and SEC; gates that passed under 0.9.x
+   carry no `source_binding` and must be rerun and sealed.
+5. Keep the global `playbook` on a released checkout; develop the methodology
+   in a separate worktree.
+
+### Known follow-ups
+
+Eight TODO tests on summary accuracy and telemetry symlinks, error-case
+navigation in the context packet, a simpler runtime-gate path for changes
+without a product runtime surface, temporary-directory cleanup in the test
+suite, and fail-closed rejection of non-UTF-8 names inside declared untracked
+paths (today they are hashed as ordinary content).
+
 ## 0.9.2 — `worker` runtime adapter promoted to supported
 
 The `worker` runtime-gate adapter moves from `experimental` (permanently

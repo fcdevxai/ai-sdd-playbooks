@@ -20,7 +20,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import matter from 'gray-matter';
+import matter from '../util/frontmatter.js';
 import { fileURLToPath } from 'node:url';
 import { splitSections } from '../util/markdown.js';
 

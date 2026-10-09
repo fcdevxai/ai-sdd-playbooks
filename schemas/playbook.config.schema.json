@@ -68,6 +68,16 @@
           "role": { "enum": ["sdd"] },
           "path": { "type": "string" },
           "stack": { "type": "string" },
+          "capabilities": {
+            "type": "object",
+            "properties": {
+              "browser": { "type": "boolean" },
+              "http": { "type": "boolean" },
+              "cli": { "type": "boolean" },
+              "worker": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          },
           "default_base": { "type": "string" },
           "protected_paths": { "type": "array", "items": { "type": "string" } },
           "verification": {

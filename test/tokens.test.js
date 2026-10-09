@@ -56,6 +56,9 @@ function makeChange() {
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'proposal.md'), PROPOSAL);
   fs.writeFileSync(path.join(dir, 'tasks.md'), TASKS);
+  const contractDir = path.join(cwd, 'openspec', 'specs', 'contracts');
+  fs.mkdirSync(contractDir, { recursive: true });
+  fs.writeFileSync(path.join(contractDir, 'openapi.yaml'), 'openapi: 3.1.0\ninfo:\n  title: fixture\n');
   return { cwd, changesDir: path.join(cwd, 'openspec', 'changes') };
 }
 
@@ -269,6 +272,21 @@ test('validatePacket reports the packet obsolete when provided_by/consumed_by/pa
   assert.equal(validatePacket('demo', changesDir, { ...CONTRACT_PORTION, path_in_loom: 'openspec/specs/contracts/other.yaml' }).ok, false);
 });
 
+test('contract content mutation invalidates a generated packet with unchanged topology', () => {
+  const { cwd, changesDir } = makeChange();
+  writePacket('demo', changesDir, CONTRACT_PORTION);
+  assert.equal(validatePacket('demo', changesDir, CONTRACT_PORTION).ok, true);
+  fs.appendFileSync(path.join(cwd, CONTRACT_PORTION.path_in_loom), '# byte mutation\n');
+  assert.equal(validatePacket('demo', changesDir, CONTRACT_PORTION).ok, false);
+});
+
+test('contract source absent or escaping project root cannot produce a fresh packet', () => {
+  const { cwd, changesDir } = makeChange();
+  fs.unlinkSync(path.join(cwd, CONTRACT_PORTION.path_in_loom));
+  assert.throws(() => writePacket('demo', changesDir, CONTRACT_PORTION), /contract.*missing/i);
+  assert.throws(() => writePacket('demo', changesDir, { ...CONTRACT_PORTION, path_in_loom: '../secret.yaml' }), /outside the project root/);
+});
+
 test('validatePacket is unaffected by an unrelated config change when the contract portion itself is unchanged (AC-9)', () => {
   const { changesDir } = makeChange();
   writePacket('demo', changesDir, CONTRACT_PORTION);
@@ -399,11 +417,11 @@ test('playbook run executes a command, exits 0, and writes telemetry', async () 
   assert.ok(fs.existsSync(runsDir(cwd)));
 });
 
-test('playbook run reports a non-zero exit and exits VIOLATION', async () => {
+test('playbook run reports and preserves a non-zero child exit', async () => {
   const cwd = tmp();
   const { io, err } = capture();
   const code = await run(['run', '--cwd', cwd, '--', 'node', '-e', 'process.exit(3)'], io);
-  assert.equal(code, EXIT.VIOLATION);
+  assert.equal(code, 3);
   assert.match(err.join('\n'), /✗ exit 3/);
 });
 

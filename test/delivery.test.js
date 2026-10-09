@@ -64,6 +64,28 @@ test('dirty working tree → uncommitted (GitHub not consulted)', () => {
   assert.equal(delivery({ dirty: true }, {}).state, 'uncommitted');
 });
 
+test('post-merge evidence-only dirt is accepted only with matching merged PR head identity', () => {
+  const sha = 'a'.repeat(40);
+  const makeGit = (file, head = sha) => (args) => {
+    const cmd = args.join(' ');
+    if (cmd.includes('--is-inside-work-tree')) return 'true';
+    if (cmd.startsWith('status --porcelain')) return `?? ${file}\n`;
+    if (cmd === 'rev-parse HEAD') return head;
+    if (cmd.includes('rev-parse --abbrev-ref')) return 'demo';
+    throw new Error(`unexpected Git command: ${cmd}`);
+  };
+  const gh = fakeGh({ pr: { state: 'MERGED', number: 4, headRefOid: sha } });
+  const options = { slug: 'demo', allowEvidenceDirty: true, runGh: gh };
+  assert.equal(resolveDelivery({ ...options,
+    runGit: makeGit('openspec/changes/demo/verification-report.md') }).state, 'merged');
+  assert.equal(resolveDelivery({ ...options,
+    runGit: makeGit('openspec/archive/demo/closure-index.json') }).state, 'merged');
+  assert.equal(resolveDelivery({ ...options,
+    runGit: makeGit('openspec/changes/demo/verification-report.md', 'b'.repeat(40)) }).state, 'unknown');
+  assert.equal(resolveDelivery({ ...options,
+    runGit: makeGit('openspec/specs/system.md') }).state, 'uncommitted');
+});
+
 test('not a git repo → unknown (GIT_UNAVAILABLE)', () => {
   const d = delivery({ repo: false }, {});
   assert.equal(d.state, 'unknown');
@@ -248,6 +270,15 @@ test('resolveMultiRepoDelivery: single-repo early-return (AC-5, back-compat)', (
   assert.equal(result.per_repo.length, 1);
   assert.equal(result.per_repo[0].path, cwd);
   assert.equal(result.per_repo[0].state, 'ci_passed');
+});
+
+test('hub explicitly listed as impacted is included once in delivery identity', () => {
+  const cwd = makeChange({ impactedReposSection: '- hub' });
+  writeConfig(cwd, { repos: { hub: { role: 'sdd', path: '.' } } });
+  const resolveOne = fakeResolveOne({ [cwd]: { state: 'merged' } });
+  const result = resolveMultiRepoDelivery({ cwd, slug: 'demo', resolveOne });
+  assert.equal(result.per_repo.length, 1);
+  assert.deepEqual(resolveOne.calls, [cwd]);
 });
 
 test('resolveMultiRepoDelivery: AC-1/AC-3/AC-4/AC-6 — 3 repos, only hub merged → not merged', () => {

@@ -10,7 +10,8 @@
       "properties": {
         "proposal": { "type": "string" },
         "tasks": { "type": "string" },
-        "contract": { "type": "string" }
+        "contract": { "type": "string" },
+        "contract_content": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
       }
     }
   }
