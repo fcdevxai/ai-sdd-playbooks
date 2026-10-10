@@ -61,11 +61,17 @@ the spec and report why.
 
 ## Behavior
 
+**Agent identity.** Pass `--agent`, `--provider` and `--model` as separate
+flags, each with the value your runtime reports (for example `--agent claude
+--provider anthropic --model <model-id>`). Omit a flag whose value is unknown;
+the CLI records it as `unknown`. Never pack several values into `--agent`. These
+values are declared by the caller, never observed by the CLI.
+
 1. Run `playbook validate` — it is the same check CI runs on the PR, so a failure
    here means the PR would be rejected anyway. If it reports issues, fix only what
    is safely fixable and re-run it — **don't reason about the reports
    yourself**. **Only a derived artifact may be fixed:** regenerate a stale
-   `context-packet.md` with `playbook packet <change-id> --stage sdd-commit --agent <agent>`. **Never edit
+   `context-packet.md` with `playbook packet <change-id> --stage sdd-commit --agent <agent> --provider <provider> --model <model>`. **Never edit
    `proposal.md`, `design.md`, `tasks.md`, an `adr-*.md` draft, or a gate report
    (`code-review-report.md`, `security-report.md`, `runtime-gate-report.md`) to
    make `validate` pass** — the first two carry a human `status: approved`, the
@@ -94,8 +100,7 @@ the spec and report why.
    pre-commit HEAD. The saved handoff stays fresh by content when the committed
    tree is identical, but each gate report still needs an explicit binding.
    Regenerate the derived packet with an explicit stage and identity:
-   `playbook packet <change-id> --stage sdd-commit --agent <agent>` (add
-   `--provider` and `--model` when observed), then run
+   `playbook packet <change-id> --stage sdd-commit --agent <agent> --provider <provider> --model <model>`, then run
    `playbook evidence bind <change-id> <report>` for each of
    `code-review-report.md`, `security-report.md` and `runtime-gate-report.md`.
    The CLI accepts the bind only when the governed content recorded in the

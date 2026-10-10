@@ -17,6 +17,12 @@ version: 0.1.0
 
 ## Purpose
 
+**Agent identity.** Pass `--agent`, `--provider` and `--model` as separate
+flags, each with the value your runtime reports (for example `--agent claude
+--provider anthropic --model <model-id>`). Omit a flag whose value is unknown;
+the CLI records it as `unknown`. Never pack several values into `--agent`. These
+values are declared by the caller, never observed by the CLI.
+
 After merge, confirm every acceptance criterion in `proposal.md` has passing
 evidence in the current codebase and detect regressions. Produce a schema-valid
 `verification-report.md` that gates `sdd-archive`.
@@ -33,7 +39,7 @@ Run it on the base branch after the merge: there the pre-merge gates are judged
 as delivered, at the commit their evidence covers, and their comparison with the
 base branch's current content is reported as not applicable after delivery,
 never as passed. That comparison is this skill's job: verify the merged code.
-Then generate `playbook packet <change-id> --stage sdd-verify --agent <agent>`
+Then generate `playbook packet <change-id> --stage sdd-verify --agent <agent> --provider <provider> --model <model>`
 from the SDD Hub. Preserve this stage's manifest and its source hashes.
 
 ## Context
@@ -43,7 +49,7 @@ full for acceptance criteria and verification commands (verbatim copies). If
 it doesn't exist, fall back to reading both in full. Also read
 `docs/doc_verification_guide.md` (project verification commands), and run
 commands through `playbook run --change <change-id> --step verify --repo <repo>
---agent <agent> -- <command>`
+--agent <agent> --provider <provider> --model <model> -- <command>`
 for the same compacted-summary + full-log behavior `sdd-apply` uses. Acceptance
 criteria and verification commands come from the packet (or the full
 `proposal.md`/`tasks.md`), never from `spec-read` — that command is confined to

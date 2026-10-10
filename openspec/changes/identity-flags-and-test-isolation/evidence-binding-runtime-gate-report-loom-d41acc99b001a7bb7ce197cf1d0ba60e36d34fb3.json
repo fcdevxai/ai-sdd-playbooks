@@ -1,0 +1,76 @@
+{
+  "schema": "evidence-binding",
+  "schema_version": 1,
+  "change_id": "identity-flags-and-test-isolation",
+  "repository": "loom",
+  "report": {
+    "repository": "loom",
+    "path": "openspec/changes/identity-flags-and-test-isolation/runtime-gate-report.md",
+    "hash": "a0137e2b952ec43ee06ea42c221aeeccb7efe20dbd42f4fa3056ff6eb71d39f1"
+  },
+  "previous_commit_sha": "20c7248b72aba0c012aea80dba7bacdc492bfc70",
+  "current_commit_sha": "d41acc99b001a7bb7ce197cf1d0ba60e36d34fb3",
+  "governed_hash": "37323d1101847192fb02aef35cbc876a86d3e55be573c39b28d3411935114b5b",
+  "evidence_only_paths": [
+    "openspec/changes/identity-flags-and-test-isolation/code-review-report.md",
+    "openspec/changes/identity-flags-and-test-isolation/context-packet.md",
+    "openspec/changes/identity-flags-and-test-isolation/handoff-manifest-sdd-apply-113d2bad06180fc252ef736ce7810eb594eb012f71f1b0b97bae24bacc45825b.json",
+    "openspec/changes/identity-flags-and-test-isolation/handoff-manifest-sdd-apply-350e480c0b8e635f5d406352e2688b17eee139c274186a927ec4372e66a5d807.json",
+    "openspec/changes/identity-flags-and-test-isolation/handoff-manifest-sdd-apply-ba936c843b1001822f885c85cf5d5dd461d6967aeb5641c733719804305043cf.json",
+    "openspec/changes/identity-flags-and-test-isolation/handoff-manifest-sdd-code-review-aac29d6ee46c62cfb1f9b7554d715088ce182a7c52c68c943918f0773d7a4aa5.json",
+    "openspec/changes/identity-flags-and-test-isolation/handoff-manifest-sdd-plan-89cc59aec9614481b51f6f1b66ccacae8eb2046f3c35a9d859f9dcd462b188f0.json",
+    "openspec/changes/identity-flags-and-test-isolation/handoff-manifest-sdd-runtime-gate-cee3284aa0fb40a3cdfa3e0f000d0ca6560f4c9307746946c5f13c2a7cee7088.json",
+    "openspec/changes/identity-flags-and-test-isolation/handoff-manifest-sdd-security-gate-b20c01d068a42249dd41b5492d730d5f567a88f126e454b65db9fb2e58e67d41.json",
+    "openspec/changes/identity-flags-and-test-isolation/handoff-manifest.json",
+    "openspec/changes/identity-flags-and-test-isolation/runtime-gate-report.md",
+    "openspec/changes/identity-flags-and-test-isolation/security-report.md",
+    "openspec/changes/identity-flags-and-test-isolation/tasks.md"
+  ],
+  "equivalence": {
+    "kind": "identical-governed-content",
+    "reviewed_tree_hash": "37323d1101847192fb02aef35cbc876a86d3e55be573c39b28d3411935114b5b",
+    "committed_tree_hash": "37323d1101847192fb02aef35cbc876a86d3e55be573c39b28d3411935114b5b",
+    "governed_paths_committed": [
+      "CHANGELOG.md",
+      "README.md",
+      "docs/doc_verification_guide.md",
+      "openspec/changes/identity-flags-and-test-isolation/OWNER.md",
+      "openspec/changes/identity-flags-and-test-isolation/proposal.md",
+      "package-lock.json",
+      "package.json",
+      "skills/sdd-apply/SKILL.md",
+      "skills/sdd-apply/canonical.md",
+      "skills/sdd-code-review/SKILL.md",
+      "skills/sdd-code-review/canonical.md",
+      "skills/sdd-commit/SKILL.md",
+      "skills/sdd-commit/canonical.md",
+      "skills/sdd-plan/SKILL.md",
+      "skills/sdd-plan/canonical.md",
+      "skills/sdd-runtime-gate/SKILL.md",
+      "skills/sdd-runtime-gate/canonical.md",
+      "skills/sdd-security-gate/SKILL.md",
+      "skills/sdd-security-gate/canonical.md",
+      "skills/sdd-verify/SKILL.md",
+      "skills/sdd-verify/canonical.md",
+      "test/helpers/run-tests.js",
+      "test/run-tests.test.js",
+      "test/skill-contract.test.js"
+    ],
+    "intervening_commits": [
+      "d41acc99b001a7bb7ce197cf1d0ba60e36d34fb3"
+    ],
+    "original_receipts": [
+      {
+        "repository": "loom",
+        "path": ".specloom/runs/1791643520115-48c6dfdf-8bs220/execution-receipt.json",
+        "sha256": "67e4173dd39588a7a867f061b78c63a30128b099db49d1c24a81dcf86a6eaee8"
+      },
+      {
+        "repository": "loom",
+        "path": ".specloom/runs/1791643735547-8bcdefad-hzOkyD/execution-receipt.json",
+        "sha256": "b06953d2a053a88a24fd6cdeb313fa8a79d79e3cdb86d56a5660e61e91fd145b"
+      }
+    ]
+  },
+  "created_at": "2026-10-10T14:51:29.349Z"
+}
