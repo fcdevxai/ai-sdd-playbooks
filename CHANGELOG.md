@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.10.2 — Agent identity flags in skills and an isolated test temporary root
+
+Decided in change `identity-flags-and-test-isolation`; two follow-ups of
+`merged-delivery-identity` (`0.10.1`).
+
+- **Identity flags.** The seven lifecycle skills that run `playbook packet` or
+  `playbook run` (`sdd-plan`, `sdd-apply`, `sdd-code-review`,
+  `sdd-security-gate`, `sdd-runtime-gate`, `sdd-commit`, `sdd-verify`) now show
+  `--agent <agent> --provider <provider> --model <model>` in every command and
+  state the rule once: separate flags, values as the runtime reports them, an
+  unknown value omitted (recorded as `unknown`), never packed into `--agent`,
+  declared rather than observed. A skill contract test enforces it. CLI
+  behavior and receipts are unchanged.
+- **Test temporary root.** `npm test` now runs `test/helpers/run-tests.js`. It
+  creates one temporary root per run under the inherited temporary directory,
+  passes it to the tests as `TMPDIR` and removes it on success, failure and
+  `SIGINT`/`SIGTERM`, keeping the exit code. A full run used to leave about
+  1,080 directories (about 300 MB) behind. Run a single file with
+  `npm test -- test/<file>.test.js`. CI keeps running `npm test`.
+
 ## 0.10.1 — Post-merge delivery proven by merge-commit ancestry
 
 `sdd-verify` and `sdd-archive` run on the base branch after the merge and write

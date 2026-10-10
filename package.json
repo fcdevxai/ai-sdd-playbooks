@@ -1,6 +1,6 @@
 {
   "name": "playbook-ai",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "Spec-Driven Development methodology: global Agent Skills + the `playbook` CLI for Claude Code, GitHub Copilot, and Codex. Unifies the deterministic lifecycle engine (formerly ai-sdd-playbooks) with multi-repo orchestration, ADRs, and token-efficiency tooling (formerly specloom).",
   "private": true,
   "type": "module",
@@ -18,7 +18,7 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "test": "node --test test/*.test.js",
+    "test": "node test/helpers/run-tests.js",
     "generate": "node src/generator/generate-skills.js",
     "generate:check": "node src/generator/generate-skills.js --check"
   },

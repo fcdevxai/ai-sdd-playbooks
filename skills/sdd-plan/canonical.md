@@ -39,6 +39,12 @@ the API), and existing implementation files in the affected modules.
 
 ## Behavior
 
+**Agent identity.** Pass `--agent`, `--provider` and `--model` as separate
+flags, each with the value your runtime reports (for example `--agent claude
+--provider anthropic --model <model-id>`). Omit a flag whose value is unknown;
+the CLI records it as `unknown`. Never pack several values into `--agent`. These
+values are declared by the caller, never observed by the CLI.
+
 1. Map each acceptance criterion to impacted layers; identify files to create or
    modify; identify only truly-needed setup commands. All commands in `tasks.md`
    must be written to run from the repo root — never assume a task-specific `cd`.
@@ -99,7 +105,7 @@ handoff:
    `handoff.source_paths.<repo>` before generating gate evidence; never inventory
    arbitrary untracked files or secrets automatically.
 4. Generate the context packet and first handoff: run `playbook packet
-   <change-id> --stage sdd-plan --agent <agent>`. It derives
+   <change-id> --stage sdd-plan --agent <agent> --provider <provider> --model <model>`. It derives
    `context-packet.md` from `proposal.md` + `tasks.md` (verbatim acceptance
    criteria, constraints, security considerations, files touched, verification
    commands) so later gates read one compact file instead of both sources in

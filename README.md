@@ -239,7 +239,7 @@ inline audit comments against existing docs).
 
 ```bash
 npm ci
-npm test              # node --test test/*.test.js
+npm test              # node --test test/*.test.js in a per-run TMPDIR, removed afterwards
 npm run generate       # regenerate skills/<name>/SKILL.md from canonical.md
 npm run generate:check # CI: fail if SKILL.md is out of sync with canonical.md
 ```

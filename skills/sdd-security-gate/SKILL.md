@@ -66,10 +66,16 @@ to build it, then `playbook spec-read openspec/specs/<file>#<anchor>`. If
 
 ## Behavior
 
+**Agent identity.** Pass `--agent`, `--provider` and `--model` as separate
+flags, each with the value your runtime reports (for example `--agent claude
+--provider anthropic --model <model-id>`). Omit a flag whose value is unknown;
+the CLI records it as `unknown`. Never pack several values into `--agent`. These
+values are declared by the caller, never observed by the CLI.
+
 Generate the stage handoff from the SDD Hub with `playbook packet <change-id>
---stage sdd-security-gate --agent <agent>` before assessing the change. Capture
+--stage sdd-security-gate --agent <agent> --provider <provider> --model <model>` before assessing the change. Capture
 the applicable security checks through `playbook run --change <change-id>
---step security --repo <repo> --agent <agent> -- <command>`; keep the private
+--step security --repo <repo> --agent <agent> --provider <provider> --model <model> -- <command>`; keep the private
 raw output and its execution receipt. A `not_applicable` decision still needs
 an observed source-bound receipt supporting its scope assessment.
 
