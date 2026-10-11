@@ -57,12 +57,18 @@ the spec and report why.
 
 ## Behavior
 
+**Agent identity.** Pass `--agent`, `--provider` and `--model` as separate
+flags, each with the value your runtime reports (for example `--agent claude
+--provider anthropic --model <model-id>`). Omit a flag whose value is unknown;
+the CLI records it as `unknown`. Never pack several values into `--agent`. These
+values are declared by the caller, never observed by the CLI.
+
 Before reviewing, generate a fresh handoff from the SDD Hub with
-`playbook packet <change-id> --stage sdd-code-review --agent <agent>`; declare
+`playbook packet <change-id> --stage sdd-code-review --agent <agent> --provider <provider> --model <model>`; declare
 provider/model only when observed or known. Read its stage manifest and stop if
 `playbook validate <change-id>` reports stale references. Capture at least one
 actual review/quality command through `playbook run --change <change-id> --step
-review --repo <repo> --agent <agent> -- <command>` so the report has an
+review --repo <repo> --agent <agent> --provider <provider> --model <model> -- <command>` so the report has an
 execution receipt and retained raw output. Use one run per affected repository
 when commands differ.
 

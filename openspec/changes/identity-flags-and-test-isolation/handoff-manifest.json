@@ -1,0 +1,190 @@
+{
+  "schema": "handoff-manifest",
+  "schema_version": 1,
+  "change_id": "identity-flags-and-test-isolation",
+  "stage": "sdd-commit",
+  "requirement": {
+    "repository": "loom",
+    "path": "openspec/changes/identity-flags-and-test-isolation/proposal.md",
+    "hash": "dcf1a5181d681791ace333f8d28f6e34b28539b95f27e219de3f9aa3c8873f3b"
+  },
+  "spec": [
+    {
+      "repository": "loom",
+      "path": "openspec/specs/system.md",
+      "hash": "ee6f5149d4b46eabc5cb367181d1c64e5fea62b89f62b5ce7f6108f6812438fe"
+    },
+    {
+      "repository": "loom",
+      "path": "openspec/specs/playbooks/spec.md",
+      "hash": "a931a2b2d3f0f77a09ddad9aa067de8441bf45c3f2611ddb623828934b8a0768"
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-1",
+      "reference": "openspec/changes/identity-flags-and-test-isolation/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-2",
+      "reference": "openspec/changes/identity-flags-and-test-isolation/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-3",
+      "reference": "openspec/changes/identity-flags-and-test-isolation/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-4",
+      "reference": "openspec/changes/identity-flags-and-test-isolation/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-5",
+      "reference": "openspec/changes/identity-flags-and-test-isolation/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-6",
+      "reference": "openspec/changes/identity-flags-and-test-isolation/proposal.md#acceptance-criteria"
+    }
+  ],
+  "error_cases": [
+    {
+      "id": "EC-1",
+      "reference": "openspec/changes/identity-flags-and-test-isolation/proposal.md#error-cases"
+    },
+    {
+      "id": "EC-2",
+      "reference": "openspec/changes/identity-flags-and-test-isolation/proposal.md#error-cases"
+    },
+    {
+      "id": "EC-3",
+      "reference": "openspec/changes/identity-flags-and-test-isolation/proposal.md#error-cases"
+    }
+  ],
+  "security_criteria": [
+    {
+      "id": "SEC-1",
+      "reference": "openspec/changes/identity-flags-and-test-isolation/proposal.md#security-considerations"
+    },
+    {
+      "id": "SEC-2",
+      "reference": "openspec/changes/identity-flags-and-test-isolation/proposal.md#security-considerations"
+    }
+  ],
+  "repositories": [
+    {
+      "name": "loom",
+      "branch": "identity-flags-and-test-isolation",
+      "commit_sha": "d41acc99b001a7bb7ce197cf1d0ba60e36d34fb3",
+      "source_hash": "6e54a418f5f1aaa83e6a075c5a4a883ccfb4a3510652411af5ccfea8bced80d8",
+      "inventory_count": 291,
+      "tree_hash": "37323d1101847192fb02aef35cbc876a86d3e55be573c39b28d3411935114b5b"
+    }
+  ],
+  "context_repositories": [],
+  "design": null,
+  "tasks": {
+    "repository": "loom",
+    "path": "openspec/changes/identity-flags-and-test-isolation/tasks.md",
+    "hash": "f76c07494d9e1548ae5d844548e97db28ec006f32f135ee2fbce3d8a7adef3e1",
+    "normative_hash": "4f78b58495e6f9418fe2114a8ebfd4e7e3def41be60c5d999b13071fced409c2"
+  },
+  "contracts": [
+    {
+      "repository": "loom",
+      "path": "openspec/specs/contracts/openapi.yaml",
+      "content_hash": "18a5d47d03953801479346fe7779ac169469c18fd63c05f65585561693460a4f"
+    }
+  ],
+  "architecture": [
+    {
+      "repository": "loom",
+      "path": "docs/doc_architecture.md",
+      "hash": "aa74cf1460f20968b09b30c7c3083dd35459982a3a9c6457f3365fd79ab6354e"
+    },
+    {
+      "repository": "loom",
+      "path": "docs/doc_verification_guide.md",
+      "hash": "a2d69c16d3f7cfa04ad4babd7057a95f9175a5b76af5eae6a4e53046efed44d6"
+    }
+  ],
+  "required_skills": [
+    {
+      "name": "sdd-apply",
+      "repository": "loom",
+      "path": "skills/sdd-apply/SKILL.md",
+      "hash": "7d1472e3e857962caa56a26d88e034d7ef25f4259e8a555dd719ff050add33da"
+    }
+  ],
+  "required_tools": [
+    {
+      "name": "playbook",
+      "context": "loom",
+      "purpose": "lifecycle"
+    },
+    {
+      "name": "node",
+      "context": "loom",
+      "purpose": "test-runner"
+    }
+  ],
+  "runtime_coverage": [],
+  "non_runtime_criteria": [
+    {
+      "criterion": "AC-1",
+      "rationale": "Skill instruction text; proven by the skill contract test and generate:check"
+    },
+    {
+      "criterion": "AC-2",
+      "rationale": "Generated skill parity and a contract test; no runtime surface."
+    },
+    {
+      "criterion": "AC-3",
+      "rationale": "Test tooling only; proven by runner unit tests and a full npm test run"
+    },
+    {
+      "criterion": "AC-4",
+      "rationale": "Temporary-directory count before and after a full npm test run; test tooling only."
+    },
+    {
+      "criterion": "AC-5",
+      "rationale": "Runner exit-code and argument forwarding tests; test tooling only."
+    },
+    {
+      "criterion": "AC-6",
+      "rationale": "CI workflow unchanged; proven by local Node 18/20 runs and the pull-request CI matrix."
+    },
+    {
+      "criterion": "EC-1",
+      "rationale": "Runner test with a failing test file; test tooling only."
+    },
+    {
+      "criterion": "EC-2",
+      "rationale": "Runner test sending SIGTERM; test tooling only."
+    },
+    {
+      "criterion": "EC-3",
+      "rationale": "Runner test with an unusable parent temporary directory; test tooling only."
+    },
+    {
+      "criterion": "SEC-1",
+      "rationale": "Runner removal-scope unit tests (refuses paths outside its own root); test tooling only."
+    },
+    {
+      "criterion": "SEC-2",
+      "rationale": "Skill text and contract test; no change to receipts or CLI."
+    }
+  ],
+  "unresolved_risks": [
+    "Tests that spawn processes with an explicit env may drop TMPDIR and still use the system directory; the AC-4 count check detects them."
+  ],
+  "blockers": [],
+  "producer": {
+    "agent": "claude",
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "provenance": "caller_declared"
+  },
+  "identity_issues": [],
+  "created_at": "2026-10-10T14:51:27.561Z",
+  "design_not_applicable_reason": "Design not required by proposal impact and project configuration"
+}

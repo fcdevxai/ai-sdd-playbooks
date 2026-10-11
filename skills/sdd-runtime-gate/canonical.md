@@ -17,6 +17,12 @@ version: 0.1.0
 
 ## Purpose
 
+**Agent identity.** Pass `--agent`, `--provider` and `--model` as separate
+flags, each with the value your runtime reports (for example `--agent claude
+--provider anthropic --model <model-id>`). Omit a flag whose value is unknown;
+the CLI records it as `unknown`. Never pack several values into `--agent`. These
+values are declared by the caller, never observed by the CLI.
+
 One capability-driven runtime gate that replaces separate UX and E2E gates.
 Applicability comes from `capabilities:` and, for multi-repo projects, explicit
 `repos.<name>.capabilities` in `playbook.config.yaml`, combined with the
@@ -24,9 +30,9 @@ criterion/repository mappings in `tasks.md`'s `handoff.runtime_coverage`. An
 incomplete adapter **blocks** — it must never fabricate a `passed`.
 
 Generate a fresh stage handoff from the SDD Hub with `playbook packet
-<change-id> --stage sdd-runtime-gate --agent <agent>` before collecting
+<change-id> --stage sdd-runtime-gate --agent <agent> --provider <provider> --model <model>` before collecting
 evidence. Use `playbook run --change <change-id> --step runtime --repo <repo>
---agent <agent> -- <command>` for executable checks and retain the resulting
+--agent <agent> --provider <provider> --model <model> -- <command>` for executable checks and retain the resulting
 receipt and raw output. MCP-only observations need an independently retained
 raw record captured into a source-bound execution receipt; if that cannot be
 done without fabricating evidence, mark the adapter `blocked`.

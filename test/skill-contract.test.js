@@ -549,3 +549,42 @@ test('sdd-commit and sdd-verify describe checkout context and delivered evaluati
   assert.match(verify, /judged\s+as delivered/i);
   assert.match(verify, /not\s+applicable\s+after\s+delivery/i);
 });
+
+// Change identity-flags-and-test-isolation (0.10.2): an agent that packs its identity into
+// `--agent` records provider and model as `unknown`. Every lifecycle command a skill shows
+// therefore carries the three identity flags, and the skill states how to fill them.
+const IDENTITY_RULE = /\*\*Agent identity\.\*\*/;
+
+function identityInvocations(markdown) {
+  // Inline code spans may wrap across lines; `[^`]` keeps each span separate.
+  return [...markdown.matchAll(/`([^`]*playbook (?:packet|run)[^`]*)`/g)]
+    .map((match) => match[1].replace(/\s+/g, ' '))
+    .filter((span) => span.includes('--agent'));
+}
+
+test('every skill command that names --agent also passes --provider and --model, with the identity rule (AC-1, AC-2, SEC-2)', () => {
+  const missing = [];
+  let skillsWithInvocations = 0;
+  for (const name of fs.readdirSync(SKILLS_DIR)) {
+    for (const file of ['canonical.md', 'SKILL.md']) {
+      const full = path.join(SKILLS_DIR, name, file);
+      if (!fs.existsSync(full)) continue;
+      const markdown = fs.readFileSync(full, 'utf8');
+      const spans = identityInvocations(markdown);
+      if (spans.length === 0) continue;
+      if (file === 'canonical.md') skillsWithInvocations += 1;
+      for (const span of spans) {
+        if (!/--provider <provider>/.test(span) || !/--model <model>/.test(span)) missing.push(`${name}/${file}: ${span}`);
+      }
+      if (!IDENTITY_RULE.test(markdown)) missing.push(`${name}/${file}: no **Agent identity.** rule`);
+      else {
+        const rule = markdown.slice(markdown.search(IDENTITY_RULE)).split(/\n\s*\n/)[0];
+        for (const required of [/separate/i, /unknown/i, /never/i, /declared/i]) {
+          if (!required.test(rule)) missing.push(`${name}/${file}: identity rule lacks ${required}`);
+        }
+      }
+    }
+  }
+  assert.ok(skillsWithInvocations >= 7, `expected the seven lifecycle skills, found ${skillsWithInvocations}`);
+  assert.deepEqual(missing, []);
+});

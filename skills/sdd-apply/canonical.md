@@ -44,8 +44,14 @@ present), `openspec/specs/system.md`, the affected domain spec, the project's
 
 ## Behavior
 
+**Agent identity.** Pass `--agent`, `--provider` and `--model` as separate
+flags, each with the value your runtime reports (for example `--agent claude
+--provider anthropic --model <model-id>`). Omit a flag whose value is unknown;
+the CLI records it as `unknown`. Never pack several values into `--agent`. These
+values are declared by the caller, never observed by the CLI.
+
 1. Set `tasks.md` `status: in_progress`, then run `playbook packet <change-id>
-   --stage sdd-apply --agent <agent>` from the SDD Hub. Read the handoff
+   --stage sdd-apply --agent <agent> --provider <provider> --model <model>` from the SDD Hub. Read the handoff
    manifest before executing tasks. If new untracked implementation files are
    added, declare only those paths under `tasks.md` `handoff.source_paths.<repo>`
    and regenerate the handoff before using their test receipts as gate evidence.
@@ -77,7 +83,7 @@ present), `openspec/specs/system.md`, the affected domain spec, the project's
    d. Before running the verification command, check `pwd` — never assume the
       cwd inherited from a previous task or step.
    e. Run the task-level verification command from `docs/doc_verification_guide.md`
-      through `playbook run --change <change-id> --step apply --agent <agent>
+      through `playbook run --change <change-id> --step apply --agent <agent> --provider <provider> --model <model>
       [--repo <repo>] -- <command>` —
       it prints a compacted summary (one line on success; exit code + last 40
       lines on failure) while the full output always lands at
@@ -99,7 +105,7 @@ present), `openspec/specs/system.md`, the affected domain spec, the project's
    the ADR survives the archive.
 5. Closure: run the project quality gates (format, lint/type-check, feature tests,
    regression if risk warrants) from `docs/doc_verification_guide.md`, each
-   through `playbook run --change <change-id> --step apply --agent <agent>
+   through `playbook run --change <change-id> --step apply --agent <agent> --provider <provider> --model <model>
    [--repo <repo>] -- <command>`.
 6. Append an **Execution Report** to `tasks.md` (verified ACs → test/evidence,
    commands run, receipt paths, raw references and result). When every task
