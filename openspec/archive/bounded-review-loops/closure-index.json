@@ -1,0 +1,362 @@
+{
+  "schema": "closure-index",
+  "schema_version": 1,
+  "change_id": "bounded-review-loops",
+  "verified_commit_sha": "691b0314cb2e6e11e8349064f83cf6bf39c96b03",
+  "reference_rebase": {
+    "from": "openspec/changes/bounded-review-loops/",
+    "to": "openspec/archive/bounded-review-loops/"
+  },
+  "repositories": [
+    {
+      "name": "loom",
+      "branch": "bounded-review-loops",
+      "commit_sha": "691b0314cb2e6e11e8349064f83cf6bf39c96b03",
+      "source_hash": "bf1752a93a0d95e5d9986f9698001592d1ba7f2304fd8557d04b43aeac7bb445",
+      "inventory_count": 287,
+      "tree_hash": "08506e2484d23cab7966e6e51da8c33c873d407ba6159ba258138bbe87605954"
+    }
+  ],
+  "files": [
+    {
+      "path": "OWNER.md",
+      "sha256": "80d84f9b2c0cf17926956ca6971159eeb5ff154b62c29f22a9f67e50a386b3f5"
+    },
+    {
+      "path": "code-review-report.md",
+      "sha256": "fcc39ec8b68d997769a4de058359564fd18c2110cc37883221261da0dabf2b10"
+    },
+    {
+      "path": "context-packet.md",
+      "sha256": "647b9862ef7ac09e1083f5dcfbfc48580bde5be3eb16fd6e3bb6e3e1c8201e9e"
+    },
+    {
+      "path": "evidence-binding-code-review-report-loom-bb3ff11a85df145df757938f5a24a67ee7fe6513.json",
+      "sha256": "5ce9e8a3110d60ac27b0408c84efec8da2ac56350b8977f4bc825358eb743011"
+    },
+    {
+      "path": "evidence-binding-runtime-gate-report-loom-bb3ff11a85df145df757938f5a24a67ee7fe6513.json",
+      "sha256": "f659c683e28a7048cdecb8db85da0201dd3f9029acb4b8127d905632ea8fb27f"
+    },
+    {
+      "path": "evidence-binding-security-report-loom-bb3ff11a85df145df757938f5a24a67ee7fe6513.json",
+      "sha256": "179db070e43f4b73a5baf976d6adf1208efa888b3ed74607220960f6dff0ee5c"
+    },
+    {
+      "path": "handoff-manifest-sdd-apply-6ad061291f7baf385cf59fa5bd8b0168f90d196bab348278e2f50dd98a80887a.json",
+      "sha256": "6ad061291f7baf385cf59fa5bd8b0168f90d196bab348278e2f50dd98a80887a"
+    },
+    {
+      "path": "handoff-manifest-sdd-apply-a7f64c3ab93174532d06a78430e5b3afed2c98c5e29e198aef195254c0509b12.json",
+      "sha256": "a7f64c3ab93174532d06a78430e5b3afed2c98c5e29e198aef195254c0509b12"
+    },
+    {
+      "path": "handoff-manifest-sdd-apply-d4e8fe2516588abb83e4d7d733eaf79270c7c02f3cff75b34ec5ec684e311af7.json",
+      "sha256": "d4e8fe2516588abb83e4d7d733eaf79270c7c02f3cff75b34ec5ec684e311af7"
+    },
+    {
+      "path": "handoff-manifest-sdd-apply-f8259d341874a9c3da562431471b24567aad2cefab7563a266868bfd18178217.json",
+      "sha256": "f8259d341874a9c3da562431471b24567aad2cefab7563a266868bfd18178217"
+    },
+    {
+      "path": "handoff-manifest-sdd-apply-f95dfcba4448078193bc4563e4a3a3b160f2bdb186c64004188a0c6e17c61a88.json",
+      "sha256": "f95dfcba4448078193bc4563e4a3a3b160f2bdb186c64004188a0c6e17c61a88"
+    },
+    {
+      "path": "handoff-manifest-sdd-code-review-0074a153b53e62aa3ada3250792724de85e97911db770ba4755c8863ab717a2a.json",
+      "sha256": "0074a153b53e62aa3ada3250792724de85e97911db770ba4755c8863ab717a2a"
+    },
+    {
+      "path": "handoff-manifest-sdd-code-review-1409c92d95cbcfde7626611b86bc98099d13ee042c2e693014f2b6ac86125cc3.json",
+      "sha256": "1409c92d95cbcfde7626611b86bc98099d13ee042c2e693014f2b6ac86125cc3"
+    },
+    {
+      "path": "handoff-manifest-sdd-commit-b7a5acdd97a75f7ded715b9f3d085b5ebf287587a5ba91a429228031ff90dc8a.json",
+      "sha256": "b7a5acdd97a75f7ded715b9f3d085b5ebf287587a5ba91a429228031ff90dc8a"
+    },
+    {
+      "path": "handoff-manifest-sdd-plan-72c14dd129a59d87618a457e2bff64e4f61fa57ea1a1411a9705783bb5050711.json",
+      "sha256": "72c14dd129a59d87618a457e2bff64e4f61fa57ea1a1411a9705783bb5050711"
+    },
+    {
+      "path": "handoff-manifest-sdd-runtime-gate-3b3092bf17757d771b1beb29b2044980bc7e5e4b8d9a182783b7f42fa2e7342c.json",
+      "sha256": "3b3092bf17757d771b1beb29b2044980bc7e5e4b8d9a182783b7f42fa2e7342c"
+    },
+    {
+      "path": "handoff-manifest-sdd-security-gate-e85286bd3a237d7872b9dd7f37370bb4fbc51767f0cc31994a94c711dece78b5.json",
+      "sha256": "e85286bd3a237d7872b9dd7f37370bb4fbc51767f0cc31994a94c711dece78b5"
+    },
+    {
+      "path": "handoff-manifest-sdd-verify-c99ae7f9a01ac0b244971b55e5ac0f77c7ca7d3ba53e2539c28cabfdb50042d5.json",
+      "sha256": "c99ae7f9a01ac0b244971b55e5ac0f77c7ca7d3ba53e2539c28cabfdb50042d5"
+    },
+    {
+      "path": "handoff-manifest.json",
+      "sha256": "c99ae7f9a01ac0b244971b55e5ac0f77c7ca7d3ba53e2539c28cabfdb50042d5"
+    },
+    {
+      "path": "proposal.md",
+      "sha256": "65fc6807733cc85c8f48f73ee25b071efc5a8400a1eed084ca94cfc96054ec41"
+    },
+    {
+      "path": "runtime-gate-report.md",
+      "sha256": "8e675a0308e3c7b83e463ff9e4714a3be64b011fa3c7fae5a0b36c56d50eee31"
+    },
+    {
+      "path": "security-report.md",
+      "sha256": "89412c24866e17ce7c8f07730aa97dee4127c9caba54f5a4b39fcb5b91746f9b"
+    },
+    {
+      "path": "tasks.md",
+      "sha256": "36a12153da0408b2c41ca4f70691c9344d13df378f108e65cc0099192819895c"
+    },
+    {
+      "path": "verification-report.md",
+      "sha256": "b6b4c8fbf8f4beaca4d4c10bf47c5e9596469f553553abb21ddfa0e440b7d89c"
+    }
+  ],
+  "restricted_raw": [
+    {
+      "original_reference": ".specloom/runs/1791747662409-3cdf4327-nz6BPk/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791747662409-3cdf4327-nz6BPk/execution-receipt.json",
+      "sha256": "3c4858678b06a4f1f3259de49d80eb37050e24e414938ee0a6bf995c68255464",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791747662409-3cdf4327-nz6BPk/full.log",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791747662409-3cdf4327-nz6BPk/full.log",
+      "sha256": "8b5defae3f0dbf181180be49a3ea26bcdb7d4cd109094408cc9e3dafe506be8f",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791747662409-3cdf4327-nz6BPk/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791747662409-3cdf4327-nz6BPk/stdout.raw",
+      "sha256": "8b5defae3f0dbf181180be49a3ea26bcdb7d4cd109094408cc9e3dafe506be8f",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791747662409-3cdf4327-nz6BPk/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791747662409-3cdf4327-nz6BPk/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791747670424-fe08bd9e-AyK2Yj/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791747670424-fe08bd9e-AyK2Yj/execution-receipt.json",
+      "sha256": "f9ec8a083b888f845f4e79e39dbfb79ca7ecdd98cebb49a78568ea0577b8107a",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791747670424-fe08bd9e-AyK2Yj/full.log",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791747670424-fe08bd9e-AyK2Yj/full.log",
+      "sha256": "8fb4733c58be33be1099a2b492b9b8745f9b71c1a9c59448520c2c27baad9618",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791747670424-fe08bd9e-AyK2Yj/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791747670424-fe08bd9e-AyK2Yj/stdout.raw",
+      "sha256": "8fb4733c58be33be1099a2b492b9b8745f9b71c1a9c59448520c2c27baad9618",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791747670424-fe08bd9e-AyK2Yj/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791747670424-fe08bd9e-AyK2Yj/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791748526792-e743c175-H8vFJP/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791748526792-e743c175-H8vFJP/execution-receipt.json",
+      "sha256": "419da20d166df9e4b4230d2ae58f66075176f04ed0191e458e68e8d7b2ace25c",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791748526792-e743c175-H8vFJP/full.log",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791748526792-e743c175-H8vFJP/full.log",
+      "sha256": "c17e2e100474e6f9ecf5c3f55954777b3d9f7d924c112c4c8bb937985f9773ed",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791748526792-e743c175-H8vFJP/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791748526792-e743c175-H8vFJP/stdout.raw",
+      "sha256": "c17e2e100474e6f9ecf5c3f55954777b3d9f7d924c112c4c8bb937985f9773ed",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791748526792-e743c175-H8vFJP/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791748526792-e743c175-H8vFJP/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791748541894-8472b89e-HRzkH1/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791748541894-8472b89e-HRzkH1/execution-receipt.json",
+      "sha256": "92768d1b222efe2bfd6e489de16a60f9f5fe4650ee4e0b96f3fb445c47f5635a",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791748541894-8472b89e-HRzkH1/full.log",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791748541894-8472b89e-HRzkH1/full.log",
+      "sha256": "d8fd29f729ebd73fc218ffeabc299d46a929b361197e2dd1659b43e07d4eeacb",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791748541894-8472b89e-HRzkH1/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791748541894-8472b89e-HRzkH1/stdout.raw",
+      "sha256": "d8fd29f729ebd73fc218ffeabc299d46a929b361197e2dd1659b43e07d4eeacb",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791748541894-8472b89e-HRzkH1/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791748541894-8472b89e-HRzkH1/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791748570393-b56eeb21-HMwrFG/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791748570393-b56eeb21-HMwrFG/execution-receipt.json",
+      "sha256": "6d0683bd401f88c5bc10c32edbd7325c464b5b46f4f879c64a148916c4874165",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791748570393-b56eeb21-HMwrFG/full.log",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791748570393-b56eeb21-HMwrFG/full.log",
+      "sha256": "cf3bce5bd964eb63833b546ce3c8864f1df9d6ed4f39fc5ccf49ff63dca96c7e",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791748570393-b56eeb21-HMwrFG/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791748570393-b56eeb21-HMwrFG/stdout.raw",
+      "sha256": "cf3bce5bd964eb63833b546ce3c8864f1df9d6ed4f39fc5ccf49ff63dca96c7e",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791748570393-b56eeb21-HMwrFG/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791748570393-b56eeb21-HMwrFG/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791749330203-30c3c1ea-e4qWWz/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791749330203-30c3c1ea-e4qWWz/execution-receipt.json",
+      "sha256": "7fec339b0f17d535de4960feee0ea8eb8695020773ad15ef74399efca9101d27",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791749330203-30c3c1ea-e4qWWz/full.log",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791749330203-30c3c1ea-e4qWWz/full.log",
+      "sha256": "b2de1eaab329184a13b2f11c54ab9c05578b5342dbae550ef4b680cde6e65a0f",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791749330203-30c3c1ea-e4qWWz/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791749330203-30c3c1ea-e4qWWz/stdout.raw",
+      "sha256": "b2de1eaab329184a13b2f11c54ab9c05578b5342dbae550ef4b680cde6e65a0f",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791749330203-30c3c1ea-e4qWWz/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791749330203-30c3c1ea-e4qWWz/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791749331125-724e3099-ztPRhb/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791749331125-724e3099-ztPRhb/execution-receipt.json",
+      "sha256": "6f8e9a7204e526d16dbc923ce1748232d94cbdeb1344a4efe8547f5e83dba5a9",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791749331125-724e3099-ztPRhb/full.log",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791749331125-724e3099-ztPRhb/full.log",
+      "sha256": "673bd1ac2a09b8cc555e2638855a5acedea6f08be3f44cdcf10a1deb4c061119",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791749331125-724e3099-ztPRhb/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791749331125-724e3099-ztPRhb/stdout.raw",
+      "sha256": "673bd1ac2a09b8cc555e2638855a5acedea6f08be3f44cdcf10a1deb4c061119",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791749331125-724e3099-ztPRhb/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791749331125-724e3099-ztPRhb/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791749332064-a36d2ff6-0EV8cC/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791749332064-a36d2ff6-0EV8cC/execution-receipt.json",
+      "sha256": "46272d63f06836dbecefbfb83ed4860aa3a9ac16859f9d96bb4eebf369aba60b",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791749332064-a36d2ff6-0EV8cC/full.log",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791749332064-a36d2ff6-0EV8cC/full.log",
+      "sha256": "3a5c7582f305235367c7db1112908fb31a74945d0052b0e25e39338747f12483",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791749332064-a36d2ff6-0EV8cC/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791749332064-a36d2ff6-0EV8cC/stdout.raw",
+      "sha256": "3a5c7582f305235367c7db1112908fb31a74945d0052b0e25e39338747f12483",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791749332064-a36d2ff6-0EV8cC/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791749332064-a36d2ff6-0EV8cC/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791750318091-fdc9e9a2-NdX5WV/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791750318091-fdc9e9a2-NdX5WV/execution-receipt.json",
+      "sha256": "f5144df13bbeb63e71ac82e7ffbbbaba27db47590a912a7fe54f00341abba1b8",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791750318091-fdc9e9a2-NdX5WV/full.log",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791750318091-fdc9e9a2-NdX5WV/full.log",
+      "sha256": "5fda26ede5da3b8ec74f90194df9eac37a4a472f0520b6645bc01545d7d7f640",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791750318091-fdc9e9a2-NdX5WV/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791750318091-fdc9e9a2-NdX5WV/stdout.raw",
+      "sha256": "5fda26ede5da3b8ec74f90194df9eac37a4a472f0520b6645bc01545d7d7f640",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791750318091-fdc9e9a2-NdX5WV/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791750318091-fdc9e9a2-NdX5WV/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791750319793-b530ef2c-46vF3e/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791750319793-b530ef2c-46vF3e/execution-receipt.json",
+      "sha256": "019f208a4ee25a1269b415de1804a05d52f646e5c8dee0ae89b01c302026c689",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791750319793-b530ef2c-46vF3e/full.log",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791750319793-b530ef2c-46vF3e/full.log",
+      "sha256": "a5a101caa0ca72a17b1f7e9d5e701331872e0f95a5f1041fb9bd4948b1122316",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791750319793-b530ef2c-46vF3e/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791750319793-b530ef2c-46vF3e/stdout.raw",
+      "sha256": "a5a101caa0ca72a17b1f7e9d5e701331872e0f95a5f1041fb9bd4948b1122316",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1791750319793-b530ef2c-46vF3e/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops/1791750319793-b530ef2c-46vF3e/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    }
+  ],
+  "raw_root": "/mnt/data/playbook-closure/bounded-review-loops-20261011T204450Z/retained-closure/bounded-review-loops",
+  "created_at": "2026-10-11T20:44:53.495Z"
+}

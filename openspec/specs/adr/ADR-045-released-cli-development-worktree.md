@@ -1,6 +1,6 @@
 ---
 schema: adr
-status: proposed
+status: accepted
 date: '2026-10-11'
 ticket: bounded-review-loops
 ---
@@ -17,8 +17,8 @@ released checkout, and development happens in a separate worktree. ADR-042 alrea
 narrower case of a change to the gate code itself. Nothing in this repository writes the
 general rule down, and nothing detects a global CLI that runs from a development tree.
 
-The README also still shows the install command of the former repository
-(`github:lablab-outplacement/lablab-playbook-ai-v2`), while the CI templates install from
+The README also still showed an install command that points at a repository of a former
+organization, which is not this project's source, while the CI templates install from
 `github:fcdevxai/ai-sdd-playbooks`.
 
 ## Decision

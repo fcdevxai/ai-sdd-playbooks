@@ -1,7 +1,7 @@
 ---
 status: implemented
 owner: felipe
-last_updated: 2026-10-08
+last_updated: 2026-10-11
 ---
 
 # CLI Consumer-Root Behavior
@@ -349,6 +349,36 @@ Added in change `token-saving-parity`.
 - This closes the loop on `loom index`/spec index above: a consumer project
   that never ran it now gets a one-line nudge instead of silently missing out
   on section-first reads.
+
+## Release provenance advisory (`playbook doctor`)
+
+Added in change `bounded-review-loops` (`0.11.0`, see **ADR-045**).
+
+- `releaseProvenance({ root, version, runGit })` (`src/cli/doctor.js`) is an advisory
+  check of whether the running CLI is a released checkout. `root` is the package root
+  (`PACKAGE_ROOT`, derived from the module location, never from arguments, environment
+  variables or project files) and `version` is the package version.
+- It returns a warning when `root` is a git checkout whose `HEAD` does not carry the tag
+  `v<version>`, or whose working tree has changes (tracked, or untracked and not ignored).
+  The warning names the path, the short commit, the tags found, the expected tag and
+  whether there are uncommitted changes, and nothing else.
+- It returns neither warning nor note when `root` is not a git checkout (a package
+  install), when the git top level is not `root` itself (the package lives inside another
+  repository), or when the checkout is clean at the expected tag.
+- If `git` is unavailable, fails or times out, it returns no warning and a fixed note
+  (`release provenance could not be checked: <reason>`) without echoing git's stderr.
+- `git` runs through `execFileSync` with a fixed argument array and no shell, a 2 second
+  timeout, `cwd` set to the package root, and an environment without any `GIT_*` variable
+  except `GIT_NO_REPLACE_OBJECTS`, so inherited repository selectors (`GIT_DIR`,
+  `GIT_WORK_TREE`, `GIT_INDEX_FILE`, `GIT_COMMON_DIR`) cannot redirect it. It is read-only:
+  `rev-parse --show-toplevel`, `rev-parse --short HEAD`, `tag --points-at HEAD`,
+  `status --porcelain`.
+- `playbook doctor` pushes the result to the non-blocking `warnings[]` and `notes[]`
+  channels (text and `--json`); it never affects `healthy` or the exit code. A methodology
+  worktree or a CI checkout therefore shows the warning by design.
+- Known limit: with a translated `git`, the "not a git repository" message may not match,
+  and a package install can show the extra note instead of staying silent. A follow-up sets
+  `LC_ALL=C` for these calls.
 
 ## JSON output
 
