@@ -1,0 +1,86 @@
+{
+  "schema": "evidence-binding",
+  "schema_version": 1,
+  "change_id": "bounded-review-loops",
+  "repository": "loom",
+  "report": {
+    "repository": "loom",
+    "path": "openspec/changes/bounded-review-loops/runtime-gate-report.md",
+    "hash": "8e675a0308e3c7b83e463ff9e4714a3be64b011fa3c7fae5a0b36c56d50eee31"
+  },
+  "previous_commit_sha": "749bc97cede527899499a796505801c6060adedc",
+  "current_commit_sha": "bb3ff11a85df145df757938f5a24a67ee7fe6513",
+  "governed_hash": "08506e2484d23cab7966e6e51da8c33c873d407ba6159ba258138bbe87605954",
+  "evidence_only_paths": [
+    "openspec/changes/bounded-review-loops/code-review-report.md",
+    "openspec/changes/bounded-review-loops/context-packet.md",
+    "openspec/changes/bounded-review-loops/handoff-manifest-sdd-apply-6ad061291f7baf385cf59fa5bd8b0168f90d196bab348278e2f50dd98a80887a.json",
+    "openspec/changes/bounded-review-loops/handoff-manifest-sdd-apply-a7f64c3ab93174532d06a78430e5b3afed2c98c5e29e198aef195254c0509b12.json",
+    "openspec/changes/bounded-review-loops/handoff-manifest-sdd-apply-d4e8fe2516588abb83e4d7d733eaf79270c7c02f3cff75b34ec5ec684e311af7.json",
+    "openspec/changes/bounded-review-loops/handoff-manifest-sdd-apply-f8259d341874a9c3da562431471b24567aad2cefab7563a266868bfd18178217.json",
+    "openspec/changes/bounded-review-loops/handoff-manifest-sdd-apply-f95dfcba4448078193bc4563e4a3a3b160f2bdb186c64004188a0c6e17c61a88.json",
+    "openspec/changes/bounded-review-loops/handoff-manifest-sdd-code-review-0074a153b53e62aa3ada3250792724de85e97911db770ba4755c8863ab717a2a.json",
+    "openspec/changes/bounded-review-loops/handoff-manifest-sdd-code-review-1409c92d95cbcfde7626611b86bc98099d13ee042c2e693014f2b6ac86125cc3.json",
+    "openspec/changes/bounded-review-loops/handoff-manifest-sdd-plan-72c14dd129a59d87618a457e2bff64e4f61fa57ea1a1411a9705783bb5050711.json",
+    "openspec/changes/bounded-review-loops/handoff-manifest-sdd-runtime-gate-3b3092bf17757d771b1beb29b2044980bc7e5e4b8d9a182783b7f42fa2e7342c.json",
+    "openspec/changes/bounded-review-loops/handoff-manifest-sdd-security-gate-e85286bd3a237d7872b9dd7f37370bb4fbc51767f0cc31994a94c711dece78b5.json",
+    "openspec/changes/bounded-review-loops/handoff-manifest.json",
+    "openspec/changes/bounded-review-loops/runtime-gate-report.md",
+    "openspec/changes/bounded-review-loops/security-report.md",
+    "openspec/changes/bounded-review-loops/tasks.md"
+  ],
+  "equivalence": {
+    "kind": "identical-governed-content",
+    "reviewed_tree_hash": "08506e2484d23cab7966e6e51da8c33c873d407ba6159ba258138bbe87605954",
+    "committed_tree_hash": "08506e2484d23cab7966e6e51da8c33c873d407ba6159ba258138bbe87605954",
+    "governed_paths_committed": [
+      "CHANGELOG.md",
+      "README.md",
+      "docs/agent_architecture.md",
+      "docs/doc_verification_guide.md",
+      "openspec/changes/bounded-review-loops/OWNER.md",
+      "openspec/changes/bounded-review-loops/adr-bounded-review-rounds.md",
+      "openspec/changes/bounded-review-loops/adr-released-cli-development-worktree.md",
+      "openspec/changes/bounded-review-loops/proposal.md",
+      "package-lock.json",
+      "package.json",
+      "skills/sdd-apply/SKILL.md",
+      "skills/sdd-apply/canonical.md",
+      "skills/sdd-code-review/SKILL.md",
+      "skills/sdd-code-review/canonical.md",
+      "skills/sdd-design/SKILL.md",
+      "skills/sdd-design/canonical.md",
+      "skills/sdd-runtime-gate/SKILL.md",
+      "skills/sdd-runtime-gate/canonical.md",
+      "skills/sdd-security-gate/SKILL.md",
+      "skills/sdd-security-gate/canonical.md",
+      "src/cli/doctor.js",
+      "templates/project/github/workflows/contract-drift-check.yml",
+      "templates/project/github/workflows/playbook-validation.yml",
+      "test/doctor.test.js",
+      "test/readme.test.js",
+      "test/skill-contract.test.js"
+    ],
+    "intervening_commits": [
+      "bb3ff11a85df145df757938f5a24a67ee7fe6513"
+    ],
+    "original_receipts": [
+      {
+        "repository": "loom",
+        "path": ".specloom/runs/1791749330203-30c3c1ea-e4qWWz/execution-receipt.json",
+        "sha256": "7fec339b0f17d535de4960feee0ea8eb8695020773ad15ef74399efca9101d27"
+      },
+      {
+        "repository": "loom",
+        "path": ".specloom/runs/1791749331125-724e3099-ztPRhb/execution-receipt.json",
+        "sha256": "6f8e9a7204e526d16dbc923ce1748232d94cbdeb1344a4efe8547f5e83dba5a9"
+      },
+      {
+        "repository": "loom",
+        "path": ".specloom/runs/1791749332064-a36d2ff6-0EV8cC/execution-receipt.json",
+        "sha256": "46272d63f06836dbecefbfb83ed4860aa3a9ac16859f9d96bb4eebf369aba60b"
+      }
+    ]
+  },
+  "created_at": "2026-10-11T20:15:26.156Z"
+}

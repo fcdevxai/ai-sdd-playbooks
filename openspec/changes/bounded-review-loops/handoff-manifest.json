@@ -2,7 +2,7 @@
   "schema": "handoff-manifest",
   "schema_version": 1,
   "change_id": "bounded-review-loops",
-  "stage": "sdd-runtime-gate",
+  "stage": "sdd-commit",
   "requirement": {
     "repository": "loom",
     "path": "openspec/changes/bounded-review-loops/proposal.md",
@@ -123,7 +123,7 @@
     {
       "name": "loom",
       "branch": "bounded-review-loops",
-      "commit_sha": "749bc97cede527899499a796505801c6060adedc",
+      "commit_sha": "bb3ff11a85df145df757938f5a24a67ee7fe6513",
       "source_hash": "bf1752a93a0d95e5d9986f9698001592d1ba7f2304fd8557d04b43aeac7bb445",
       "inventory_count": 287,
       "tree_hash": "08506e2484d23cab7966e6e51da8c33c873d407ba6159ba258138bbe87605954"
@@ -278,12 +278,12 @@
   ],
   "blockers": [],
   "producer": {
-    "agent": "claude",
-    "provider": "anthropic",
-    "model": "claude-opus-5-5",
+    "agent": "codex",
+    "provider": "openai",
+    "model": "gpt-6",
     "provenance": "caller_declared"
   },
   "identity_issues": [],
-  "created_at": "2026-10-11T20:08:49.747Z",
+  "created_at": "2026-10-11T20:15:16.730Z",
   "design_not_applicable_reason": "Design not required by proposal impact and project configuration"
 }

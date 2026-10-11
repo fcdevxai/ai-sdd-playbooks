@@ -1,0 +1,289 @@
+{
+  "schema": "handoff-manifest",
+  "schema_version": 1,
+  "change_id": "bounded-review-loops",
+  "stage": "sdd-commit",
+  "requirement": {
+    "repository": "loom",
+    "path": "openspec/changes/bounded-review-loops/proposal.md",
+    "hash": "65fc6807733cc85c8f48f73ee25b071efc5a8400a1eed084ca94cfc96054ec41"
+  },
+  "spec": [
+    {
+      "repository": "loom",
+      "path": "openspec/specs/system.md",
+      "hash": "f26e7d614e9f79c90c72fc7fd978aac951c64cac32ba4ba46bba31d85dcfbe00"
+    },
+    {
+      "repository": "loom",
+      "path": "openspec/specs/playbooks/spec.md",
+      "hash": "d149cf50398cb011ebf874581c7d40a8d46c5a2d3b0b8074ab153b317ffad244"
+    },
+    {
+      "repository": "loom",
+      "path": "openspec/specs/cli/spec.md",
+      "hash": "1b0c22b5c1cef7bc63b61aec57c131ba67b5b08cab79258c6b997c9db2a72903"
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-1",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-2",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-3",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-4",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-5",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-6",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-7",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-8",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-9",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-10",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-11",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-12",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-13",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#acceptance-criteria"
+    },
+    {
+      "id": "AC-14",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#acceptance-criteria"
+    }
+  ],
+  "error_cases": [
+    {
+      "id": "EC-1",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#error-cases"
+    },
+    {
+      "id": "EC-2",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#error-cases"
+    },
+    {
+      "id": "EC-3",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#error-cases"
+    }
+  ],
+  "security_criteria": [
+    {
+      "id": "SEC-1",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#security-considerations"
+    },
+    {
+      "id": "SEC-2",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#security-considerations"
+    },
+    {
+      "id": "SEC-3",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#security-considerations"
+    },
+    {
+      "id": "SEC-4",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#security-considerations"
+    },
+    {
+      "id": "SEC-5",
+      "reference": "openspec/changes/bounded-review-loops/proposal.md#security-considerations"
+    }
+  ],
+  "repositories": [
+    {
+      "name": "loom",
+      "branch": "bounded-review-loops",
+      "commit_sha": "bb3ff11a85df145df757938f5a24a67ee7fe6513",
+      "source_hash": "bf1752a93a0d95e5d9986f9698001592d1ba7f2304fd8557d04b43aeac7bb445",
+      "inventory_count": 287,
+      "tree_hash": "08506e2484d23cab7966e6e51da8c33c873d407ba6159ba258138bbe87605954"
+    }
+  ],
+  "context_repositories": [],
+  "design": null,
+  "tasks": {
+    "repository": "loom",
+    "path": "openspec/changes/bounded-review-loops/tasks.md",
+    "hash": "36a12153da0408b2c41ca4f70691c9344d13df378f108e65cc0099192819895c",
+    "normative_hash": "4cf491efd4a5ceb78e989af8f78976f7474ae433606d5960bc0cf64224cd1f5a"
+  },
+  "contracts": [
+    {
+      "repository": "loom",
+      "path": "openspec/specs/contracts/openapi.yaml",
+      "content_hash": "18a5d47d03953801479346fe7779ac169469c18fd63c05f65585561693460a4f"
+    }
+  ],
+  "architecture": [
+    {
+      "repository": "loom",
+      "path": "docs/doc_architecture.md",
+      "hash": "aa74cf1460f20968b09b30c7c3083dd35459982a3a9c6457f3365fd79ab6354e"
+    },
+    {
+      "repository": "loom",
+      "path": "docs/doc_verification_guide.md",
+      "hash": "5dcebfa871afbea483672375fbd041210671262e19b0fc6a45c86d041d210394"
+    }
+  ],
+  "required_skills": [
+    {
+      "name": "sdd-apply",
+      "repository": "loom",
+      "path": "skills/sdd-apply/SKILL.md",
+      "hash": "f4d10efe295f005c15d361a3332ef9fabd6fe3a1e299e1df05dc7ec8d06f072c"
+    }
+  ],
+  "required_tools": [
+    {
+      "name": "playbook",
+      "context": "loom",
+      "purpose": "lifecycle"
+    },
+    {
+      "name": "node",
+      "context": "loom",
+      "purpose": "test-runner"
+    },
+    {
+      "name": "git",
+      "context": "loom",
+      "purpose": "read-only provenance check in playbook doctor"
+    }
+  ],
+  "runtime_coverage": [],
+  "non_runtime_criteria": [
+    {
+      "criterion": "AC-1",
+      "rationale": "Skill instruction text (blocking rule in sdd-code-review and sdd-security-gate); proven by the skill contract test and generate:check"
+    },
+    {
+      "criterion": "AC-2",
+      "rationale": "Skill report templates (Follow-ups section); proven by the skill contract test"
+    },
+    {
+      "criterion": "AC-3",
+      "rationale": "Existing sdd-code-review failing conditions kept in the skill text; proven by the skill contract test"
+    },
+    {
+      "criterion": "AC-4",
+      "rationale": "Skill instruction text (one full round plus one delta round in three gates); proven by the skill contract test"
+    },
+    {
+      "criterion": "AC-5",
+      "rationale": "Skill instruction text (stop with convergence analysis"
+    },
+    {
+      "criterion": "AC-6",
+      "rationale": "Skill report templates (Review rounds section); proven by the skill contract test"
+    },
+    {
+      "criterion": "AC-7",
+      "rationale": "Skill instruction text in sdd-apply; proven by the skill contract test"
+    },
+    {
+      "criterion": "AC-8",
+      "rationale": "Skill instruction text in sdd-design"
+    },
+    {
+      "criterion": "AC-9",
+      "rationale": "Skill instruction text in sdd-design (numbered amendments"
+    },
+    {
+      "criterion": "AC-10",
+      "rationale": "Skill instruction text in sdd-runtime-gate (exclusion recipe); proven by the skill contract test"
+    },
+    {
+      "criterion": "AC-11",
+      "rationale": "Documentation and README text; proven by content assertions in the readme test"
+    },
+    {
+      "criterion": "AC-12",
+      "rationale": "Observable behavior of playbook doctor"
+    },
+    {
+      "criterion": "AC-13",
+      "rationale": "Test coverage of AC-1 to AC-12; proven by running the test files"
+    },
+    {
+      "criterion": "AC-14",
+      "rationale": "Version"
+    },
+    {
+      "criterion": "EC-1",
+      "rationale": "doctor behavior when git fails; unit test with an injected failing runner"
+    },
+    {
+      "criterion": "EC-2",
+      "rationale": "doctor behavior when HEAD lacks the release tag; unit test with an injected runner"
+    },
+    {
+      "criterion": "EC-3",
+      "rationale": "Skill instruction text (an unreproducible finding is a follow-up); proven by the skill contract test"
+    },
+    {
+      "criterion": "SEC-1",
+      "rationale": "Skill instruction text plus a negative contract assertion that the always-blocking classes are never demoted; no runtime surface."
+    },
+    {
+      "criterion": "SEC-2",
+      "rationale": "Skill instruction text plus a negative contract assertion that a failing report is never sealed at the round stop; no runtime surface."
+    },
+    {
+      "criterion": "SEC-3",
+      "rationale": "Skill report templates (follow-ups carry owner and destination); proven by the skill contract test"
+    },
+    {
+      "criterion": "SEC-4",
+      "rationale": "doctor runs git with a fixed argument array"
+    },
+    {
+      "criterion": "SEC-5",
+      "rationale": "Skill instruction text keeps the never-lower-risk rule; proven by the skill contract test"
+    }
+  ],
+  "unresolved_risks": [
+    "The doctor warning also appears in CI and in any methodology worktree, because those CLIs are not a clean release checkout; it is advisory by design and never changes the exit code.",
+    "The review and design rules are skill text, so an agent can ignore them; accepted risk, as in ADR-011."
+  ],
+  "blockers": [],
+  "producer": {
+    "agent": "codex",
+    "provider": "openai",
+    "model": "gpt-6",
+    "provenance": "caller_declared"
+  },
+  "identity_issues": [],
+  "created_at": "2026-10-11T20:15:16.730Z",
+  "design_not_applicable_reason": "Design not required by proposal impact and project configuration"
+}
