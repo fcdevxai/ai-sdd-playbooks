@@ -26,7 +26,7 @@ jobs:
       # pertenece a un proyecto de terceros no relacionado, así que `npx` traería
       # el paquete equivocado en silencio. Se instala desde el repo público real.
       - name: Instalar playbook CLI
-        run: npm install -g github:fcdevxai/ai-sdd-playbooks#semver:^0.10.0
+        run: npm install -g github:fcdevxai/ai-sdd-playbooks#semver:^0.11.0
       # Valida artefactos, config, lock, estado legal del lifecycle, gates, adapters.
       # Solo checks estructurados — sin matchear verdicts/encabezados/emojis, sin mutar.
       - name: playbook validate --ci

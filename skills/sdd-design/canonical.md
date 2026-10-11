@@ -81,7 +81,11 @@ both feed the guard in step 2).
      still skips authoring for a change that only touches the CLI.
 3. **Security refinement**: carry the proposal's `risk` forward, set
    `threat_model_required`, and list the concrete `controls` (`SEC-00x`). Include
-   a threat-model section when `risk: elevated` or `threat_model_required: true`.
+   a threat-model section when `security.risk: elevated`, any
+   `security.triggers`, or `threat_model_required: true`. It names actors in scope,
+   what they can do, and what is out of scope. Declare a closed list of negative
+   cases `NC-N`, each mapped to a proposal `SEC-N`; resolve missing mappings
+   with the human before approval.
    You may **raise** risk if the design surfaces new exposure; never lower it.
 4. Write `design.md` with `status: draft`:
 
@@ -104,11 +108,23 @@ updated: <YYYY-MM-DD>
 ## Public contracts / interfaces
 ## Data model changes
 ## Security controls (+ threat model when required)
+### Threat model (when required)
+- Actors in scope: <actors>
+- What they can do: <capabilities>
+- Out of scope: <explicit exclusions>
+### Closed negative cases (when required)
+| NC-N | SEC-N | negative case |
 ## Testing strategy
+## Amendments
+| A-N | date | reason | decision | human approver |
 ```
 
 5. Ask the tech lead to review. **A human sets `status: approved`** — this skill
    never self-approves. While it stays `draft`, `playbook next` reports "await human".
+   Draft edits are free. After approval, change `design.md` only through a
+   numbered `## Amendments` entry (`A-N`: date, reason, decision, human approver).
+   Admit at most two amendments. If a third is needed, stop and take the new
+   decision to a new change instead of editing this approved design.
 
 ## Rules
 

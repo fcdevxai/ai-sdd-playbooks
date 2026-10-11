@@ -16,6 +16,12 @@
 
 ## Notas
 
+- El global `playbook` ejecuta un release tag instalado o un checkout detached
+  en ese release tag con árbol clean. Para cada cambio de metodología, usar un
+  git worktree propio desde `origin/main` y correr allí los tests y
+  `node bin/playbook.js`. Mover el CLI global al nuevo release requiere un
+  human go explícito.
+
 - Correr un test individual: `npm test -- test/repos.test.js`.
 - `npm test` corre `test/helpers/run-tests.js`: crea una carpeta temporal propia por corrida
   dentro del directorio temporal heredado (respeta `TMPDIR`), se la pasa a los tests como

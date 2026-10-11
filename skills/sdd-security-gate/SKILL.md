@@ -124,6 +124,33 @@ you raise it, justify why. Confirm a threat model exists when
 
 ### 4. Write `security-report.md`
 
+A finding blocks only when it cites a checklist item or an `AC-N`, `EC-N` or
+`SEC-N`, describes a realistic scenario within the declared threat model
+(`design.md` when present, otherwise the proposal's `## Security considerations`
+and `docs/security-checklist.md`), and reproduces in the real code path through
+a test, command or concrete trace. A synthetic fixture bypassing the project's
+own invariants does not establish that path. Otherwise record it under follow-ups
+with the unmet condition, owner, destination and severity; follow-ups never
+change the report status. An adversarial variant outside the design's closed
+`NC-N` list is a follow-up unless an always-blocking defect is present in code
+or it shows the threat model is wrong; stop and ask the human in those cases.
+
+The always-blocking classes below are never demoted to follow-ups when present
+in the change's code. Record their location and reproduction or concrete trace.
+Only a human can explicitly accept one as an accepted risk. Risk may raise but
+never lowers automatically.
+
+Use at most one full round and one delta round per gate. A delta round re-checks
+only the prior blocking findings and the fix diff. A new finding blocks only
+when it meets the blocking rule and is caused by the fix diff. Preserve
+`## Review rounds` across runs; a failing report without `## Review rounds`
+counts as one full round. If the delta round still fails, keep the failing status,
+not sealed, and stop without a third automatic round. Add a convergence analysis
+with each round's blocking count, persisted findings, new findings, findings
+introduced by fixes and suspected structural cause. Ask the human to authorize
+one more fix-and-delta round, accept named eligible findings as follow-ups, or
+re-scope/split the change. The cap never clears a failing gate.
+
 ```markdown
 ---
 schema: security-report
@@ -186,6 +213,18 @@ updated: <YYYY-MM-DD>
 ## Findings
 
 | id | severity | blocking | location | remediation |
+
+## Follow-ups
+
+| finding | severity | unmet condition | owner | destination (new change, issue, accepted as-is) |
+
+## Review rounds
+
+| round | full or delta | date | commit reviewed | blocking findings | result |
+
+## Convergence analysis (when a delta round fails)
+
+| round | blocking count | persisted findings | new findings | findings introduced by fixes | suspected structural cause |
 ```
 
 For a `passed` or `not_applicable` report, run `playbook evidence seal

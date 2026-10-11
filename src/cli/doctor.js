@@ -9,8 +9,9 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { EXIT } from './exit.js';
-import { listSkills, PACKAGE_ROOT } from '../install/skills.js';
+import { listSkills, PACKAGE_ROOT, readPackageVersion } from '../install/skills.js';
 import { resolveTargets } from '../install/targets.js';
 import { lintSkillsDir } from '../install/skill-contract.js';
 import { loadConfig, validateConfig } from '../config/config.js';
@@ -22,6 +23,7 @@ import { satisfies } from '../util/semver.js';
 import { ensureDir, copyIfMissing, writeIfMissing } from '../util/fs-safe.js';
 import { discoverSpecFiles, defaultSpecIndexPath } from '../tokens/spec-index.js';
 import { readManifest, verifyManifest } from '../install/manifest.js';
+import { GIT_ENV } from '../tokens/equivalence.js';
 
 function readStamp(dir) {
   const p = path.join(dir, '.playbook-version');
@@ -125,6 +127,45 @@ export function specIndexAdvisory({ cwd }) {
   return 'no spec index at `.specloom/index/spec-index.json` — run `playbook spec-index` to enable section-first reads of permanent specs and save tokens';
 }
 
+const readGit = (args, options) => execFileSync('git', args, options);
+
+export function releaseProvenance({ root = PACKAGE_ROOT, version, runGit = readGit }) {
+  // Git's inherited repository selectors can override cwd and inspect another checkout.
+  const env = Object.fromEntries(Object.entries(GIT_ENV).filter(([key]) =>
+    !/^GIT_/i.test(key) || key === 'GIT_NO_REPLACE_OBJECTS'));
+  const options = { cwd: root, env, timeout: 2000, stdio: ['ignore', 'pipe', 'pipe'] };
+  const read = (args) => String(runGit(args, options)).trim();
+  let top;
+  try {
+    top = read(['rev-parse', '--show-toplevel']);
+  } catch (error) {
+    const reason = `${error.message || ''} ${error.stderr || ''}`;
+    if (/not a git repository/i.test(reason)) return { warning: null, note: null };
+    const safeReason = /timed out|ETIMEDOUT/i.test(reason) ? 'git timed out'
+      : error.code === 'ENOENT' ? 'git unavailable'
+        : `git failed (${error.code || error.status || 'unknown'})`;
+    return { warning: null, note: `release provenance could not be checked: ${safeReason}` };
+  }
+  try {
+    if (fs.realpathSync(top) !== fs.realpathSync(root)) return { warning: null, note: null };
+    const commit = read(['rev-parse', '--short', 'HEAD']);
+    const tags = read(['tag', '--points-at', 'HEAD']).split('\n').filter(Boolean);
+    const hasChanges = read(['status', '--porcelain']).length > 0;
+    const expected = `v${version}`;
+    if (tags.includes(expected) && !hasChanges) return { warning: null, note: null };
+    return {
+      warning: `release provenance: ${root} at ${commit}; tags: ${tags.join(', ') || '(none)'}; expected ${expected}; uncommitted changes: ${hasChanges}`,
+      note: null,
+    };
+  } catch (error) {
+    const reason = `${error.message || ''} ${error.stderr || ''}`;
+    const safeReason = /timed out|ETIMEDOUT/i.test(reason) ? 'git timed out'
+      : error.code === 'ENOENT' ? 'git unavailable'
+        : `git failed (${error.code || error.status || 'unknown'})`;
+    return { warning: null, note: `release provenance could not be checked: ${safeReason}` };
+  }
+}
+
 function runtimeReadinessNotes(config) {
   const notes = [];
   if (config && config.capabilities && config.capabilities.browser === true) {
@@ -136,13 +177,16 @@ function runtimeReadinessNotes(config) {
   return notes;
 }
 
-export async function doctorCommand(parsed, io) {
+export async function doctorCommand(parsed, io, { runGit = readGit } = {}) {
   const cwd = parsed.flags.cwd || process.cwd();
   const fix = parsed.rest.includes('--fix');
   const problems = [];
   const warnings = [];
   const fixes = [];
   const notes = [];
+  const provenance = releaseProvenance({ root: PACKAGE_ROOT, version: readPackageVersion(), runGit });
+  if (provenance.warning) warnings.push(provenance.warning);
+  if (provenance.note) notes.push(provenance.note);
 
   // global install + compatibility range (C-08)
   const targets = resolveTargets(process.env);

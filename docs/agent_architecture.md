@@ -8,6 +8,12 @@ operativas de este proyecto — no la estructura técnica (ver
 
 ## Checklist previo a implementar
 
+El CLI global `playbook` debe correr una versión publicada: instalado desde un
+release tag o desde un checkout detached en ese release tag y con árbol clean.
+Cada cambio de la metodología se desarrolla en su propio git worktree, creado
+desde `origin/main`; allí se corren `npm test` y `node bin/playbook.js`.
+Mover el CLI global a un nuevo release requiere un human go explícito.
+
 Antes de escribir código, los agentes deben:
 
 1. Leer la spec o el requisito relevante (`openspec/changes/<change-id>/proposal.md`).

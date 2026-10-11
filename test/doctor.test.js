@@ -4,9 +4,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { run, EXIT } from '../src/cli/dispatch.js';
-import { workflowStaleness, specIndexAdvisory } from '../src/cli/doctor.js';
-import { installSkills, PACKAGE_ROOT } from '../src/install/skills.js';
+import { workflowStaleness, specIndexAdvisory, releaseProvenance, doctorCommand } from '../src/cli/doctor.js';
+import { installSkills, PACKAGE_ROOT, readPackageVersion } from '../src/install/skills.js';
 import { manifestPathFor } from '../src/install/manifest.js';
+import { GIT_ENV } from '../src/tokens/equivalence.js';
 
 function tmp() { return fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-doctor-')); }
 function capture() {
@@ -64,6 +65,90 @@ async function initRepo() {
   await run(['init', '--cwd', dir], capture().io);
   return dir;
 }
+
+function gitRunner(root, { commit = 'abc1234', tags = ['v0.11.0'], status = '' } = {}) {
+  const calls = [];
+  const runGit = (args, options) => {
+    calls.push({ args, options });
+    const key = args.join(' ');
+    return ({ 'rev-parse --show-toplevel': root, 'rev-parse --short HEAD': commit,
+      'tag --points-at HEAD': tags.join('\n'), 'status --porcelain': status })[key];
+  };
+  return { runGit, calls };
+}
+
+test('release provenance is clean only at the matching tag with a clean tree (AC-12, SEC-4)', () => {
+  const root = fs.realpathSync(PACKAGE_ROOT);
+  const clean = gitRunner(root);
+  assert.deepEqual(releaseProvenance({ root, version: '0.11.0', runGit: clean.runGit }), { warning: null, note: null });
+  assert.deepEqual(clean.calls.map((c) => c.args), [
+    ['rev-parse', '--show-toplevel'], ['rev-parse', '--short', 'HEAD'],
+    ['tag', '--points-at', 'HEAD'], ['status', '--porcelain'],
+  ]);
+  for (const { options } of clean.calls) {
+    assert.equal(options.cwd, root);
+    assert.ok(options.timeout > 0);
+    assert.ok(options.env.GIT_NO_REPLACE_OBJECTS);
+  }
+  for (const status of [' M tracked.js', '?? untracked.js']) {
+    const dirty = releaseProvenance({ root, version: '0.11.0', runGit: gitRunner(root, { status }).runGit });
+    assert.match(dirty.warning, /uncommitted changes/);
+  }
+  const mismatch = releaseProvenance({ root, version: '0.11.0', runGit: gitRunner(root, { tags: ['v0.10.2'] }).runGit });
+  assert.match(mismatch.warning, /v0\.10\.2.*v0\.11\.0/);
+});
+
+test('release provenance skips non-checkouts and nested packages, and notes git failures (EC-1, SEC-4)', () => {
+  const root = fs.realpathSync(PACKAGE_ROOT);
+  const nonRepo = releaseProvenance({ root, version: '0.11.0', runGit: () => { throw new Error('not a git repository'); } });
+  assert.deepEqual(nonRepo, { warning: null, note: null });
+  const nested = releaseProvenance({ root, version: '0.11.0', runGit: gitRunner(path.dirname(root)).runGit });
+  assert.deepEqual(nested, { warning: null, note: null });
+  const failed = releaseProvenance({ root, version: '0.11.0', runGit: () => { throw new Error('timed out'); } });
+  assert.equal(failed.warning, null);
+  assert.match(failed.note, /timed out/);
+});
+
+test('release provenance never passes inherited repository selectors to git (SEC-4, F-2)', () => {
+  const keys = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR',
+    'GIT_NAMESPACE', 'GIT_OBJECT_DIRECTORY', 'GIT_CONFIG_GLOBAL'];
+  const original = keys.map((key) => [key, GIT_ENV[key]]);
+  try {
+    for (const key of keys) GIT_ENV[key] = '/another/repository';
+    const root = fs.realpathSync(PACKAGE_ROOT);
+    const runner = gitRunner(root);
+    assert.deepEqual(releaseProvenance({ root, version: '0.11.0', runGit: runner.runGit }),
+      { warning: null, note: null });
+    for (const { options } of runner.calls) {
+      for (const key of keys) assert.equal(options.env[key], undefined, `${key} must not reach git`);
+      assert.equal(options.env.GIT_NO_REPLACE_OBJECTS, '1');
+    }
+  } finally {
+    for (const [key, value] of original) {
+      if (value === undefined) delete GIT_ENV[key];
+      else GIT_ENV[key] = value;
+    }
+  }
+});
+
+test('doctor shows the release warning in text and JSON without changing health or exit (AC-12)', async () => {
+  const dir = await initRepo();
+  const runner = gitRunner(fs.realpathSync(PACKAGE_ROOT), { tags: ['v0.10.2'], status: '?? new.txt' });
+  const expectedTag = `v${readPackageVersion()}`;
+  await withGlobalVersion('0.1.0', async () => {
+    const textCapture = capture();
+    const textCode = await doctorCommand({ flags: { cwd: dir }, rest: [] }, textCapture.io, { runGit: runner.runGit });
+    const jsonCapture = capture();
+    const jsonCode = await doctorCommand({ flags: { cwd: dir, json: true }, rest: [] }, jsonCapture.io, { runGit: runner.runGit });
+    const json = JSON.parse(jsonCapture.out.join('\n'));
+    assert.equal(textCode, EXIT.OK);
+    assert.equal(jsonCode, EXIT.OK);
+    assert.equal(json.healthy, true);
+    assert.match(textCapture.out.join('\n'), /release provenance.*v0\.10\.2/);
+    assert.ok(textCapture.out.join('\n').includes(`expected ${expectedTag}`));
+    assert.ok(json.warnings.some((warning) => warning.includes('release provenance') && warning.includes(`expected ${expectedTag}`)));
+  });
+});
 
 test('doctor is read-only by default — writes nothing (AC-05)', async () => {
   const dir = await initRepo();
