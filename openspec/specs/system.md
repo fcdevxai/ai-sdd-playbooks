@@ -76,7 +76,10 @@ signed.
 ## Code conventions
 
 - ESM throughout (`"type": "module"`), Node ≥18.
-- `node --test` for tests (`test/*.test.js`), no test framework dependency.
+- `node --test` for tests (`test/*.test.js`), no test framework dependency. `npm test`
+  runs them through `test/helpers/run-tests.js`, which gives each run its own temporary
+  root (passed as `TMPDIR`) and removes it on success, failure and `SIGINT`/`SIGTERM`,
+  keeping the exit code (change `identity-flags-and-test-isolation`, `0.10.2`).
 - No comments explaining *what* code does; only *why*, when non-obvious.
 - A module never calls `process.exit`; only `bin/playbook.js` does.
 
