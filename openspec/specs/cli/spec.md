@@ -1,6 +1,6 @@
 ---
 status: implemented
-owner: bernardo
+owner: felipe
 last_updated: 2026-10-08
 ---
 
