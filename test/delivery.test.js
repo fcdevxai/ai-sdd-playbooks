@@ -86,6 +86,108 @@ test('post-merge evidence-only dirt is accepted only with matching merged PR hea
     runGit: makeGit('openspec/specs/system.md') }).state, 'uncommitted');
 });
 
+// Merge-commit identity (change merged-delivery-identity): the merged result is delivered to a
+// checkout whose HEAD is the pull request's merge commit or one of its descendants.
+function ancestryGit({ head, ancestors = [], present = [], shallow = false, calls = [] }) {
+  return (args) => {
+    calls.push(args);
+    const cmd = args.join(' ');
+    if (cmd.includes('--is-inside-work-tree')) return 'true\n';
+    if (cmd.startsWith('status --porcelain')) return '?? openspec/changes/demo/verification-report.md\n';
+    if (cmd === 'rev-parse HEAD') return `${head}\n`;
+    if (cmd === 'rev-parse --is-shallow-repository') return `${shallow}\n`;
+    if (args[0] === 'cat-file' && args[1] === '-t') {
+      if (args[2] === head || present.includes(args[2])) return 'commit\n';
+      throw Object.assign(new Error('missing object'), { status: 128 });
+    }
+    if (args[0] === 'merge-base' && args[1] === '--is-ancestor') {
+      if (args[2] === args[3] || ancestors.includes(args[2])) return '';
+      throw Object.assign(new Error('not an ancestor'), { status: 1 });
+    }
+    throw new Error(`unexpected Git command: ${cmd}`);
+  };
+}
+
+function mergedDelivery(gitOptions, { headRefOid = 'a'.repeat(40), mergeCommit } = {}) {
+  const gh = fakeGh({ pr: { state: 'MERGED', number: 4, headRefOid, mergeCommit } });
+  return resolveDelivery({ slug: 'demo', allowEvidenceDirty: true, runGh: gh, runGit: ancestryGit(gitOptions) });
+}
+
+test('AC-1: evidence-only dirt is delivered when the merge commit is HEAD or an ancestor of HEAD', () => {
+  const merge = 'c'.repeat(40);
+  assert.equal(mergedDelivery({ head: merge }, { mergeCommit: { oid: merge } }).state, 'merged');
+  assert.equal(mergedDelivery({ head: 'd'.repeat(40), present: [merge], ancestors: [merge] }, { mergeCommit: { oid: merge } }).state, 'merged');
+});
+
+test('AC-2: HEAD equal to the pull-request head stays delivered, with or without a merge commit', () => {
+  const head = 'a'.repeat(40);
+  assert.equal(mergedDelivery({ head }, { headRefOid: head, mergeCommit: null }).state, 'merged');
+  assert.equal(mergedDelivery({ head }, { headRefOid: head, mergeCommit: { oid: 'c'.repeat(40) } }).state, 'merged');
+});
+
+test('EC-1: a merge commit that is not an ancestor of HEAD leaves the identity unproven', () => {
+  const merge = 'c'.repeat(40);
+  assert.deepEqual(mergedDelivery({ head: 'd'.repeat(40), present: [merge] }, { mergeCommit: { oid: merge } }),
+    { provider: 'github', state: 'unknown', blocked_reason: 'MERGED_HEAD_IDENTITY_UNPROVEN' });
+});
+
+test('EC-2: a merge commit absent from a complete history is reported as not in history', () => {
+  assert.deepEqual(mergedDelivery({ head: 'd'.repeat(40) }, { mergeCommit: { oid: 'c'.repeat(40) } }),
+    { provider: 'github', state: 'unknown', blocked_reason: 'MERGE_COMMIT_NOT_IN_HISTORY' });
+});
+
+test('EC-3: a shallow history that cannot decide is reported as unavailable history', () => {
+  assert.deepEqual(mergedDelivery({ head: 'd'.repeat(40), shallow: true }, { mergeCommit: { oid: 'c'.repeat(40) } }),
+    { provider: 'github', state: 'unknown', blocked_reason: 'MERGED_HISTORY_UNAVAILABLE' });
+});
+
+test('EC-4: a merged pull request without a merge commit is unproven off the pull-request head', () => {
+  for (const mergeCommit of [null, undefined, {}, { oid: null }]) {
+    assert.deepEqual(mergedDelivery({ head: 'd'.repeat(40) }, { mergeCommit }),
+      { provider: 'github', state: 'unknown', blocked_reason: 'MERGED_HEAD_IDENTITY_UNPROVEN' });
+  }
+});
+
+test('SEC-2: a malformed merge-commit identifier never reaches Git and is unproven', () => {
+  for (const oid of ['--output=/tmp/x', 'HEAD', 'HEAD~1', 'main', 'c'.repeat(39), 'C'.repeat(40), `${'c'.repeat(40)}\n`, 'g'.repeat(40)]) {
+    const calls = [];
+    const gh = fakeGh({ pr: { state: 'MERGED', number: 4, headRefOid: 'a'.repeat(40), mergeCommit: { oid } } });
+    const result = resolveDelivery({ slug: 'demo', allowEvidenceDirty: true, runGh: gh,
+      runGit: ancestryGit({ head: 'd'.repeat(40), present: [oid], ancestors: [oid], calls }) });
+    assert.deepEqual(result, { provider: 'github', state: 'unknown', blocked_reason: 'MERGED_HEAD_IDENTITY_UNPROVEN' }, oid);
+    const identityCalls = calls.filter((args) => args[0] === 'merge-base' || args[0] === 'cat-file');
+    assert.ok(!identityCalls.some((args) => args.includes(oid)), `malformed identifier reached Git: ${JSON.stringify(oid)}`);
+  }
+});
+
+test('SEC-2: a 64-hexadecimal (SHA-256) merge-commit identifier is accepted', () => {
+  const merge = 'e'.repeat(64);
+  assert.equal(mergedDelivery({ head: merge }, { mergeCommit: { oid: merge } }).state, 'merged');
+});
+
+test('SEC-4: a clean tree after merge keeps the 0.10.0 result without any identity call', () => {
+  const calls = [];
+  const runGit = (args) => {
+    calls.push(args.join(' '));
+    if (args.join(' ').includes('--is-inside-work-tree')) return 'true\n';
+    if (args[0] === 'status') return '';
+    throw new Error(`unexpected Git command: ${args.join(' ')}`);
+  };
+  const gh = fakeGh({ pr: { state: 'MERGED', number: 4, headRefOid: 'a'.repeat(40), mergeCommit: { oid: 'c'.repeat(40) } } });
+  assert.equal(resolveDelivery({ slug: 'demo', allowEvidenceDirty: true, runGh: gh, runGit }).state, 'merged');
+  assert.ok(!calls.some((cmd) => cmd.startsWith('merge-base') || cmd.startsWith('cat-file')), calls.join('; '));
+});
+
+test('the pull-request lookup requests the merge commit and returns its identifier', async () => {
+  const { prForBranch } = await import('../src/github/pull-request.js');
+  let requested = null;
+  const gh = (args) => { requested = args; return JSON.stringify({ state: 'MERGED', number: 9, headRefOid: 'a'.repeat(40), mergeCommit: { oid: 'c'.repeat(40) } }); };
+  assert.deepEqual(prForBranch('demo', gh), { state: 'MERGED', number: 9, headRefOid: 'a'.repeat(40), mergeCommitOid: 'c'.repeat(40) });
+  assert.ok(requested.at(-1).split(',').includes('mergeCommit'), requested.join(' '));
+  const open = () => JSON.stringify({ state: 'OPEN', number: 10, headRefOid: 'a'.repeat(40), mergeCommit: null });
+  assert.equal(prForBranch('demo', open).mergeCommitOid, null);
+});
+
 test('not a git repo → unknown (GIT_UNAVAILABLE)', () => {
   const d = delivery({ repo: false }, {});
   assert.equal(d.state, 'unknown');

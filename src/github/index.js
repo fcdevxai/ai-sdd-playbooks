@@ -9,6 +9,11 @@
  *      no PR                     → committed
  *      PR merged                 → merged
  *      PR open + checks          → ci_failed | ci_pending | ci_passed | pr_open
+ *   only change evidence uncommitted + PR merged:
+ *      HEAD is the PR head, or the PR's merge commit is HEAD or an ancestor of HEAD → merged
+ *      merge commit not an ancestor / no merge commit → unknown (MERGED_HEAD_IDENTITY_UNPROVEN)
+ *      merge commit absent from a complete history  → unknown (MERGE_COMMIT_NOT_IN_HISTORY)
+ *      shallow history cannot decide                 → unknown (MERGED_HISTORY_UNAVAILABLE)
  *   not a git repo               → unknown (GIT_UNAVAILABLE)
  *   malformed change slug        → unknown (INVALID_CHANGE_SLUG)
  *
@@ -24,11 +29,12 @@ import { localGitState, currentBranch, isGitRepo, baseBranch, evidenceOnlyDirty 
 import { githubContext } from './auth.js';
 import { prForBranch } from './pull-request.js';
 import { checksState } from './checks.js';
+import { GIT_ENV, ancestryWith, commitExistsWith } from '../tokens/equivalence.js';
 
 export { currentBranch, baseBranch };
 
 export function gitRunner(cwd) {
-  return (args) => execFileSync('git', args, { cwd, stdio: ['ignore', 'pipe', 'ignore'] }).toString();
+  return (args) => execFileSync('git', args, { cwd, stdio: ['ignore', 'pipe', 'ignore'], env: GIT_ENV }).toString();
 }
 
 export function ghRunner(cwd) {
@@ -77,9 +83,8 @@ export function resolveDelivery({ cwd, runGit, runGh, slug, allowEvidenceDirty =
   if (!pr) return { provider: 'github', state: dirtyEvidence ? 'uncommitted' : 'committed' };
   if (pr.state === 'MERGED') {
     if (dirtyEvidence) {
-      let head;
-      try { head = git(['rev-parse', 'HEAD']).trim(); } catch { head = null; }
-      if (!head || head !== pr.headRefOid) return { provider: 'github', state: 'unknown', blocked_reason: 'MERGED_HEAD_IDENTITY_UNPROVEN' };
+      const unproven = mergedHeadIdentity(git, pr);
+      if (unproven) return { provider: 'github', state: 'unknown', blocked_reason: unproven };
     }
     return { provider: 'github', state: 'merged' };
   }
@@ -91,6 +96,31 @@ export function resolveDelivery({ cwd, runGit, runGh, slug, allowEvidenceDirty =
     return { provider: 'github', state: 'pr_open' };
   }
   return { provider: 'github', state: 'committed' }; // CLOSED-unmerged → back to committed
+}
+
+// A full Git object name (SHA-1 or SHA-256), lowercase as GitHub reports it. Anything else
+// never reaches a Git argument vector, where it could be read as an option or a revision.
+const OBJECT_NAME = /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/;
+
+/**
+ * Post-merge identity with only change evidence uncommitted: the merged result is in this
+ * checkout when HEAD is the pull-request head, or when the pull request's merge commit is HEAD
+ * or an ancestor of HEAD — the same three-valued ancestry delivered evidence uses (design
+ * Amendment R5, rules 2 and 7), whatever the merge strategy. Returns null when proven, otherwise
+ * the `blocked_reason`; nothing undecidable is ever proven.
+ */
+function mergedHeadIdentity(git, pr) {
+  let head;
+  try { head = git(['rev-parse', 'HEAD']).trim(); } catch { return 'MERGED_HEAD_IDENTITY_UNPROVEN'; }
+  if (!OBJECT_NAME.test(head)) return 'MERGED_HEAD_IDENTITY_UNPROVEN';
+  if (head === pr.headRefOid) return null;
+  const merge = pr.mergeCommitOid;
+  if (typeof merge !== 'string' || !OBJECT_NAME.test(merge)) return 'MERGED_HEAD_IDENTITY_UNPROVEN';
+  let answer;
+  try { answer = ancestryWith(git, merge, head); } catch { return 'MERGED_HEAD_IDENTITY_UNPROVEN'; }
+  if (answer === 'yes') return null;
+  if (answer === 'unknown') return 'MERGED_HISTORY_UNAVAILABLE';
+  return commitExistsWith(git, merge) ? 'MERGED_HEAD_IDENTITY_UNPROVEN' : 'MERGE_COMMIT_NOT_IN_HISTORY';
 }
 
 export { isGitRepo };

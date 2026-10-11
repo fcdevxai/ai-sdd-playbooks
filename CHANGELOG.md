@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.10.1 — Post-merge delivery proven by merge-commit ancestry
+
+`sdd-verify` and `sdd-archive` run on the base branch after the merge and write
+evidence there. With that evidence uncommitted, `0.10.0` accepted delivery as
+`merged` only when `HEAD` equaled the pull request's head commit, which holds
+only after a fast-forward merge. After a merge commit, a squash or a rebase
+merge, generating the stage packet turned delivery `unknown`
+(`MERGED_HEAD_IDENTITY_UNPROVEN`) and blocked `validate`, the stage
+preconditions, `status`, `next`, `evidence seal` and `evidence retain`.
+Decided in change `merged-delivery-identity`.
+
+- With only change evidence uncommitted and the pull request merged, delivery
+  is `merged` when `HEAD` is the pull-request head (as before) or when the merge
+  commit GitHub reports for the pull request is `HEAD` or an ancestor of `HEAD`.
+  This covers merge-commit, squash and rebase merges and a base branch that
+  advanced after the merge, using the same three-valued ancestry as delivered
+  evidence.
+- Undecidable cases stay `unknown` with a reason that says what to do:
+  `MERGE_COMMIT_NOT_IN_HISTORY` (pull the base branch) and
+  `MERGED_HISTORY_UNAVAILABLE` (fetch full history). A merge commit that is not
+  an ancestor of `HEAD`, or a missing one, keeps `MERGED_HEAD_IDENTITY_UNPROVEN`.
+- The merge-commit identifier is accepted only as a full lowercase object name
+  before it reaches Git. Delivery's Git calls ignore replace refs, like evidence
+  checks.
+- No change to the clean-tree result, the evidence-path allowlist, sealing,
+  binding, freshness or retention. Consumers on `semver:^0.10.0` receive this
+  release without changes.
+
 ## 0.10.0 — Source-bound evidence for every lifecycle gate
 
 Lifecycle gates no longer advance on a report's scalar `status`. Every gate now
