@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.11.0 — Bounded review rounds and released CLI provenance
+
+- Code, security and runtime reviews now stop after one full and one delta
+  round, with blocking findings and follow-ups recorded separately.
+- Sensitive designs declare a bounded threat model and negative cases; approved
+  designs allow at most two numbered amendments.
+- `playbook doctor` warns when its checkout is dirty or lacks the matching
+  release tag. The global CLI release and development worktree rules are
+  documented, and the README install source is corrected.
+
 ## 0.10.2 — Agent identity flags in skills and an isolated test temporary root
 
 Decided in change `identity-flags-and-test-isolation`; two follow-ups of

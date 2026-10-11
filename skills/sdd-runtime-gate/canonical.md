@@ -72,6 +72,17 @@ entry (`passed` or a validated exclusion). Each excluded criterion/repository
 pair still needs a coverage row that cites its substitute receipt; unrelated or
 missing receipts fail.
 
+For an enabled capability the change does not touch, use this exclusion recipe:
+
+1. Put the adapter in frontmatter with `status: not_applicable` and
+   `reason_code: NOT_RELEVANT_TO_CHANGE`; no other reason code is valid for an
+   exclusion. Omit disabled capabilities from the frontmatter entirely.
+2. Give a specific reason tied to this change's scope, and cite the proposal as
+   authority using its path and hash from the handoff manifest.
+3. List `covered_criteria` including every criterion mapped to that adapter.
+4. Attach `substitute_receipts` from real runs that exercise the criterion's
+   applicable path, including each excluded criterion/repository coverage row.
+
 For each adapter (`browser`, `http`, `cli`, `worker`):
 
 | Condition | Adapter status |
@@ -212,6 +223,12 @@ coverage:
 ## <adapter> — <status>
 - Evidence: <what was driven and observed>
 - Findings: <issues, if any>
+
+## Review rounds
+| round | full or delta | date | commit reviewed | blocking findings | result |
+
+## Convergence analysis (when a delta round fails)
+| round | blocking count | persisted findings | new findings | findings introduced by fixes | suspected structural cause |
 ```
 
 Include every applicable configured adapter and every mapped criterion/repo
@@ -222,6 +239,21 @@ Source/contract changes require a rerun; evidence-only commits require
 `playbook evidence bind`.
 
 ## Rules
+
+- Run at most one full round and one delta round per gate. The delta round
+  re-checks only failed or blocked adapters and criteria from the previous
+  round, plus the fix diff. A new finding blocks only if it meets the blocking
+  rule (cited criterion/checklist item, realistic scenario in the declared
+  threat model, reproduction in the real code path) and the fix diff caused it.
+  Other new findings go to follow-ups with an owner and destination.
+- Preserve `## Review rounds` across runs. A failing report without
+  `## Review rounds` counts as one full round. If the delta round still has
+  blocking findings, keep the failing status, not sealed, and stop without a
+  third automatic round. Add a convergence analysis: each round's blocking
+  count, persisted findings, new findings, findings introduced by fixes, and
+  suspected structural cause. Ask the human to authorize one more fix-and-delta
+  round, accept named eligible findings as follow-ups, or re-scope/split the
+  change. Never clear a failed or blocked adapter merely because the cap is met.
 
 - Never fabricate `passed`; missing evidence or dependency → `blocked` with a `reason_code`.
 - A `false` capability is `not_applicable` and does not block.

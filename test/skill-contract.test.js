@@ -13,6 +13,55 @@ function body(name) {
   return fs.readFileSync(path.join(SKILLS_DIR, name, 'SKILL.md'), 'utf8');
 }
 
+function authoredAndGenerated(name) {
+  return ['canonical.md', 'SKILL.md'].map((file) =>
+    fs.readFileSync(path.join(SKILLS_DIR, name, file), 'utf8').replace(/\s+/g, ' '));
+}
+
+test('bounded review rules survive skill generation (AC-1 to AC-10, SEC-1 to SEC-3, SEC-5)', () => {
+  for (const name of ['sdd-code-review', 'sdd-security-gate']) {
+    for (const skill of authoredAndGenerated(name)) {
+      for (const phrase of ['checklist item', 'AC-N', 'EC-N', 'SEC-N', 'realistic scenario', 'threat model', 'real code path', 'synthetic fixture', '## Follow-ups', 'unmet condition', 'owner', 'destination', 'never change the report status', 'NC-N']) {
+        assert.ok(skill.includes(phrase), `${name} lacks ${phrase}`);
+      }
+      assert.match(skill, /always-blocking defect.*threat model.*human/s);
+    }
+  }
+  for (const name of ['sdd-code-review', 'sdd-security-gate', 'sdd-runtime-gate']) {
+    for (const skill of authoredAndGenerated(name)) {
+      for (const phrase of ['one full round', 'one delta round', 'fix diff', '## Review rounds', 'convergence analysis', 'blocking count', 'persisted findings', 'new findings', 'suspected structural cause', 'failing status', 'not sealed', 'human']) {
+        assert.ok(skill.includes(phrase), `${name} lacks ${phrase}`);
+      }
+      assert.match(skill, /failing report without.*Review rounds.*one full round/s);
+      assert.doesNotMatch(skill, /seal a failing report/i);
+    }
+  }
+  for (const skill of authoredAndGenerated('sdd-code-review')) {
+    assert.match(skill, /criterion without passing evidence.*file changed outside scope.*required quality gate not executed/s);
+  }
+  for (const skill of authoredAndGenerated('sdd-security-gate')) {
+    assert.match(skill, /never demoted to follow-ups/);
+    for (const phrase of ['missing/client-side-only/broader-than-specified authorization', 'cross-tenant', 'unsanitized input', 'sensitive data exposed', 'committed secret']) {
+      assert.ok(skill.toLowerCase().includes(phrase), `security gate lacks ${phrase}`);
+    }
+    assert.match(skill, /may raise.*never lowers/s);
+  }
+  for (const skill of authoredAndGenerated('sdd-runtime-gate')) {
+    for (const phrase of ['NOT_RELEVANT_TO_CHANGE', 'specific reason', 'proposal', 'path and hash', 'covered_criteria', 'substitute_receipts', 'real runs', 'disabled capabilities', 'no other reason code']) {
+      assert.ok(skill.includes(phrase), `runtime gate lacks ${phrase}`);
+    }
+  }
+  for (const skill of authoredAndGenerated('sdd-apply')) {
+    assert.match(skill, /only that round's blocking findings.*does not widen scope.*human decision/s);
+    assert.match(skill, /capped at 2 retries/);
+  }
+  for (const skill of authoredAndGenerated('sdd-design')) {
+    for (const phrase of ['security.risk: elevated', 'security.triggers', 'threat_model_required: true', 'actors in scope', 'what they can do', 'out of scope', 'NC-N', 'SEC-N', '## Amendments', 'A-N', 'human approver', 'at most two amendments', 'new change']) {
+      assert.ok(skill.includes(phrase), `design lacks ${phrase}`);
+    }
+  }
+});
+
 function headingSection(markdown, heading) {
   const start = markdown.indexOf(heading);
   assert.notEqual(start, -1, `${heading} exists`);

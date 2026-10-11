@@ -91,6 +91,10 @@ values are declared by the caller, never observed by the CLI.
       floods context unless you need it.
    f. Mark the task `[x]` in `tasks.md`.
 
+   When returning from a failed code-review, security or runtime gate round,
+   fix only that round's blocking findings; this does not widen scope. If a fix needs
+   a new design or other decision, stop for a human decision before editing.
+
    The test-fails→fix→re-test loop for a single task is capped at 2 retries (3
    attempts total). If the 3rd attempt is still red, stop: report the task's
    current state and do not mark it `[x]`. This never overrides the rule above —

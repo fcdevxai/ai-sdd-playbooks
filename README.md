@@ -18,7 +18,7 @@ and a lockfile pinning the compatible methodology range.
 ## Install (global, once)
 
 ```bash
-npm install -g github:lablab-outplacement/lablab-playbook-ai-v2#semver:^X.Y.Z
+npm install -g github:fcdevxai/ai-sdd-playbooks#semver:^0.11.0
 ```
 
 This repo is private: the command above requires git access configured
