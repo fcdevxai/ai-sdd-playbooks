@@ -1,7 +1,7 @@
 ---
 status: implemented
 owner: bernardo
-last_updated: 2026-10-08
+last_updated: 2026-10-11
 ---
 
 # Playbooks and Agent Skill Metadata
@@ -485,3 +485,22 @@ sufficient evidence:
   bound with `playbook evidence bind`; a source change reruns the gate.
 - **Closure is retained.** `sdd-archive` runs `playbook evidence retain`
   before spec/ADR promotion and before the change folder is removed.
+
+## Agent identity flags in the stage playbooks
+
+Decided in change `identity-flags-and-test-isolation` (`0.10.2`). The seven
+stage playbooks that run `playbook packet` or `playbook run` (`sdd-plan`,
+`sdd-apply`, `sdd-code-review`, `sdd-security-gate`, `sdd-runtime-gate`,
+`sdd-commit`, `sdd-verify`) show `--agent <agent> --provider <provider>
+--model <model>` in every such command and state the identity rule once:
+
+- **Separate flags.** Agent, provider and model each go in their own flag,
+  never packed into `--agent`.
+- **Reported values.** Values are the ones the runtime reports; an unknown
+  value is omitted and the CLI records it as `unknown`.
+- **Declared, not observed.** The identity is declared by the caller and never
+  observed by the CLI; receipts and manifests record it with that provenance
+  (see the CLI spec, `playbook run`).
+- **Enforced by a contract test.** `test/skill-contract.test.js` fails when a
+  skill command that names `--agent` lacks `--provider <provider>` or
+  `--model <model>`, or when such a skill lacks the **Agent identity.** rule.
