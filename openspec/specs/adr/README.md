@@ -47,3 +47,5 @@ Architecture Decision Records: they document the context, alternatives, and trad
 | ADR-041 | The `worker` runtime adapter drives evidence generically, with no declared per-project dependency | accepted | 2026-09-01 | runtime-gate-worker-supported |
 | ADR-042 | A change that modifies the lifecycle gate itself is delivered outside that gate (bootstrap exception) | accepted | 2026-10-08 | harness-trust-restoration |
 | ADR-043 | Lifecycle gates require source-bound evidence, under an honest-error threat model | accepted | 2026-10-08 | harness-trust-restoration |
+| ADR-044 | Gate findings block only under a bounded rule, review rounds are capped, and sensitive designs declare a closed threat model | accepted | 2026-10-11 | bounded-review-loops |
+| ADR-045 | The global CLI runs a released version, methodology development happens in a separate worktree, and `playbook doctor` warns when it does not | accepted | 2026-10-11 | bounded-review-loops |

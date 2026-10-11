@@ -17,7 +17,7 @@ incondicional, incluso ante errores internos (`try/catch` global). Un `npm
 install` jamás se rompe por specloom."**
 
 Esa garantía se probó falsa empíricamente. Instalando el paquete como consumer
-real (`npm install -g github:lablab-outplacement/lablab-playbook-ai-v2#semver:^0.9.0`),
+real (`npm install -g github:fcdevxai/ai-sdd-playbooks#semver:^0.9.0`),
 el `postinstall` hizo fallar el install completo con:
 
 ```
@@ -85,7 +85,7 @@ roto en la práctica, independientemente de este bug.
 por dos canales que no dependen de que npm ejecute código del paquete:
 
 1. **README** documenta el flujo completo de instalación explícitamente: el
-   comando real `npm install -g github:lablab-outplacement/lablab-playbook-ai-v2#semver:^X.Y.Z`
+   comando real `npm install -g github:fcdevxai/ai-sdd-playbooks#semver:^X.Y.Z`
    (ausente hasta ahora) seguido de `playbook install`, más una nota de que el
    repo es privado y requiere acceso git (SSH/PAT) configurado.
 2. **El propio CLI** (`playbook`/`sdd`) detecta, en cada invocación excepto
@@ -167,3 +167,5 @@ controlar ni tiene ETA — no resuelve el problema para el equipo hoy.
   cambia el modelo de distribución (ADR-002 sigue vigente sin cambios)
 - testing: test estructural que impide reintroducir un `postinstall` sin ADR
   que supersedee a esta; test de contenido sobre el aviso del CLI
+
+> Nota de edición (2026-10-11): el nombre de la organización o del repositorio de origen que aparecía en este texto se reemplazó por un marcador genérico o por el repositorio actual del proyecto, por decisión del mantenedor. El resto de la decisión no cambia.

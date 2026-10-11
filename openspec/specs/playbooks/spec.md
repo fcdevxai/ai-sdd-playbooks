@@ -1,6 +1,6 @@
 ---
 status: implemented
-owner: bernardo
+owner: felipe
 last_updated: 2026-10-11
 ---
 
@@ -58,6 +58,7 @@ See ADR-011 for the decision context and trade-offs behind these limits.
 - The cap bounds *how many times*, not *what*. **ADR-031** adds the scope dimension ADR-011 left open: a loop iteration may regenerate a **derived** artifact (`playbook packet` for a stale `context-packet.md`) but must never mutate a **human-signed** one — `proposal.md`, `design.md`, `tasks.md`, an `adr-*.md` draft, or a gate report — to make `validate` pass. Anything not named regenerable counts as signed, and a forbidden fix stops immediately **without consuming an iteration**. See "Retry-loop scope and the pwd/cap restoration" below.
 - `sdd-enrich-us` caps clarification at 4 Q&A rounds; a 5th unresolved round stops, summarizes the remaining open decisions, and asks whether to continue.
 - Security rules remain stronger than retry caps. In particular, `sdd-apply` must never mark complete a task tied to a security consideration while its negative test is still red.
+- **ADR-044** extends the same stop/report model to the review↔apply cycle: each of `sdd-code-review`, `sdd-security-gate` and `sdd-runtime-gate` runs at most one full round and one delta round per change; see "Bounded review loops in the stage playbooks" below.
 
 ## Cross-repo gate-check convention
 
@@ -504,3 +505,50 @@ stage playbooks that run `playbook packet` or `playbook run` (`sdd-plan`,
 - **Enforced by a contract test.** `test/skill-contract.test.js` fails when a
   skill command that names `--agent` lacks `--provider <provider>` or
   `--model <model>`, or when such a skill lacks the **Agent identity.** rule.
+
+## Bounded review loops in the stage playbooks
+
+Decided in change `bounded-review-loops` (`0.11.0`, see **ADR-044** for the alternatives and
+accepted risks, and **ADR-045** for the released-CLI rule). It turns the stop rules that ended
+the ten-round review of `harness-trust-restoration` into methodology rules. They are skill
+text enforced by content assertions in `test/skill-contract.test.js`; the CLI does not count
+rounds or amendments.
+
+- **Blocking rule.** In `sdd-code-review` and `sdd-security-gate` a finding blocks only when
+  it cites a checklist item or an `AC-N`, `EC-N` or `SEC-N`, describes a realistic scenario
+  within the change's declared threat model, and reproduces in the change's real code path
+  (not only in a synthetic fixture that bypasses the project's own invariants). Every other
+  finding goes to a `## Follow-ups` section with the unmet condition, an owner and a
+  destination, and never changes the report status.
+- **Always-blocking classes are never demoted.** The security gate's always-blocking classes
+  (authorization gaps, cross-tenant access, unsanitized input reaching a query, command or
+  template, sensitive data exposure, committed secrets) block whenever the defect is present
+  in the change's code. Only a human can accept such a risk.
+- **Round cap.** `sdd-code-review`, `sdd-security-gate` and `sdd-runtime-gate` each run one
+  full round and at most one delta round. The delta round re-checks the previous blocking
+  findings and the diff of their fixes. If it still has blocking findings the gate stops, the
+  report keeps its failing status and is not sealed, and a convergence analysis asks the human
+  to authorize one more round, accept named findings as follow-ups, or re-scope the change.
+  Each report carries a `## Review rounds` table kept across rounds.
+- **`sdd-apply`** fixes only the blocking findings of the round and stops for a human
+  decision if a fix needs a new decision.
+- **Sensitive designs.** `sdd-design` requires a threat model and a closed list of negative
+  cases (`NC-N`, each mapped to a `SEC-N`) when the risk is elevated, there are security
+  triggers or `threat_model_required` is set; the gates treat that list as the bound for
+  adversarial variants. An approved design changes only through numbered `## Amendments`
+  (`A-N`), at most two; a third sends the decision to a new change.
+- **Runtime-gate exclusion recipe.** `sdd-runtime-gate` documents how to exclude an enabled
+  capability the change does not touch: `not_applicable` with `NOT_RELEVANT_TO_CHANGE`, a
+  specific reason, the proposal as authority (path and hash from the handoff), covered
+  criteria including every criterion mapped to the adapter, and substitute receipts from real
+  runs. Disabled capabilities are omitted from the frontmatter and no other reason code is
+  valid. The validator is unchanged.
+- **Released global CLI.** The global `playbook` runs a released version (an install from a
+  release tag, or a checkout detached at the tag with no local changes); each methodology
+  change is developed in its own git worktree; moving the global CLI to a new release needs a
+  human go. `playbook doctor` warns when the running CLI is not a clean release checkout (see
+  the CLI spec, "Release provenance advisory"). The README installs from
+  `github:fcdevxai/ai-sdd-playbooks`.
+- **Known follow-ups.** The `sdd-runtime-gate` report template has no `## Follow-ups`
+  section, and no skill says where to record a human-authorized extra round; both are planned
+  for the next skill change.

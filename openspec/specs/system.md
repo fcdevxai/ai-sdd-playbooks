@@ -82,6 +82,7 @@ signed.
   keeping the exit code (change `identity-flags-and-test-isolation`, `0.10.2`).
 - No comments explaining *what* code does; only *why*, when non-obvious.
 - A module never calls `process.exit`; only `bin/playbook.js` does.
+- The global `playbook` CLI runs a released version and each methodology change is developed in its own git worktree; `playbook doctor` warns when the running CLI is not a clean release checkout (ADR-045).
 
 ## Immutability rule
 
