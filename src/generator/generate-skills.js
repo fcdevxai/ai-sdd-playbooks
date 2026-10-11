@@ -2,7 +2,7 @@
 /**
  * Skill generator — canonical.md → SKILL.md (design: merged authoring model).
  *
- * lablab authored SKILL.md directly; specloom authored a `canonical.md` per
+ * ai-sdd-playbooks authored SKILL.md directly; specloom authored a `canonical.md` per
  * playbook and generated SKILL.md (+ slash commands) from it via
  * `framework/scripts/sync.js`. This repo keeps ONE canonical source per skill
  * (`skills/<name>/canonical.md`) and generates `skills/<name>/SKILL.md` next to
