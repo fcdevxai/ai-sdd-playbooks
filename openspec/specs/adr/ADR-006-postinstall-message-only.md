@@ -17,7 +17,7 @@ Relación con ADR-002: su sección Impact registró como propiedad de seguridad 
 
 ## Decision
 
-- specloom declara un `postinstall` en el `package.json` raíz (el que instala el consumidor vía `github:lablab-outplacement/specloom`).
+- specloom declara un `postinstall` en el `package.json` raíz (el que instala el consumidor vía `github:<org>/specloom`).
 - Política inmutable del script, en orden de prioridad sobre cualquier utilidad futura:
   1. **Nunca escribe** — cero operaciones de escritura a filesystem.
   2. **Nunca lee el repo del consumidor** — no inspecciona archivos fuera del propio paquete.
@@ -66,3 +66,5 @@ Cero superficie, pero reproduce el problema: la señal depende de que el humano 
 - data: sin impacto — no lee ni transmite datos del consumidor
 - deployment: el script debe estar incluido en la whitelist `files` del package.json raíz para llegar al consumidor
 - testing: test estructural que asegura la política (sin fs write, sin red, exit 0 incondicional)
+
+> Nota de edición (2026-10-11): el nombre de la organización o del repositorio de origen que aparecía en este texto se reemplazó por un marcador genérico o por el repositorio actual del proyecto, por decisión del mantenedor. El resto de la decisión no cambia.

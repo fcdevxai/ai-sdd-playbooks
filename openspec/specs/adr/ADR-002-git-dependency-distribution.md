@@ -17,7 +17,7 @@ Al evaluar cómo distribuir el framework hacia proyectos futuros (la topología 
 specloom se distribuye como dependencia git privada de GitHub. Cada proyecto consumidor lo instala con:
 
 ```
-npm install github:lablab-outplacement/specloom#semver:^X.Y.Z
+npm install github:<org>/specloom#semver:^X.Y.Z
 ```
 
 Las versiones se resuelven contra tags de git (`vX.Y.Z`), no contra un registro de paquetes — sin necesidad de scope de paquete (`@org/...`) ni de un token separado de `packages`. El repo mantiene un `package.json` delgado en su propia raíz (apuntando a `framework/`) para que la resolución de dependencia git encuentre el punto de entrada del paquete. Los tags de release se cortan manualmente y de forma deliberada — nunca automáticamente en cada merge a `main`.
@@ -38,14 +38,14 @@ Las versiones se resuelven contra tags de git (`vX.Y.Z`), no contra un registro 
 
 ### Risks
 
-- Si el repo alguna vez cambia de owner/org o deja de ser accesible con las credenciales configuradas, las URLs `github:lablab-outplacement/...` dejan de resolver — mismo riesgo que ya existe hoy para cualquier clon de este repo, no uno nuevo.
+- Si el repo alguna vez cambia de owner/org o deja de ser accesible con las credenciales configuradas, las URLs `github:<org>/...` dejan de resolver — mismo riesgo que ya existe hoy para cualquier clon de este repo, no uno nuevo.
 - La resolución `#semver:` depende de que los tags sigan la convención `vX.Y.Z`; un tag fuera de esa convención simplemente no participa en la resolución de versión, sin error explícito — mitigación: la convención de tagging manual y deliberado queda documentada en `CLAUDE.md` → "Convenciones rápidas".
 
 ## Alternatives considered
 
 ### GitHub Packages (registro npm scoped a la org)
 
-Descartada por ahora: exige que el nombre del paquete tenga scope (`@lablab-outplacement/specloom`), un token separado con permiso `read:packages`/`write:packages` que configurar y rotar en cada consumidor y en cada CI, y un paso de publish adicional (`npm publish` contra `npm.pkg.github.com`) — más infraestructura para el mismo resultado, dado que el único consumidor previsto hoy es la propia org.
+Descartada por ahora: exige que el nombre del paquete tenga scope (`@<org>/specloom`), un token separado con permiso `read:packages`/`write:packages` que configurar y rotar en cada consumidor y en cada CI, y un paso de publish adicional (`npm publish` contra `npm.pkg.github.com`) — más infraestructura para el mismo resultado, dado que el único consumidor previsto hoy es la propia org.
 
 ### Seguir clonando el repo (statu quo)
 
@@ -59,3 +59,5 @@ Descartada: ya produjo drift real y documentado (Issue 6 del code-review de `adr
 - data: nuevo `package.json` en la raíz del repo; nuevo `framework/templates/config.yaml`.
 - deployment: redefine el mecanismo de distribución del framework en sí — de "clonar" a "instalar y actualizar vía npm" — afectando a todo proyecto que use loom de ahora en adelante.
 - testing: cobertura nueva para la resolución del `package.json` de la raíz y para el comando `init` que depende de esta instalación.
+
+> Nota de edición (2026-10-11): el nombre de la organización o del repositorio de origen que aparecía en este texto se reemplazó por un marcador genérico o por el repositorio actual del proyecto, por decisión del mantenedor. El resto de la decisión no cambia.
