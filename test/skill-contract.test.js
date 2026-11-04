@@ -637,3 +637,17 @@ test('every skill command that names --agent also passes --provider and --model,
   assert.ok(skillsWithInvocations >= 7, `expected the seven lifecycle skills, found ${skillsWithInvocations}`);
   assert.deepEqual(missing, []);
 });
+
+test('sdd-plan and sdd-runtime-gate document per-criterion omissions, multi-repo entries and receipt labels (AC-7)', () => {
+  for (const skill of authoredAndGenerated('sdd-plan')) {
+    assert.ok(skill.includes('runtime_not_applicable'), 'sdd-plan lacks runtime_not_applicable');
+    assert.match(skill, /one `runtime_coverage` entry per repository.*different capabilities/);
+    assert.match(skill, /criterion, repository, capability and a written rationale/);
+  }
+  for (const skill of authoredAndGenerated('sdd-runtime-gate')) {
+    assert.ok(skill.includes('runtime_not_applicable'), 'sdd-runtime-gate lacks runtime_not_applicable');
+    assert.match(skill, /needs no coverage row for that criterion/);
+    assert.match(skill, /adapter itself still needs/);
+    assert.match(skill, /`--repo`.*system under test.*another repository/);
+  }
+});

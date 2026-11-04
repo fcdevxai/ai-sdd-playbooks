@@ -82,6 +82,7 @@ handoff:
   required_tools: [{name: playbook, context: <sdd-repo>, purpose: lifecycle}]
   runtime_coverage: [{criterion: AC-1, repositories: [<repo>], capabilities: [http]}]
   non_runtime: [{criterion: EC-1, rationale: <why this criterion has no runtime surface>}]
+  runtime_not_applicable: []   # optional: [{criterion: AC-2, repository: <repo>, capability: worker, rationale: <why>}]
   unresolved_risks: []
   blockers: []
 ---
@@ -131,7 +132,13 @@ missing precondition (e.g. "design.md is required and must be approved first").
    once: in `runtime_coverage` (its repositories and applicable adapters) or in
    `non_runtime` with a written rationale — never both, never neither; the CLI
    blocks the runtime gate otherwise. Use explicit, evidence-backed exclusions at
-   runtime for enabled adapters without a runnable product surface. Include required skills and
+   runtime for enabled adapters without a runnable product surface. In a multi-repository change
+   write one `runtime_coverage` entry per repository whenever its repositories enable different
+   capabilities: an entry maps every listed repository to every listed capability, and the CLI
+   rejects a capability a repository does not enable. A criterion may skip an enabled capability
+   of a repository only through an entry in `handoff.runtime_not_applicable`, written with the
+   criterion, repository, capability and a written rationale; the pair must be mapped in
+   `runtime_coverage`, and an omission never replaces the per-adapter evidence. Include required skills and
    tools, unresolved risks and blockers even when their arrays are empty. As
    new untracked source files are created, declare them under
    `handoff.source_paths.<repo>` before generating gate evidence; never inventory

@@ -27,16 +27,16 @@ test('methodology docs require a released global CLI and isolated change worktre
   }
 });
 
-test('release version, changelog and CI pins agree at 0.11.0 (AC-14)', () => {
+test('release version, changelog and CI pins agree at 0.12.0 (AC-9)', () => {
   const pkg = JSON.parse(fs.readFileSync(REPO_ROOT + 'package.json', 'utf8'));
   const lock = JSON.parse(fs.readFileSync(REPO_ROOT + 'package-lock.json', 'utf8'));
-  assert.equal(pkg.version, '0.11.0');
-  assert.equal(lock.version, '0.11.0');
-  assert.equal(lock.packages[''].version, '0.11.0');
-  assert.match(fs.readFileSync(REPO_ROOT + 'CHANGELOG.md', 'utf8'), /0\.11\.0/);
+  assert.equal(pkg.version, '0.12.0');
+  assert.equal(lock.version, '0.12.0');
+  assert.equal(lock.packages[''].version, '0.12.0');
+  assert.match(fs.readFileSync(REPO_ROOT + 'CHANGELOG.md', 'utf8'), /0\.12\.0/);
   for (const file of ['playbook-validation.yml', 'contract-drift-check.yml']) {
     const workflow = fs.readFileSync(REPO_ROOT + `templates/project/github/workflows/${file}`, 'utf8');
-    assert.match(workflow, /github:fcdevxai\/ai-sdd-playbooks#semver:\^0\.11\.0/);
+    assert.match(workflow, /github:fcdevxai\/ai-sdd-playbooks#semver:\^0\.12\.0/);
   }
 });
 
@@ -44,4 +44,11 @@ test('README notes the repo is private and requires git access configured (AC-5)
   const section = installSection(readme);
   assert.match(section, /private/i);
   assert.match(section, /SSH|PAT/);
+});
+
+test('security checklist records the unverifiable rationale of runtime_not_applicable as an accepted risk (SEC-5)', () => {
+  const checklist = fs.readFileSync(REPO_ROOT + 'docs/security-checklist.md', 'utf8');
+  const accepted = checklist.slice(checklist.indexOf('## Riesgos aceptados conocidos'));
+  assert.match(accepted, /runtime_not_applicable/);
+  assert.match(accepted, /no es verificable por m[aá]quina/);
 });

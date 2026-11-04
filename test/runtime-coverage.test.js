@@ -146,3 +146,122 @@ test('an exclusion with only a reason string and any receipt is no longer enough
   assert.match(issues, /approving authority/i);
   assert.match(issues, /covered criteria/i);
 });
+
+// --- Per-criterion explicit omissions (runtime_not_applicable) -------------------------------
+
+const asyncConfig = { capabilities: { http: true, worker: true }, repos: {
+  hub: { capabilities: { browser: false, http: false, cli: false, worker: false } },
+  service: { capabilities: { browser: false, http: true, cli: false, worker: true } } } };
+const omission = (overrides = {}) => ({ criterion: 'AC-1', repository: 'service', capability: 'worker',
+  rationale: 'AC-1 is exercised by HTTP only', ...overrides });
+function asyncManifest(overrides = {}) {
+  return { ...manifest, acceptance_criteria: [{ id: 'AC-1' }, { id: 'AC-2' }],
+    runtime_coverage: [
+      { criterion: 'AC-1', repositories: ['service'], capabilities: ['http'] },
+      { criterion: 'AC-2', repositories: ['service'], capabilities: ['http', 'worker'] },
+    ],
+    runtime_not_applicable: [omission()], ...overrides };
+}
+function asyncReport() {
+  return { status: 'passed',
+    adapters: { http: { status: 'passed', receipts: [receipt] }, worker: { status: 'passed', receipts: [receipt] } },
+    coverage: [
+      { criterion: 'AC-1', repository: 'service', adapter: 'http', receipt },
+      { criterion: 'AC-2', repository: 'service', adapter: 'http', receipt },
+      { criterion: 'AC-2', repository: 'service', adapter: 'worker', receipt },
+    ] };
+}
+const checkAsync = (overrides, candidate = asyncReport()) => validateRuntimeCoverage(candidate,
+  { manifest: asyncManifest(overrides), config: asyncConfig, validateReceipt: validReceipt });
+
+test('an explicit omission lets a criterion skip a capability without a coverage row (AC-3)', () => {
+  assert.deepEqual(checkAsync({}), []);
+});
+
+test('without an omission the unmapped enabled capability still fails (AC-4)', () => {
+  assert.match(checkAsync({ runtime_not_applicable: undefined }).join(' '), /AC-1 service enabled capability worker not mapped/);
+  assert.match(checkAsync({ runtime_not_applicable: [] }).join(' '), /AC-1 service enabled capability worker not mapped/);
+  assert.match(checkAsync({ runtime_not_applicable: [omission({ criterion: 'AC-2', capability: 'http' })] }).join(' '),
+    /AC-1 service enabled capability worker not mapped/);
+});
+
+test('an omission never replaces the per-adapter evidence requirement (AC-5, SEC-3)', () => {
+  const everywhere = { runtime_coverage: [
+    { criterion: 'AC-1', repositories: ['service'], capabilities: ['http'] },
+    { criterion: 'AC-2', repositories: ['service'], capabilities: ['http'] },
+  ], runtime_not_applicable: [omission(), omission({ criterion: 'AC-2' })] };
+  const withWorkerReceipt = asyncReport();
+  withWorkerReceipt.coverage = withWorkerReceipt.coverage.filter((row) => row.adapter !== 'worker');
+  assert.match(checkAsync(everywhere, withWorkerReceipt).join(' '), /adapter worker has receipt unrelated to its required coverage/);
+  const withoutWorker = withWorkerReceipt;
+  delete withoutWorker.adapters.worker;
+  assert.match(checkAsync(everywhere, withoutWorker).join(' '), /required runtime adapter worker missing/);
+  const onlyExclusion = asyncReport();
+  onlyExclusion.coverage = onlyExclusion.coverage.filter((row) => row.adapter !== 'worker');
+  onlyExclusion.adapters.worker = { status: 'not_applicable', reason_code: 'NOT_RELEVANT_TO_CHANGE',
+    exclusion: { reason: 'No worker behavior changed', authority, covered_criteria: ['AC-1', 'AC-2'], substitute_receipts: [receipt] } };
+  onlyExclusion.status = 'not_applicable';
+  assert.doesNotMatch(checkAsync(everywhere, onlyExclusion).join(' '), /worker.*(missing|unrelated receipt)/);
+  const extraRow = asyncReport();
+  extraRow.coverage.push({ criterion: 'AC-1', repository: 'service', adapter: 'worker', receipt });
+  assert.match(checkAsync({}, extraRow).join(' '), /unrelated runtime coverage AC-1:service:worker/);
+});
+
+test('a multi-repository entry that maps a disabled capability says to split the entry (AC-6)', () => {
+  const issues = validateRuntimeCoverage(report(), { config, validateReceipt: validReceipt,
+    manifest: { ...manifest, runtime_coverage: [{ criterion: 'AC-1', repositories: ['hub', 'service'], capabilities: ['http'] }] },
+  }).join(' ');
+  assert.match(issues, /AC-1 hub maps disabled capability http; split the runtime_coverage entry per repository/);
+  assert.doesNotMatch(issues, /AC-1 service maps disabled/);
+  const single = validateRuntimeCoverage(report(), { config, validateReceipt: validReceipt,
+    manifest: { ...manifest, runtime_coverage: [{ criterion: 'AC-1', repositories: ['hub'], capabilities: ['http'] }] },
+  }).join(' ');
+  assert.match(single, /AC-1 hub maps disabled capability http/);
+  assert.doesNotMatch(single, /split the runtime_coverage entry/);
+});
+
+test('an omission without a rationale is an error that names the pair and keeps the capability unmapped (EC-1, SEC-2)', () => {
+  for (const rationale of ['', '   ', undefined]) {
+    const issues = checkAsync({ runtime_not_applicable: [omission({ rationale })] }).join(' ');
+    assert.match(issues, /AC-1 service omits worker without a rationale/);
+    assert.match(issues, /AC-1 service enabled capability worker not mapped/);
+  }
+});
+
+test('an omission of an unmapped criterion/repository pair is an error (EC-2)', () => {
+  const issues = checkAsync({ runtime_not_applicable: [omission({ repository: 'hub', capability: 'http' })] }).join(' ');
+  assert.match(issues, /AC-1 hub omits http but is not mapped in runtime_coverage/);
+});
+
+test('an omission of a disabled or unknown capability is an error (EC-3)', () => {
+  assert.match(checkAsync({ runtime_not_applicable: [omission(), omission({ capability: 'browser' })] }).join(' '),
+    /AC-1 service omits disabled capability browser/);
+  assert.match(checkAsync({ runtime_not_applicable: [omission(), omission({ capability: 'gpu' })] }).join(' '),
+    /AC-1 service omits unknown capability gpu/);
+});
+
+test('a capability both mapped and omitted for the same pair is an error (EC-4)', () => {
+  assert.match(checkAsync({ runtime_not_applicable: [omission(), omission({ criterion: 'AC-2', capability: 'worker' })] }).join(' '),
+    /AC-2 service both maps and omits worker/);
+});
+
+test('an omission with an unknown criterion or repository is an error (EC-5)', () => {
+  assert.match(checkAsync({ runtime_not_applicable: [omission(), omission({ criterion: 'AC-9' })] }).join(' '),
+    /unknown runtime criterion AC-9 in runtime_not_applicable/);
+  assert.match(checkAsync({ runtime_not_applicable: [omission(), omission({ repository: 'ghost' })] }).join(' '),
+    /unknown runtime repository ghost in runtime_not_applicable/);
+});
+
+test('duplicate omissions are an error (EC-6)', () => {
+  assert.match(checkAsync({ runtime_not_applicable: [omission(), omission({ rationale: 'again' })] }).join(' '),
+    /duplicate runtime_not_applicable entry AC-1:service:worker/);
+});
+
+test('a malformed omission list is reported without throwing and never counts as an omission (EC-7, SEC-4)', () => {
+  assert.match(checkAsync({ runtime_not_applicable: 'nope' }).join(' '), /runtime_not_applicable must be a list/);
+  const issues = checkAsync({ runtime_not_applicable: [3, null, omission()] }).join(' ');
+  assert.match(issues, /runtime_not_applicable entry 1 must be a mapping/);
+  assert.match(issues, /runtime_not_applicable entry 2 must be a mapping/);
+  assert.doesNotMatch(issues, /AC-1 service enabled capability worker not mapped/);
+  assert.match(checkAsync({ runtime_not_applicable: { criterion: 'AC-1' } }).join(' '), /runtime_not_applicable must be a list/);
+});

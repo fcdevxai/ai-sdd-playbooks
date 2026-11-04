@@ -48,6 +48,45 @@ test('handoff schema rejects missing identity, missing repository SHA and malfor
   assert.equal(validateNamed('handoff-manifest', escapingPath).valid, false);
 });
 
+const notApplicable = () => ({ criterion: 'AC-1', repository: 'hub', capability: 'worker', rationale: 'No queue behavior is exercised by this criterion' });
+
+function tasksFrontmatter(list) {
+  return {
+    schema: 'tasks', schema_version: 1, change_id: 'example', status: 'ready',
+    handoff: {
+      specs: [], architecture: [], contracts: [], required_skills: [], required_tools: [],
+      runtime_coverage: [], unresolved_risks: [], blockers: [],
+      ...(list === undefined ? {} : { runtime_not_applicable: list }),
+    },
+  };
+}
+
+test('tasks schema accepts runtime_not_applicable and rejects malformed entries (AC-1, SEC-4)', () => {
+  assert.deepEqual(validateNamed('tasks', tasksFrontmatter()).errors, []);
+  assert.deepEqual(validateNamed('tasks', tasksFrontmatter([])).errors, []);
+  assert.deepEqual(validateNamed('tasks', tasksFrontmatter([notApplicable()])).errors, []);
+  for (const field of ['criterion', 'repository', 'capability', 'rationale']) {
+    const entry = notApplicable();
+    delete entry[field];
+    assert.equal(validateNamed('tasks', tasksFrontmatter([entry])).valid, false, `missing ${field}`);
+  }
+  assert.equal(validateNamed('tasks', tasksFrontmatter([{ ...notApplicable(), extra: true }])).valid, false);
+  assert.equal(validateNamed('tasks', tasksFrontmatter('not a list')).valid, false);
+  assert.equal(validateNamed('tasks', tasksFrontmatter([{ ...notApplicable(), rationale: '' }])).valid, false);
+});
+
+test('handoff manifest schema accepts runtime_not_applicable and rejects malformed entries (AC-1, SEC-4)', () => {
+  const ok = manifest();
+  ok.runtime_not_applicable = [notApplicable()];
+  assert.deepEqual(validateNamed('handoff-manifest', ok).errors, []);
+  const bad = manifest();
+  bad.runtime_not_applicable = [{ criterion: 'AC-1', repository: 'hub', capability: 'worker' }];
+  assert.equal(validateNamed('handoff-manifest', bad).valid, false);
+  const extra = manifest();
+  extra.runtime_not_applicable = [{ ...notApplicable(), extra: true }];
+  assert.equal(validateNamed('handoff-manifest', extra).valid, false);
+});
+
 test('receipt and closure schemas require raw evidence and source identity', () => {
   const receipt = {
     schema: 'execution-receipt', schema_version: 1, run_id: 'run-1', change_id: 'example',
