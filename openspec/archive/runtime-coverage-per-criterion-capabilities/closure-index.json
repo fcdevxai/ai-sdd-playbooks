@@ -1,0 +1,474 @@
+{
+  "schema": "closure-index",
+  "schema_version": 1,
+  "change_id": "runtime-coverage-per-criterion-capabilities",
+  "verified_commit_sha": "678a8f283ca39d668d05420029c793bd04eebcc9",
+  "reference_rebase": {
+    "from": "openspec/changes/runtime-coverage-per-criterion-capabilities/",
+    "to": "openspec/archive/runtime-coverage-per-criterion-capabilities/"
+  },
+  "repositories": [
+    {
+      "name": "loom",
+      "branch": "main",
+      "commit_sha": "678a8f283ca39d668d05420029c793bd04eebcc9",
+      "source_hash": "c2b112de0d2165a662018e32a0a4ecc004ca6ebb6da858a63f067c17d44d4121",
+      "inventory_count": 289,
+      "tree_hash": "661a6724271e1af2d1c48eebab546994b1682744798b21e3e430d9ac7c4fb459"
+    }
+  ],
+  "files": [
+    {
+      "path": "OWNER.md",
+      "sha256": "3961fbba67553c53617a4ef020f1d3933925eb199159e891326e9519780a3772"
+    },
+    {
+      "path": "code-review-report.md",
+      "sha256": "5647aa9a4348a3bbb3fa606ed52175cb22586c53b11b1933c56dad38012a4bf9"
+    },
+    {
+      "path": "context-packet.md",
+      "sha256": "6ca8f833ff964381b1ff91debfbb5492e32a6bbd33a29a419a76b5428fab881a"
+    },
+    {
+      "path": "evidence-binding-code-review-report-loom-162371fb76b2c6d5db1ad8c8e5c24984fe970da5.json",
+      "sha256": "66dceeb1441466dfb3644def77f83cc95be23ca011be74c10cf26ee3d2e0bed5"
+    },
+    {
+      "path": "evidence-binding-runtime-gate-report-loom-162371fb76b2c6d5db1ad8c8e5c24984fe970da5.json",
+      "sha256": "581ded5180efd33c4e1931fb111cc1dccfe65a169943cdb9e01ce941ac922c2c"
+    },
+    {
+      "path": "evidence-binding-security-report-loom-162371fb76b2c6d5db1ad8c8e5c24984fe970da5.json",
+      "sha256": "4d5cacbdd79a4a5b4e89c7cb60e062d9dcd1b5211f169bc66c3e3882c27cfc95"
+    },
+    {
+      "path": "handoff-manifest-sdd-apply-00f2e85950f7e4e41dbba4c39837ceae6af5c771295351463f5f6ff600b224eb.json",
+      "sha256": "00f2e85950f7e4e41dbba4c39837ceae6af5c771295351463f5f6ff600b224eb"
+    },
+    {
+      "path": "handoff-manifest-sdd-apply-46a0eaf91c02e8d8beba1dde8569933757871170608a7db2f4aa1909da9fcb32.json",
+      "sha256": "46a0eaf91c02e8d8beba1dde8569933757871170608a7db2f4aa1909da9fcb32"
+    },
+    {
+      "path": "handoff-manifest-sdd-apply-4db7e7380d2f19da13031acd436e2739a7cc7157f846f87bb2a593f7045c2067.json",
+      "sha256": "4db7e7380d2f19da13031acd436e2739a7cc7157f846f87bb2a593f7045c2067"
+    },
+    {
+      "path": "handoff-manifest-sdd-code-review-1e9d4afce5f6651bc5f565e97b2f8d78ab00dbc826c77a57b041aaaca39ffada.json",
+      "sha256": "1e9d4afce5f6651bc5f565e97b2f8d78ab00dbc826c77a57b041aaaca39ffada"
+    },
+    {
+      "path": "handoff-manifest-sdd-code-review-b3729519ef8570cf617358d48c53a211738bbe157b400f7e6df8a20a02987620.json",
+      "sha256": "b3729519ef8570cf617358d48c53a211738bbe157b400f7e6df8a20a02987620"
+    },
+    {
+      "path": "handoff-manifest-sdd-commit-0e6f3ff36a150518c044faf8365a39d7e6a8b6291c04a190ff3129fb19db2abd.json",
+      "sha256": "0e6f3ff36a150518c044faf8365a39d7e6a8b6291c04a190ff3129fb19db2abd"
+    },
+    {
+      "path": "handoff-manifest-sdd-plan-dcac2582485e528566c44a02411a0a0d2b24d1ce87ac0245811105e5245542fb.json",
+      "sha256": "dcac2582485e528566c44a02411a0a0d2b24d1ce87ac0245811105e5245542fb"
+    },
+    {
+      "path": "handoff-manifest-sdd-runtime-gate-734fcc62e5a8eb63a97f63a7f076edb8b515416d80f3c4c5a454e7f8b4ded97a.json",
+      "sha256": "734fcc62e5a8eb63a97f63a7f076edb8b515416d80f3c4c5a454e7f8b4ded97a"
+    },
+    {
+      "path": "handoff-manifest-sdd-security-gate-7874a3a99e99fdeef216478b0c9ec2a1855bebc9a3034a5512158aa9472f39ef.json",
+      "sha256": "7874a3a99e99fdeef216478b0c9ec2a1855bebc9a3034a5512158aa9472f39ef"
+    },
+    {
+      "path": "handoff-manifest-sdd-verify-6c3eed6386f8f8f1df2b479fbcd62c34c61f83b14d09a097c63088fb0b619d0f.json",
+      "sha256": "6c3eed6386f8f8f1df2b479fbcd62c34c61f83b14d09a097c63088fb0b619d0f"
+    },
+    {
+      "path": "handoff-manifest.json",
+      "sha256": "6c3eed6386f8f8f1df2b479fbcd62c34c61f83b14d09a097c63088fb0b619d0f"
+    },
+    {
+      "path": "proposal.md",
+      "sha256": "60b794ec33e9273427b0a7fb5f6ef89a9114a9f548f2503826627536b1b977b1"
+    },
+    {
+      "path": "runtime-gate-report.md",
+      "sha256": "5b1aa0831f96b3061805f48ea2a97a05fd12d2187f7a5994cc3b0efea22539c7"
+    },
+    {
+      "path": "security-report.md",
+      "sha256": "9a5903f063685d4c2b299d7173563eb01ce85f9cfaa710a41428dfd9155391d0"
+    },
+    {
+      "path": "tasks.md",
+      "sha256": "fcfdd1b833a23091e1b215769f9b4efd7b56ce5f318372b68295a01323110768"
+    },
+    {
+      "path": "verification-report.md",
+      "sha256": "dee1b9b3a8e94c0e869b1426f6c9b93ad10d51a326ba55e92c53c38a5751779b"
+    }
+  ],
+  "restricted_raw": [
+    {
+      "original_reference": ".specloom/runs/1793833678810-53030179-2hz88a/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793833678810-53030179-2hz88a/execution-receipt.json",
+      "sha256": "614423d18121a97dff2de52ed38dc65825526efe0665c3bbae8f60559392e7f6",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793833678810-53030179-2hz88a/full.log",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793833678810-53030179-2hz88a/full.log",
+      "sha256": "a0fe3e66f37e47d88c789b6604e9a1dbee0825cd4ffce4cf8afd5b938f9ef50d",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793833678810-53030179-2hz88a/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793833678810-53030179-2hz88a/stdout.raw",
+      "sha256": "a0fe3e66f37e47d88c789b6604e9a1dbee0825cd4ffce4cf8afd5b938f9ef50d",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793833678810-53030179-2hz88a/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793833678810-53030179-2hz88a/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793833678029-700ae678-CAnYqP/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793833678029-700ae678-CAnYqP/execution-receipt.json",
+      "sha256": "16689d6065b24ecf21329b2856f19d72656465125c8c64dc97679245dce37dac",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793833678029-700ae678-CAnYqP/full.log",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793833678029-700ae678-CAnYqP/full.log",
+      "sha256": "15ff9cf32e19f4f0c17d6e5716815bf3f06ebf034a475c34d7de9d68af375137",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793833678029-700ae678-CAnYqP/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793833678029-700ae678-CAnYqP/stdout.raw",
+      "sha256": "15ff9cf32e19f4f0c17d6e5716815bf3f06ebf034a475c34d7de9d68af375137",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793833678029-700ae678-CAnYqP/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793833678029-700ae678-CAnYqP/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836484584-a8e82ca8-l3uh9T/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836484584-a8e82ca8-l3uh9T/execution-receipt.json",
+      "sha256": "4147989cb834556d4181b79bb45592be040c7256562238907871e09a9e3a04fe",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836484584-a8e82ca8-l3uh9T/full.log",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836484584-a8e82ca8-l3uh9T/full.log",
+      "sha256": "c221ee82b7648dbeda7b39f1962a0d1e03990d638141d2aab3a0c7f02ea2b1f2",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836484584-a8e82ca8-l3uh9T/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836484584-a8e82ca8-l3uh9T/stdout.raw",
+      "sha256": "c221ee82b7648dbeda7b39f1962a0d1e03990d638141d2aab3a0c7f02ea2b1f2",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836484584-a8e82ca8-l3uh9T/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836484584-a8e82ca8-l3uh9T/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836488002-0c3aa9b3-2hCv4w/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836488002-0c3aa9b3-2hCv4w/execution-receipt.json",
+      "sha256": "4136aae9fb1ebefb539d6006ea7d307fa9d7ee9a7bd9f1330ddc013009b58e85",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836488002-0c3aa9b3-2hCv4w/full.log",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836488002-0c3aa9b3-2hCv4w/full.log",
+      "sha256": "52615b3274e2e58036dcbc54dfaebbf76f9faac98c3feaff4c71ff905a190221",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836488002-0c3aa9b3-2hCv4w/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836488002-0c3aa9b3-2hCv4w/stdout.raw",
+      "sha256": "52615b3274e2e58036dcbc54dfaebbf76f9faac98c3feaff4c71ff905a190221",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836488002-0c3aa9b3-2hCv4w/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836488002-0c3aa9b3-2hCv4w/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836643529-fc6106b4-N4Gg9A/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836643529-fc6106b4-N4Gg9A/execution-receipt.json",
+      "sha256": "53dbd5317602772b1dc7186f30fd7c8669851299c7b9cc62987ead8bedd9fc26",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836643529-fc6106b4-N4Gg9A/full.log",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836643529-fc6106b4-N4Gg9A/full.log",
+      "sha256": "043f1c97aba951d4f85a8e470224d7cadd0a1c65cb4ae6bb2f3c398d7a54a8a8",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836643529-fc6106b4-N4Gg9A/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836643529-fc6106b4-N4Gg9A/stdout.raw",
+      "sha256": "043f1c97aba951d4f85a8e470224d7cadd0a1c65cb4ae6bb2f3c398d7a54a8a8",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836643529-fc6106b4-N4Gg9A/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836643529-fc6106b4-N4Gg9A/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836645313-f94d1785-w06wcg/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836645313-f94d1785-w06wcg/execution-receipt.json",
+      "sha256": "ecc472c3090a528e7ea937b06c1642d724fcfd2ff7980e903b20e5950fa33836",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836645313-f94d1785-w06wcg/full.log",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836645313-f94d1785-w06wcg/full.log",
+      "sha256": "30d2d1c83c2cf2f325a002629f40ee35811dd7bfa84cb5390d7eb4cf7600f3c5",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836645313-f94d1785-w06wcg/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836645313-f94d1785-w06wcg/stdout.raw",
+      "sha256": "30d2d1c83c2cf2f325a002629f40ee35811dd7bfa84cb5390d7eb4cf7600f3c5",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836645313-f94d1785-w06wcg/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836645313-f94d1785-w06wcg/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836659546-bd347d14-2xlUHc/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836659546-bd347d14-2xlUHc/execution-receipt.json",
+      "sha256": "b1449349c57a7413ce534ef5ee3ad3cbc44c96159e96866136e6ada25dd61177",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836659546-bd347d14-2xlUHc/full.log",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836659546-bd347d14-2xlUHc/full.log",
+      "sha256": "456a9fd5e0ceb89ae29875ceadd7ff2d094ad549db1cd8620d5af0e52571d15d",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836659546-bd347d14-2xlUHc/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836659546-bd347d14-2xlUHc/stdout.raw",
+      "sha256": "456a9fd5e0ceb89ae29875ceadd7ff2d094ad549db1cd8620d5af0e52571d15d",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836659546-bd347d14-2xlUHc/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836659546-bd347d14-2xlUHc/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836660179-e98ecfcc-xxFe8H/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836660179-e98ecfcc-xxFe8H/execution-receipt.json",
+      "sha256": "f4b399857d596ffc376f51712175642a37dfcb724251ddfa076cfae0941627c3",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836660179-e98ecfcc-xxFe8H/full.log",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836660179-e98ecfcc-xxFe8H/full.log",
+      "sha256": "8783ac5790c938aa7ea683df5f7b30e6f1faa364fd145dbe8ab26985d07a6bfc",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836660179-e98ecfcc-xxFe8H/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836660179-e98ecfcc-xxFe8H/stdout.raw",
+      "sha256": "8783ac5790c938aa7ea683df5f7b30e6f1faa364fd145dbe8ab26985d07a6bfc",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836660179-e98ecfcc-xxFe8H/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836660179-e98ecfcc-xxFe8H/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836660804-169860d6-B8Kv1C/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836660804-169860d6-B8Kv1C/execution-receipt.json",
+      "sha256": "d0fe50433aec367ba05dff6b14e643ef76b2dea7009a725bd9c1d2dc9e130e1f",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836660804-169860d6-B8Kv1C/full.log",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836660804-169860d6-B8Kv1C/full.log",
+      "sha256": "eaff258c54aa730745bcba99a4f94828d08973f1fdf6779f4df03aff1d5513b1",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836660804-169860d6-B8Kv1C/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836660804-169860d6-B8Kv1C/stdout.raw",
+      "sha256": "eaff258c54aa730745bcba99a4f94828d08973f1fdf6779f4df03aff1d5513b1",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793836660804-169860d6-B8Kv1C/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793836660804-169860d6-B8Kv1C/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837245856-c4508cee-fPsOl2/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837245856-c4508cee-fPsOl2/execution-receipt.json",
+      "sha256": "bea4462d7484ac138337cfc34f635d4a849ea7f26a92f9c7cf9c0f851b0cf82a",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837245856-c4508cee-fPsOl2/full.log",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837245856-c4508cee-fPsOl2/full.log",
+      "sha256": "3afd283c4acebab7f9d595b807776b2502ad7a946aab09b8ec48a24558ab32e0",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837245856-c4508cee-fPsOl2/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837245856-c4508cee-fPsOl2/stdout.raw",
+      "sha256": "3afd283c4acebab7f9d595b807776b2502ad7a946aab09b8ec48a24558ab32e0",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837245856-c4508cee-fPsOl2/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837245856-c4508cee-fPsOl2/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837264306-a1ad4c95-tyd4zN/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837264306-a1ad4c95-tyd4zN/execution-receipt.json",
+      "sha256": "6aa34f441e6ea305849b3d0b247720f0ff8d87625f70c093922c4fa477da70c6",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837264306-a1ad4c95-tyd4zN/full.log",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837264306-a1ad4c95-tyd4zN/full.log",
+      "sha256": "f6ddcab1842ef55b7491e62f66e45235bce7f5315db35930a4ffa240cf04d66b",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837264306-a1ad4c95-tyd4zN/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837264306-a1ad4c95-tyd4zN/stdout.raw",
+      "sha256": "f6ddcab1842ef55b7491e62f66e45235bce7f5315db35930a4ffa240cf04d66b",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837264306-a1ad4c95-tyd4zN/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837264306-a1ad4c95-tyd4zN/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837265823-e5a5b1b0-W7A6xQ/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837265823-e5a5b1b0-W7A6xQ/execution-receipt.json",
+      "sha256": "5099aabb902f481efa7a164dcf8af1022cd8f91c47ef3978f45cd472b17951ac",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837265823-e5a5b1b0-W7A6xQ/full.log",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837265823-e5a5b1b0-W7A6xQ/full.log",
+      "sha256": "8783ac5790c938aa7ea683df5f7b30e6f1faa364fd145dbe8ab26985d07a6bfc",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837265823-e5a5b1b0-W7A6xQ/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837265823-e5a5b1b0-W7A6xQ/stdout.raw",
+      "sha256": "8783ac5790c938aa7ea683df5f7b30e6f1faa364fd145dbe8ab26985d07a6bfc",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837265823-e5a5b1b0-W7A6xQ/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837265823-e5a5b1b0-W7A6xQ/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837274963-2d5cc586-LeOjj5/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837274963-2d5cc586-LeOjj5/execution-receipt.json",
+      "sha256": "9e05cead2d27ad86d9f1d397706fc60df450a6607f0e1f9052a6ccb749064758",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837274963-2d5cc586-LeOjj5/full.log",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837274963-2d5cc586-LeOjj5/full.log",
+      "sha256": "246869e8ae49797644108ce9c2d2ca9d78a293b1f04c908c7d08af611670471c",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837274963-2d5cc586-LeOjj5/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837274963-2d5cc586-LeOjj5/stdout.raw",
+      "sha256": "246869e8ae49797644108ce9c2d2ca9d78a293b1f04c908c7d08af611670471c",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837274963-2d5cc586-LeOjj5/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837274963-2d5cc586-LeOjj5/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837507917-bc3fe70a-eve8Yd/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837507917-bc3fe70a-eve8Yd/execution-receipt.json",
+      "sha256": "9493fa96efbbe220f214b9d838b809e5d2a557063ab0452a1aef36f24405c49c",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837507917-bc3fe70a-eve8Yd/full.log",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837507917-bc3fe70a-eve8Yd/full.log",
+      "sha256": "4023c2685bd9f3ddab0a2a5321bd9156a9aaffd7c6762c8aac63458f291ce3f1",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837507917-bc3fe70a-eve8Yd/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837507917-bc3fe70a-eve8Yd/stdout.raw",
+      "sha256": "4023c2685bd9f3ddab0a2a5321bd9156a9aaffd7c6762c8aac63458f291ce3f1",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837507917-bc3fe70a-eve8Yd/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837507917-bc3fe70a-eve8Yd/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837508813-9fcf8e0d-gbpcXo/execution-receipt.json",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837508813-9fcf8e0d-gbpcXo/execution-receipt.json",
+      "sha256": "e4a102276594febf97aa2d0028cf4d15f14f688c4c2ab20a018b2e81bb36a2d7",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837508813-9fcf8e0d-gbpcXo/full.log",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837508813-9fcf8e0d-gbpcXo/full.log",
+      "sha256": "ee25eb90801b6525bf739ea2426e3ddd8b874ce7fd8c6b39a2bbf6cd0de311ce",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837508813-9fcf8e0d-gbpcXo/stdout.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837508813-9fcf8e0d-gbpcXo/stdout.raw",
+      "sha256": "ee25eb90801b6525bf739ea2426e3ddd8b874ce7fd8c6b39a2bbf6cd0de311ce",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    },
+    {
+      "original_reference": ".specloom/runs/1793837508813-9fcf8e0d-gbpcXo/stderr.raw",
+      "reference": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities/1793837508813-9fcf8e0d-gbpcXo/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "limitation": "Private local evidence; access to the designated raw destination is required for reconstruction."
+    }
+  ],
+  "raw_root": "/mnt/data/playbook-closure/runtime-coverage-per-criterion-capabilities-20261105T001410Z/runtime-coverage-per-criterion-capabilities",
+  "created_at": "2026-11-05T00:14:23.123Z"
+}

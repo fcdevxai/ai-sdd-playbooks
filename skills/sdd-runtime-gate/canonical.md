@@ -67,8 +67,8 @@ explicitly documented, evidence-backed exclusion is approved for the change.
 The CLI validates every declared `AC-N`, `EC-N` and `SEC-N`: a criterion in
 `handoff.runtime_coverage` needs coverage rows across its repositories, and a
 criterion in `handoff.non_runtime` needs a written rationale and no coverage row.
-A capability a criterion skips through `handoff.runtime_not_applicable` (declared in the approved
-plan with a rationale) needs no coverage row for that criterion; the adapter itself still needs a
+A capability a criterion skips through `handoff.runtime_not_applicable` (declared in `tasks.md`
+with a rationale and reviewed in the pull request) needs no coverage row for that criterion; the adapter itself still needs a
 `passed` entry with receipts bound to its coverage, or a validated exclusion. Label every receipt
 with `--repo` set to the system under test, even when the command runs in the container of
 another repository; a coverage row's receipt must belong to the row's repository.
