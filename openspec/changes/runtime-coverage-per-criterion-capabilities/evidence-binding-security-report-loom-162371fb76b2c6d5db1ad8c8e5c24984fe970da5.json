@@ -1,0 +1,77 @@
+{
+  "schema": "evidence-binding",
+  "schema_version": 1,
+  "change_id": "runtime-coverage-per-criterion-capabilities",
+  "repository": "loom",
+  "report": {
+    "repository": "loom",
+    "path": "openspec/changes/runtime-coverage-per-criterion-capabilities/security-report.md",
+    "hash": "9a5903f063685d4c2b299d7173563eb01ce85f9cfaa710a41428dfd9155391d0"
+  },
+  "previous_commit_sha": "09da47cef366833b9845c0171e08a8cd545d7cba",
+  "current_commit_sha": "162371fb76b2c6d5db1ad8c8e5c24984fe970da5",
+  "governed_hash": "661a6724271e1af2d1c48eebab546994b1682744798b21e3e430d9ac7c4fb459",
+  "evidence_only_paths": [
+    "openspec/changes/runtime-coverage-per-criterion-capabilities/code-review-report.md",
+    "openspec/changes/runtime-coverage-per-criterion-capabilities/context-packet.md",
+    "openspec/changes/runtime-coverage-per-criterion-capabilities/handoff-manifest-sdd-apply-00f2e85950f7e4e41dbba4c39837ceae6af5c771295351463f5f6ff600b224eb.json",
+    "openspec/changes/runtime-coverage-per-criterion-capabilities/handoff-manifest-sdd-apply-46a0eaf91c02e8d8beba1dde8569933757871170608a7db2f4aa1909da9fcb32.json",
+    "openspec/changes/runtime-coverage-per-criterion-capabilities/handoff-manifest-sdd-apply-4db7e7380d2f19da13031acd436e2739a7cc7157f846f87bb2a593f7045c2067.json",
+    "openspec/changes/runtime-coverage-per-criterion-capabilities/handoff-manifest-sdd-code-review-1e9d4afce5f6651bc5f565e97b2f8d78ab00dbc826c77a57b041aaaca39ffada.json",
+    "openspec/changes/runtime-coverage-per-criterion-capabilities/handoff-manifest-sdd-code-review-b3729519ef8570cf617358d48c53a211738bbe157b400f7e6df8a20a02987620.json",
+    "openspec/changes/runtime-coverage-per-criterion-capabilities/handoff-manifest-sdd-plan-dcac2582485e528566c44a02411a0a0d2b24d1ce87ac0245811105e5245542fb.json",
+    "openspec/changes/runtime-coverage-per-criterion-capabilities/handoff-manifest-sdd-runtime-gate-734fcc62e5a8eb63a97f63a7f076edb8b515416d80f3c4c5a454e7f8b4ded97a.json",
+    "openspec/changes/runtime-coverage-per-criterion-capabilities/handoff-manifest-sdd-security-gate-7874a3a99e99fdeef216478b0c9ec2a1855bebc9a3034a5512158aa9472f39ef.json",
+    "openspec/changes/runtime-coverage-per-criterion-capabilities/handoff-manifest.json",
+    "openspec/changes/runtime-coverage-per-criterion-capabilities/runtime-gate-report.md",
+    "openspec/changes/runtime-coverage-per-criterion-capabilities/security-report.md",
+    "openspec/changes/runtime-coverage-per-criterion-capabilities/tasks.md"
+  ],
+  "equivalence": {
+    "kind": "identical-governed-content",
+    "reviewed_tree_hash": "661a6724271e1af2d1c48eebab546994b1682744798b21e3e430d9ac7c4fb459",
+    "committed_tree_hash": "661a6724271e1af2d1c48eebab546994b1682744798b21e3e430d9ac7c4fb459",
+    "governed_paths_committed": [
+      "CHANGELOG.md",
+      "README.md",
+      "docs/security-checklist.md",
+      "openspec/changes/runtime-coverage-per-criterion-capabilities/OWNER.md",
+      "openspec/changes/runtime-coverage-per-criterion-capabilities/adr-per-criterion-capability-omissions.md",
+      "openspec/changes/runtime-coverage-per-criterion-capabilities/adr-runtime-not-applicable-handoff-field.md",
+      "openspec/changes/runtime-coverage-per-criterion-capabilities/proposal.md",
+      "package-lock.json",
+      "package.json",
+      "schemas/handoff-manifest.schema.json",
+      "schemas/tasks.schema.json",
+      "skills/sdd-plan/SKILL.md",
+      "skills/sdd-plan/canonical.md",
+      "skills/sdd-runtime-gate/SKILL.md",
+      "skills/sdd-runtime-gate/canonical.md",
+      "src/lifecycle/runtime-coverage.js",
+      "src/tokens/handoff.js",
+      "templates/project/github/workflows/contract-drift-check.yml",
+      "templates/project/github/workflows/playbook-validation.yml",
+      "test/handoff-schema.test.js",
+      "test/handoff.test.js",
+      "test/readme.test.js",
+      "test/runtime-coverage.test.js",
+      "test/skill-contract.test.js"
+    ],
+    "intervening_commits": [
+      "162371fb76b2c6d5db1ad8c8e5c24984fe970da5"
+    ],
+    "original_receipts": [
+      {
+        "repository": "loom",
+        "path": ".specloom/runs/1793836484584-a8e82ca8-l3uh9T/execution-receipt.json",
+        "sha256": "4147989cb834556d4181b79bb45592be040c7256562238907871e09a9e3a04fe"
+      },
+      {
+        "repository": "loom",
+        "path": ".specloom/runs/1793836488002-0c3aa9b3-2hCv4w/execution-receipt.json",
+        "sha256": "4136aae9fb1ebefb539d6006ea7d307fa9d7ee9a7bd9f1330ddc013009b58e85"
+      }
+    ]
+  },
+  "created_at": "2026-11-05T00:00:05.109Z"
+}
