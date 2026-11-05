@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.12.0 — Per-criterion runtime coverage with explicit omissions
+
+Decided in change `runtime-coverage-per-criterion-capabilities` (issue #34).
+
+- **Runtime coverage.** A criterion no longer needs a receipt for every capability a repository
+  enables. It may skip an enabled capability through the new optional list
+  `handoff.runtime_not_applicable` in `tasks.md`, with one `{criterion, repository,
+  capability, rationale}` entry per skipped capability. The CLI still fails when a capability is
+  skipped without an entry, with an empty rationale, for an unmapped criterion/repository pair,
+  for a capability the repository does not enable, when the same capability is also mapped, or
+  when an entry is duplicated or names an unknown criterion or repository.
+- **Adapters unchanged.** Every enabled capability of every impacted repository still needs a
+  `passed` adapter with receipts bound to its coverage, or a validated exclusion; an omission
+  never replaces that requirement.
+- **Multi-repository entries.** A `runtime_coverage` entry that maps a capability a listed
+  repository does not enable now says to split the entry per repository. `sdd-plan` and
+  `sdd-runtime-gate` document how to write multi-repository mappings and that `--repo` names the
+  system under test even when the command runs in another repository's container.
+- **Handoff manifest.** `playbook packet` copies the list to the manifest as
+  `runtime_not_applicable` (and into its governed digest) only when it is not empty, so manifests
+  of changes that do not use it are unchanged.
+- **Compatibility.** The field is additive. A CLI older than 0.12.0 ignores it, so an omission
+  has no effect there and the gate keeps failing closed.
+
 ## 0.11.0 — Bounded review rounds and released CLI provenance
 
 - Code, security and runtime reviews now stop after one full and one delta

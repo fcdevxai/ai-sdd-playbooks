@@ -187,6 +187,18 @@ export function buildHandoffManifest(changeId, { cwd = process.cwd(), stage, age
     if (!knownCriteria.has(entry?.criterion)) throw new Error(`unknown non-runtime criterion: ${entry?.criterion}`);
     if (typeof entry.rationale !== 'string' || !entry.rationale.trim()) throw new Error(`non-runtime criterion ${entry.criterion} needs a rationale`);
   }
+  // Per-criterion omissions of an enabled capability: shape only here; the validator checks them against the coverage map.
+  // Only an absent key means "no omissions"; an empty YAML value (null) is malformed, not empty.
+  const runtimeNotApplicable = handoff.runtime_not_applicable === undefined ? [] : handoff.runtime_not_applicable;
+  if (!Array.isArray(runtimeNotApplicable)) throw new Error('tasks.md handoff.runtime_not_applicable must be a list');
+  runtimeNotApplicable.forEach((entry, index) => {
+    const label = `tasks.md handoff.runtime_not_applicable entry ${index + 1}`;
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) throw new Error(`${label} must be a mapping`);
+    for (const field of ['criterion', 'repository', 'capability']) {
+      if (typeof entry[field] !== 'string' || !entry[field].trim()) throw new Error(`${label} needs a ${field}`);
+    }
+    if (typeof entry.rationale !== 'string' || !entry.rationale.trim()) throw new Error(`${label} needs a rationale`);
+  });
   for (const entry of handoff.runtime_coverage) {
     if (!knownCriteria.has(entry.criterion)) throw new Error(`unknown runtime criterion: ${entry.criterion}`);
     for (const name of entry.repositories) {
@@ -203,6 +215,7 @@ export function buildHandoffManifest(changeId, { cwd = process.cwd(), stage, age
     repositories, context_repositories, design, tasks, contracts, architecture, required_skills,
     required_tools: handoff.required_tools, runtime_coverage: handoff.runtime_coverage,
     ...(nonRuntime.length ? { non_runtime_criteria: nonRuntime.map(({ criterion, rationale }) => ({ criterion, rationale })) } : {}),
+    ...(runtimeNotApplicable.length ? { runtime_not_applicable: runtimeNotApplicable.map(({ criterion, repository, capability, rationale }) => ({ criterion, repository, capability, rationale })) } : {}),
     unresolved_risks: handoff.unresolved_risks, blockers: handoff.blockers,
     producer: { agent, provider, model, provenance: 'caller_declared' },
     identity_issues, created_at: new Date().toISOString(),
@@ -236,6 +249,7 @@ function governedManifestContent(manifest) {
     contracts: manifest.contracts, architecture: manifest.architecture,
     required_skills: manifest.required_skills, required_tools: manifest.required_tools,
     runtime_coverage: manifest.runtime_coverage, non_runtime_criteria: manifest.non_runtime_criteria,
+    runtime_not_applicable: manifest.runtime_not_applicable,
     unresolved_risks: manifest.unresolved_risks, blockers: manifest.blockers,
   };
   return governed;

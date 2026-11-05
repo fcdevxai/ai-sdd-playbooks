@@ -53,6 +53,7 @@ export function validateRuntimeCoverage(report, { manifest, config, validateRece
   const nonRuntime = new Map((manifest?.non_runtime_criteria || []).map(({ criterion, rationale }) => [criterion, rationale]));
   const expected = new Set();
   const mappedCapabilities = new Map();
+  const multiRepositoryPairs = new Set();
   // A repository's own capabilities decide applicability; the aggregate Hub
   // capabilities are acceptable only when the change has a single repository.
   const multiRepository = (manifest?.repositories || []).length > 1;
@@ -93,6 +94,7 @@ export function validateRuntimeCoverage(report, { manifest, config, validateRece
       if (!(manifest?.repositories || []).some(({ name }) => name === repository)) issues.push(`unknown runtime repository ${repository}`);
       const pair = `${mapping.criterion}:${repository}`;
       if (!mappedCapabilities.has(pair)) mappedCapabilities.set(pair, new Set());
+      if ((mapping.repositories || []).length > 1) multiRepositoryPairs.add(pair);
       for (const adapter of mapping.capabilities || []) mappedCapabilities.get(pair).add(adapter);
       for (const adapter of mapping.capabilities || []) expected.add(`${mapping.criterion}:${repository}:${adapter}`);
     }
@@ -103,17 +105,56 @@ export function validateRuntimeCoverage(report, { manifest, config, validateRece
     if (mapped && nonRuntime.has(id)) issues.push(`${id} is both mapped to runtime evidence and declared non-runtime`);
     else if (!mapped && !(typeof rationale === 'string' && rationale.trim())) issues.push(`${id} has no runtime criterion mapping or non-runtime rationale`);
   }
+  // A criterion may skip an enabled capability of a repository only through an explicit, reasoned omission
+  // in the approved plan. It never replaces the per-adapter evidence requirement checked further below.
+  const omitted = new Map();
+  const rawOmissions = manifest?.runtime_not_applicable;
+  if (rawOmissions !== undefined && !Array.isArray(rawOmissions)) issues.push('runtime_not_applicable must be a list');
+  const seenOmissions = new Set();
+  (Array.isArray(rawOmissions) ? rawOmissions : []).forEach((entry, index) => {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+      issues.push(`runtime_not_applicable entry ${index + 1} must be a mapping`);
+      return;
+    }
+    const { criterion, repository, capability, rationale } = entry;
+    const key = `${criterion}:${repository}:${capability}`;
+    if (seenOmissions.has(key)) { issues.push(`duplicate runtime_not_applicable entry ${key}`); return; }
+    seenOmissions.add(key);
+    let sound = true;
+    if (!known.has(criterion)) { issues.push(`unknown runtime criterion ${criterion} in runtime_not_applicable`); sound = false; }
+    if (!(manifest?.repositories || []).some(({ name }) => name === repository)) {
+      issues.push(`unknown runtime repository ${repository} in runtime_not_applicable`);
+      sound = false;
+    }
+    if (!sound) return;
+    const label = `${criterion} ${repository}`;
+    const pair = `${criterion}:${repository}`;
+    const mapped = mappedCapabilities.get(pair);
+    if (!mapped) { issues.push(`${label} omits ${capability} but is not mapped in runtime_coverage`); return; }
+    if (!Object.hasOwn(ADAPTERS, capability)) { issues.push(`${label} omits unknown capability ${capability}`); return; }
+    if (capabilitiesAreExplicit(repository) && !capabilitiesOf(repository)[ADAPTERS[capability].capability]) {
+      issues.push(`${label} omits disabled capability ${capability}`);
+      return;
+    }
+    if (mapped.has(capability)) { issues.push(`${label} both maps and omits ${capability}`); return; }
+    if (typeof rationale !== 'string' || !rationale.trim()) { issues.push(`${label} omits ${capability} without a rationale`); return; }
+    if (!omitted.has(pair)) omitted.set(pair, new Set());
+    omitted.get(pair).add(capability);
+  });
   for (const [pair, mapped] of mappedCapabilities) {
     const [criterion, repository] = pair.split(':');
     const capabilities = capabilitiesOf(repository);
     if (capabilitiesAreExplicit(repository)) {
       for (const name of mapped) {
         if (!Object.hasOwn(ADAPTERS, name)) issues.push(`${criterion} ${repository} maps unknown capability ${name}`);
-        else if (!capabilities[ADAPTERS[name].capability]) issues.push(`${criterion} ${repository} maps disabled capability ${name}`);
+        else if (!capabilities[ADAPTERS[name].capability]) {
+          const hint = multiRepositoryPairs.has(pair) ? '; split the runtime_coverage entry per repository' : '';
+          issues.push(`${criterion} ${repository} maps disabled capability ${name}${hint}`);
+        }
       }
     }
     for (const [name, descriptor] of Object.entries(ADAPTERS)) {
-      if (capabilities[descriptor.capability] && !mapped.has(name)) {
+      if (capabilities[descriptor.capability] && !mapped.has(name) && !omitted.get(pair)?.has(name)) {
         issues.push(`${criterion} ${repository} enabled capability ${name} not mapped`);
       }
     }

@@ -98,6 +98,52 @@ test('handoff refuses missing design, required reference and identity', () => {
   assert.throws(() => writeHandoffManifest('example', { cwd, stage: 'sdd-apply', agent: 'Codex' }), /missing reference/i);
 });
 
+function withNotApplicable(change, yamlLines) {
+  const tasksFile = path.join(change, 'tasks.md');
+  fs.writeFileSync(tasksFile, fs.readFileSync(tasksFile, 'utf8').replace('  blockers: []\n', `  blockers: []\n${yamlLines}`));
+}
+
+test('runtime_not_applicable travels to the manifest and into the governed digest (AC-2, SEC-2)', () => {
+  const { cwd, change } = fixture();
+  const without = writeHandoffManifest('example', { cwd, stage: 'sdd-apply', agent: 'Codex' }).manifest;
+  assert.equal(Object.hasOwn(without, 'runtime_not_applicable'), false);
+  withNotApplicable(change, '  runtime_not_applicable:\n    - {criterion: AC-1, repository: hub, capability: worker, rationale: No queue behavior is exercised}\n');
+  const withList = writeHandoffManifest('example', { cwd, stage: 'sdd-apply', agent: 'Codex' }).manifest;
+  assert.deepEqual(withList.runtime_not_applicable,
+    [{ criterion: 'AC-1', repository: 'hub', capability: 'worker', rationale: 'No queue behavior is exercised' }]);
+  assert.notEqual(governedManifestHash(without), governedManifestHash(withList));
+  assert.equal(validateHandoffManifest('example', { cwd }).ok, true);
+});
+
+test('an absent or empty runtime_not_applicable leaves the manifest and its governed digest unchanged (AC-2)', () => {
+  const { cwd, change } = fixture();
+  const absent = writeHandoffManifest('example', { cwd, stage: 'sdd-apply', agent: 'Codex' }).manifest;
+  assert.equal(Object.hasOwn(absent, 'runtime_not_applicable'), false);
+  withNotApplicable(change, '  runtime_not_applicable: []\n');
+  const empty = writeHandoffManifest('example', { cwd, stage: 'sdd-apply', agent: 'Codex' }).manifest;
+  assert.equal(Object.hasOwn(empty, 'runtime_not_applicable'), false);
+  for (const manifest of [absent, empty]) {
+    assert.equal(governedManifestHash(manifest), governedManifestHash({ ...manifest, runtime_not_applicable: undefined }));
+  }
+});
+
+test('a malformed runtime_not_applicable fails the packet with a message, never an uncontrolled exception (EC-7, SEC-4)', () => {
+  const cases = [
+    ['  runtime_not_applicable:\n', /runtime_not_applicable must be a list/],
+    ['  runtime_not_applicable: nope\n', /runtime_not_applicable must be a list/],
+    ['  runtime_not_applicable:\n    - 3\n', /runtime_not_applicable entry 1 must be a mapping/],
+    ['  runtime_not_applicable:\n    - {criterion: AC-1, repository: hub, capability: worker}\n', /runtime_not_applicable entry 1 needs a rationale/],
+    ['  runtime_not_applicable:\n    - {criterion: AC-1, repository: hub, capability: worker, rationale: "  "}\n', /runtime_not_applicable entry 1 needs a rationale/],
+    ['  runtime_not_applicable:\n    - {criterion: AC-1, repository: hub, rationale: why}\n', /runtime_not_applicable entry 1 needs a capability/],
+  ];
+  for (const [lines, expected] of cases) {
+    const { cwd, change } = fixture();
+    withNotApplicable(change, lines);
+    assert.throws(() => writeHandoffManifest('example', { cwd, stage: 'sdd-apply', agent: 'Codex' }), expected);
+    assert.equal(fs.existsSync(path.join(change, 'handoff-manifest.json')), false);
+  }
+});
+
 test('missing or incomplete manifest fails strict validation', () => {
   const { cwd, change } = fixture();
   assert.equal(validateHandoffManifest('example', { cwd }).ok, false);
