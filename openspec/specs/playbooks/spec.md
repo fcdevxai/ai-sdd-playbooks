@@ -1,7 +1,7 @@
 ---
 status: implemented
 owner: felipe
-last_updated: 2026-10-11
+last_updated: 2026-11-04
 ---
 
 # Playbooks and Agent Skill Metadata
@@ -552,3 +552,23 @@ rounds or amendments.
 - **Known follow-ups.** The `sdd-runtime-gate` report template has no `## Follow-ups`
   section, and no skill says where to record a human-authorized extra round; both are planned
   for the next skill change.
+
+## Per-criterion runtime omissions in `sdd-plan` and `sdd-runtime-gate`
+
+Decided in change `runtime-coverage-per-criterion-capabilities` (`0.12.0`, see **ADR-046** and
+**ADR-047**). The CLI half (field, validator rules, compatibility) is in the CLI spec,
+"Per-criterion runtime omissions"; this section covers the skill-prose half.
+
+- **`sdd-plan`** tells the planner to write one `runtime_coverage` entry per repository whenever
+  the repositories of a multi-repository change enable different capabilities, and to skip an
+  enabled capability for a criterion only through `handoff.runtime_not_applicable`, with the
+  criterion, repository, capability and a written rationale; the pair must be mapped and an
+  omission never replaces the per-adapter evidence. Its handoff template shows the optional list.
+- **`sdd-runtime-gate`** states that a capability skipped through `runtime_not_applicable` needs
+  no coverage row for that criterion while the adapter itself still needs a `passed` entry or a
+  validated exclusion, and that `playbook run --repo` names the system under test even when the
+  command runs in another repository's container.
+- **No approval step for `tasks.md`.** The omission's rationale is reviewed by a person in the
+  pull request that carries `tasks.md`, after the gates — consistent with "`tasks.md` has no
+  approval gate" in "Canonical contract authoring belongs to `sdd-design`" above.
+- `test/skill-contract.test.js` carries content assertions for both skills.

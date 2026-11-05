@@ -1,6 +1,6 @@
 ---
 schema: adr
-status: proposed
+status: accepted
 date: '2026-11-04'
 ticket: runtime-coverage-per-criterion-capabilities
 ---
@@ -9,8 +9,7 @@ ticket: runtime-coverage-per-criterion-capabilities
 
 ## Context
 
-La decisión de permitir omisiones explícitas de capacidades por criterio (ADR draft
-`adr-per-criterion-capability-omissions.md`) necesita un lugar en los artefactos. El handoff de
+La decisión de permitir omisiones explícitas de capacidades por criterio (ADR-046) necesita un lugar en los artefactos. El handoff de
 `tasks.md` ya tiene `runtime_coverage` (criterio → repositorios × capacidades) y `non_runtime`
 (criterio sin superficie de runtime, con motivo), y `src/tokens/handoff.js` transporta
 `non_runtime` al handoff manifest como `non_runtime_criteria`. El formato de `tasks.md` y del
@@ -54,7 +53,7 @@ Descartada: mezcla dos significados distintos; `non_runtime` declara que el crit
 superficie de runtime en absoluto.
 
 ### Declararlo en el reporte del gate
-Descartada: la decisión pertenece al plan aprobado, no a la evidencia.
+Descartada: la decisión pertenece al plan (`tasks.md`), no a la evidencia.
 
 ## Impact
 

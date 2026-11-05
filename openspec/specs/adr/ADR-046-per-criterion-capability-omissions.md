@@ -1,6 +1,6 @@
 ---
 schema: adr
-status: proposed
+status: accepted
 date: '2026-11-04'
 ticket: runtime-coverage-per-criterion-capabilities
 ---
@@ -37,7 +37,7 @@ superficie e ignore en silencio otra superficie habilitada del mismo repositorio
    ligados a su cobertura, o `not_applicable` con exclusión validada.
 2. A nivel de criterio, un par criterio/repositorio mapeado puede dejar sin mapear una capacidad
    habilitada de ese repositorio **solo** mediante una omisión explícita con motivo no vacío,
-   declarada en el plan (`tasks.md`) y aprobada por una persona.
+   declarada en el plan (`tasks.md`), que una persona revisa en el pull request antes del merge.
 3. Una capacidad habilitada sin mapear y sin omisión explícita sigue siendo un error.
 4. Una omisión es válida solo si el par criterio/repositorio está mapeado, la capacidad está
    habilitada en ese repositorio, la misma capacidad no está también mapeada para ese par y no
@@ -61,8 +61,10 @@ superficie e ignore en silencio otra superficie habilitada del mismo repositorio
 - Cambia una prueba que hoy fija la regla más estricta.
 
 ### Risks
-- Motivos de relleno («no aplica») aceptados por descuido. Se mitiga con la aprobación humana
-  de `tasks.md` y con el hash del handoff manifest. La veracidad del motivo no es verificable por
+- Motivos de relleno («no aplica») aceptados por descuido. El ciclo no tiene un paso de
+  aprobación propio para `tasks.md`: el control humano es la revisión del pull request que lo
+  contiene, antes del merge y después de los gates. Se mitiga con esa revisión y con el hash del
+  handoff manifest. La veracidad del motivo no es verificable por
   máquina; se registra como riesgo aceptado en `docs/security-checklist.md`.
 
 ## Alternatives considered
@@ -79,14 +81,14 @@ capacidades reales.
 Descartada: acepta en silencio mapas ambiguos en entradas multi-repo.
 
 ### Exclusión por fila en el reporte del gate
-Descartada: la decisión de qué no aplica pertenece al plan aprobado por una persona, no al
-reporte que redacta el agente que recoge la evidencia.
+Descartada: la decisión de qué no aplica pertenece al plan (`tasks.md`), que una persona revisa
+en el pull request, no al reporte que redacta el agente que recoge la evidencia.
 
 ## Impact
 
 - backend: `src/lifecycle/runtime-coverage.js` (regla por criterio y mensaje multi-repo)
 - frontend: no impact
 - security: relaja un chequeo fail-closed solo mediante declaración explícita y validada; la exigencia por adaptador no cambia
-- data: no impact (sin persistencia; la forma del campo se decide en el ADR del campo `runtime_not_applicable`)
+- data: no impact (sin persistencia; la forma del campo se decide en ADR-047)
 - deployment: release `0.12.0`
 - testing: se ajusta la prueba que fija la regla actual y se agregan casos de omisión

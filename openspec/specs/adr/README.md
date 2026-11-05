@@ -49,3 +49,5 @@ Architecture Decision Records: they document the context, alternatives, and trad
 | ADR-043 | Lifecycle gates require source-bound evidence, under an honest-error threat model | accepted | 2026-10-08 | harness-trust-restoration |
 | ADR-044 | Gate findings block only under a bounded rule, review rounds are capped, and sensitive designs declare a closed threat model | accepted | 2026-10-11 | bounded-review-loops |
 | ADR-045 | The global CLI runs a released version, methodology development happens in a separate worktree, and `playbook doctor` warns when it does not | accepted | 2026-10-11 | bounded-review-loops |
+| ADR-046 | Omisiones explícitas de capacidades por criterio en la cobertura de runtime | accepted | 2026-11-04 | runtime-coverage-per-criterion-capabilities |
+| ADR-047 | Campo `runtime_not_applicable` en el handoff de `tasks.md` y en el manifest | accepted | 2026-11-04 | runtime-coverage-per-criterion-capabilities |

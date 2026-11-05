@@ -1,7 +1,7 @@
 ---
 status: implemented
 owner: felipe
-last_updated: 2026-10-11
+last_updated: 2026-11-04
 ---
 
 # CLI Consumer-Root Behavior
@@ -151,7 +151,7 @@ of the contract, and `context-packet.md` carried nothing about it.
 
 ## Source-bound handoff (`playbook packet --stage`)
 
-- `playbook packet <change-id> --stage <stage> --agent <agent> [--provider <p>] [--model <m>]` writes, besides `context-packet.md`, a derived `handoff-manifest.json` and an immutable stage copy `handoff-manifest-<stage>-<sha256>.json`. The manifest references the requirement, specs, design, the task plan (full hash and normative hash), contracts, architecture, required skills and tools, runtime coverage and non-runtime criteria, risks, blockers, producer identity and, per configured repository, branch, commit and governed-content digest. References carry repository, contained relative path and byte hash; contents are not copied (ADR-043).
+- `playbook packet <change-id> --stage <stage> --agent <agent> [--provider <p>] [--model <m>]` writes, besides `context-packet.md`, a derived `handoff-manifest.json` and an immutable stage copy `handoff-manifest-<stage>-<sha256>.json`. The manifest references the requirement, specs, design, the task plan (full hash and normative hash), contracts, architecture, required skills and tools, runtime coverage, non-runtime criteria and per-criterion capability omissions (`runtime_not_applicable`, present only when the list is not empty), risks, blockers, producer identity and, per configured repository, branch, commit and governed-content digest. References carry repository, contained relative path and byte hash; contents are not copied (ADR-043).
 - The normative task-plan hash excludes only execution bookkeeping (completion checkboxes and appended Execution Reports); task text, commands, criteria and mappings stay governed. A change to any governed reference makes the handoff stale.
 
 ## Evidence seal, bind and retain (`playbook evidence`)
@@ -163,11 +163,54 @@ of the contract, and `context-packet.md` carried nothing about it.
 ## Lifecycle eligibility (`validate`, `status`, `next`, preconditions)
 
 - One eligibility evaluator (`src/lifecycle/eligibility.js`) serves `validate`, `status`, `next` and stage preconditions: a gate counts only when its report status is cleared, its schema and stage match, its `source_binding` and receipts validate, its governed content is fresh, and its runtime coverage is complete. A scalar `status: passed` alone never advances the lifecycle.
-- Runtime coverage requires every AC, EC and SEC to be either mapped in `handoff.runtime_coverage` or declared in `handoff.non_runtime` with a rationale, and every enabled capability of every impacted repository to have an adapter entry that is `passed` with related receipts or `not_applicable` with a validated exclusion.
+- Runtime coverage requires every AC, EC and SEC to be either mapped in `handoff.runtime_coverage` or declared in `handoff.non_runtime` with a rationale, and every enabled capability of every impacted repository to have an adapter entry that is `passed` with related receipts or `not_applicable` with a validated exclusion. Each mapped criterion/repository pair maps every enabled capability of that repository, unless a capability is omitted explicitly in `handoff.runtime_not_applicable` (see "Per-criterion runtime omissions" below, ADR-046).
 - The `sdd-commit` precondition is met only when `next` routes to `sdd-commit`: an unavailable GitHub context, an open pull request or any other delivery route makes it unmet, with the route as the reason.
 - Verification requires live unanimous merged delivery of every impacted repository; archive requires a valid closure index. `validate --ci` reports checks that need private receipts, unavailable siblings or missing history as `local-only`, never as passed.
 - Post-merge delivery with only change evidence uncommitted (change `merged-delivery-identity`, `0.10.1`): a repository is `merged` when `HEAD` is the pull-request head or when the pull request's merge commit reported by GitHub is `HEAD` or an ancestor of `HEAD`, decided by the same three-valued ancestry as delivered evidence, for any merge strategy. Otherwise it is `unknown`: `MERGED_HEAD_IDENTITY_UNPROVEN` (merge commit missing, malformed or not an ancestor), `MERGE_COMMIT_NOT_IN_HISTORY` (absent from a complete history) or `MERGED_HISTORY_UNAVAILABLE` (a shallow history cannot decide). The merge-commit identifier must be a full lowercase object name before it reaches Git.
 - Threat model and accepted limits: these checks protect against honest mistakes (stale evidence, skipped steps, missing adapters, accidental escaping paths). They do not defend against deliberate forgery by an actor with write access to the repository or the evidence stores, nor against concurrent filesystem races during a run (ADR-043).
+
+## Per-criterion runtime omissions (`handoff.runtime_not_applicable`)
+
+Added in change `runtime-coverage-per-criterion-capabilities` (`0.12.0`, see **ADR-046** for the
+rule and **ADR-047** for the field; both complement ADR-043 §5 without superseding it). Before
+it, `validateRuntimeCoverage` required each mapped criterion/repository pair to map **every**
+enabled capability of the repository: a criterion exercised only over HTTP in a repository with
+`http` and `worker` still needed a `worker` receipt, so the only ways through were citing
+unrelated evidence or not declaring a real capability. The LIA Hub change
+`lia-institutional-token-validation` was blocked by it with its real evidence already gathered
+(issue #34).
+
+- **Field.** `tasks.md` accepts the optional list `handoff.runtime_not_applicable`, entries
+  `{criterion, repository, capability, rationale}`, all four required and no extra properties
+  (`schemas/tasks.schema.json`). `playbook packet` validates its shape, copies it into the
+  handoff manifest as `runtime_not_applicable` and into the governed digest only when it is not
+  empty, so manifests of changes that do not use it are unchanged. A list that is not an array
+  (including an empty YAML value, `null`) or holds an entry that is not a mapping, or an entry
+  with an empty field, fails the packet with a message naming the entry.
+- **Validator.** A mapped criterion/repository pair may leave an enabled capability unmapped
+  only through a valid omission, which also removes the need for that capability's coverage row
+  for that criterion. Without one, `<criterion> <repository> enabled capability <name> not mapped`
+  still fails. An omission is reported, per pair, when its rationale is empty or blank, its pair
+  is not mapped in `runtime_coverage`, its capability is unknown or disabled in that repository,
+  the same capability is also mapped for the pair, it duplicates another entry, or it names an
+  unknown criterion or repository. A malformed list is reported, never thrown, and never counts
+  as an omission.
+- **Unchanged.** Every enabled capability of every impacted repository still needs a `passed`
+  adapter with receipts bound to its coverage, or a validated exclusion: an omission never
+  replaces that requirement, so a capability omitted in every criterion can only close through
+  an adapter-level exclusion. A coverage row's receipt still belongs to the row's repository.
+- **Multi-repository entries.** A `runtime_coverage` entry maps every listed repository to every
+  listed capability. Mapping a capability a listed repository does not enable is still an error;
+  when the entry lists more than one repository the message adds
+  `; split the runtime_coverage entry per repository`.
+- **Compatibility.** The field is additive. A CLI older than `0.12.0` ignores it, so an omission
+  has no effect there and the gate keeps failing closed.
+- **Accepted risk.** The truthfulness of a rationale is not machine-verifiable, as for
+  `non_runtime`. The human control is the review of the pull request that contains `tasks.md`,
+  which happens after the gates; the lifecycle has no approval step of its own for `tasks.md`
+  (see `docs/security-checklist.md`).
+- Covered by `test/runtime-coverage.test.js`, `test/handoff.test.js` and
+  `test/handoff-schema.test.js`.
 
 ## Multi-repo execution (`loom run --repo`)
 
